@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具箱 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <link rel="stylesheet" href="tools.css">
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">🚀</div>
+        <span class="navbar-logo-text">沐美服务</span>
+      </a>
+      
+      <div class="navbar-nav">
+        <a href="/tools" class="navbar-link active">工具箱</a>
+        <a href="/panel" class="navbar-link">用户面板</a>
+        <a href="/#pricing" class="navbar-link">定价</a>
+        <a href="/#docs" class="navbar-link">文档</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <div class="language-switcher">
+          <select id="languageSelect">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
+        <a href="/panel" class="btn btn-primary btn-sm">开始使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 头部 -->
+  <header class="hero small">
+    <div class="hero-bg">
+      <div class="hero-bg-grid"></div>
+      <div class="hero-bg-glow"></div>
+    </div>
+    <div class="container" style="position: relative; z-index: 1;">
+      <h1 id="tools">工具箱</h1>
+      <p style="color: var(--text-muted); font-size: 1.125rem;">50+ 开发者工具，免费使用</p>
+    </div>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="container">
+    <!-- 分类标签 -->
+    <div class="tool-tabs">
+      <button class="tool-tab active" data-category="all">全部</button>
+      <button class="tool-tab" data-category="ai">AI工具</button>
+      <button class="tool-tab" data-category="data">数据处理</button>
+      <button class="tool-tab" data-category="network">网络工具</button>
+      <button class="tool-tab" data-category="security">安全工具</button>
+      <button class="tool-tab" data-category="dev">开发工具</button>
+    </div>
+
+    <!-- 工具网格 -->
+    <div id="toolsGrid" class="tools-grid">
+      <!-- AI工具 -->
+      <div class="tool-card" data-category="ai" data-tool="ai/text-generate">
+        <div class="tool-icon">🤖</div>
+        <h3>AI文本生成</h3>
+        <p>基于GPT的智能文本生成</p>
+        <span class="tool-tag paid">付费</span>
+      </div>
+
+      <div class="tool-card" data-category="ai" data-tool="ai/image-generate">
+        <div class="tool-icon">🎨</div>
+        <h3>AI图像生成</h3>
+        <p>文生图，支持多种风格</p>
+        <span class="tool-tag paid">付费</span>
+      </div>
+
+      <div class="tool-card" data-category="ai" data-tool="ai/tts">
+        <div class="tool-icon">🔊</div>
+        <h3>语音合成</h3>
+        <p>文本转语音，多音色</p>
+        <span class="tool-tag paid">付费</span>
+      </div>
+
+      <div class="tool-card" data-category="ai" data-tool="ai/stt">
+        <div class="tool-icon">🎤</div>
+        <h3>语音识别</h3>
+        <p>音频转文字，多语言</p>
+        <span class="tool-tag paid">付费</span>
+      </div>
+
+      <div class="tool-card" data-category="ai" data-tool="ai/translate">
+        <div class="tool-icon">🌐</div>
+        <h3>AI翻译</h3>
+        <p>高质量多语言翻译</p>
+        <span class="tool-tag paid">付费</span>
+      </div>
+
+      <!-- 数据处理工具 -->
+      <div class="tool-card" data-category="data" data-tool="data/json-format">
+        <div class="tool-icon">📋</div>
+        <h3>JSON格式化</h3>
+        <p>美化、压缩、校验JSON</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="data" data-tool="data/csv-convert">
+        <div class="tool-icon">📊</div>
+        <h3>CSV转换</h3>
+        <p>CSV与JSON互转</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="data" data-tool="data/sql-format">
+        <div class="tool-icon">🗄️</div>
+        <h3>SQL格式化</h3>
+        <p>SQL美化、语法检查</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="data" data-tool="data/regex-test">
+        <div class="tool-icon">🔍</div>
+        <h3>正则测试</h3>
+        <p>在线正则表达式测试</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="data" data-tool="data/base64">
+        <div class="tool-icon">🔢</div>
+        <h3>Base64</h3>
+        <p>Base64编解码</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="data" data-tool="data/jwt">
+        <div class="tool-icon">🔐</div>
+        <h3>JWT工具</h3>
+        <p>JWT解码、生成、验证</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <!-- 网络工具 -->
+      <div class="tool-card" data-category="network" data-tool="network/dns">
+        <div class="tool-icon">🌐</div>
+        <h3>DNS查询</h3>
+        <p>多类型DNS记录查询</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="network" data-tool="network/ip-lookup">
+        <div class="tool-icon">📍</div>
+        <h3>IP查询</h3>
+        <p>IP信息、地理位置</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="network" data-tool="network/whois">
+        <div class="tool-icon">📇</div>
+        <h3>Whois查询</h3>
+        <p>域名注册信息查询</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="network" data-tool="network/ssl-check">
+        <div class="tool-icon">🔒</div>
+        <h3>SSL检查</h3>
+        <p>证书信息、过期时间</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="network" data-tool="network/speed-test">
+        <div class="tool-icon">⚡</div>
+        <h3>网站测速</h3>
+        <p>访问速度测试</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="network" data-tool="network/http-request">
+        <div class="tool-icon">📡</div>
+        <h3>HTTP请求</h3>
+        <p>在线API测试工具</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <!-- 安全工具 -->
+      <div class="tool-card" data-category="security" data-tool="security/password-generate">
+        <div class="tool-icon">🔑</div>
+        <h3>密码生成</h3>
+        <p>强密码生成、强度检测</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="security" data-tool="security/password-check">
+        <div class="tool-icon">🔍</div>
+        <h3>密码检查</h3>
+        <p>检查密码是否泄露</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="security" data-tool="security/hash">
+        <div class="tool-icon">#️⃣</div>
+        <h3>哈希计算</h3>
+        <p>MD5/SHA1/SHA256等</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="security" data-tool="security/url-encode">
+        <div class="tool-icon">🔗</div>
+        <h3>URL编解码</h3>
+        <p>URL参数处理</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="security" data-tool="security/html-escape">
+        <div class="tool-icon">🛡️</div>
+        <h3>HTML转义</h3>
+        <p>XSS防护编码</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="security" data-tool="security/uuid">
+        <div class="tool-icon">🆔</div>
+        <h3>UUID生成</h3>
+        <p>生成唯一标识符</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <!-- 开发工具 -->
+      <div class="tool-card" data-category="dev" data-tool="dev/code-format">
+        <div class="tool-icon">✨</div>
+        <h3>代码格式化</h3>
+        <p>Prettier代码美化</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="dev" data-tool="dev/code-minify">
+        <div class="tool-icon">📦</div>
+        <h3>代码压缩</h3>
+        <p>JS/CSS/HTML压缩</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="dev" data-tool="dev/code-diff">
+        <div class="tool-icon">📑</div>
+        <h3>代码对比</h3>
+        <p>Diff差异对比</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="dev" data-tool="dev/cron-parse">
+        <div class="tool-icon">⏰</div>
+        <h3>Cron解析</h3>
+        <p>定时任务表达式解析</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="dev" data-tool="dev/timestamp">
+        <div class="tool-icon">🕐</div>
+        <h3>时间戳转换</h3>
+        <p>时间格式转换</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+
+      <div class="tool-card" data-category="dev" data-tool="dev/color-convert">
+        <div class="tool-icon">🎨</div>
+        <h3>颜色转换</h3>
+        <p>HEX/RGB/HSL互转</p>
+        <span class="tool-tag free">免费</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- 工具弹窗 -->
+  <div id="toolModal" class="modal hidden">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h2 id="toolTitle">工具名称</h2>
+        <button id="closeToolModal" class="btn-close">&times;</button>
+      </div>
+      <div id="toolBody" class="tool-body">
+        <!-- 动态加载工具内容 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="tools.js"></script>
+</body>
+</html>

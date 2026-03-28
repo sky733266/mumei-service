@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API文档 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <style>
+    .docs-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 40px;
+    }
+    
+    /* 侧边导航 */
+    .docs-sidebar {
+      position: sticky;
+      top: 100px;
+      height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+    
+    .docs-nav-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding: 0 12px;
+    }
+    
+    .docs-nav-list {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    
+    .docs-nav-list li {
+      margin-bottom: 4px;
+    }
+    
+    .docs-nav-list a {
+      display: block;
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    
+    .docs-nav-list a:hover,
+    .docs-nav-list a.active {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+    }
+    
+    /* 内容区域 */
+    .docs-content {
+      min-width: 0;
+    }
+    
+    .docs-section {
+      margin-bottom: 60px;
+    }
+    
+    .docs-section h2 {
+      font-size: 2rem;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .docs-section h3 {
+      font-size: 1.5rem;
+      margin: 40px 0 20px;
+      color: var(--primary);
+    }
+    
+    .docs-section h4 {
+      font-size: 1.125rem;
+      margin: 24px 0 12px;
+    }
+    
+    .docs-section p {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    
+    /* API端点卡片 */
+    .endpoint-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: rgba(99, 102, 241, 0.05);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .endpoint-method {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .method-post { background: #10b981; color: white; }
+    .method-get { background: #3b82f6; color: white; }
+    .method-patch { background: #f59e0b; color: white; }
+    .method-delete { background: #ef4444; color: white; }
+    
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      color: var(--text);
+    }
+    
+    .endpoint-body {
+      padding: 20px;
+    }
+    
+    .endpoint-description {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    
+    /* 代码块 */
+    .code-block {
+      background: #0d1117;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+    }
+    
+    .code-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .code-tab {
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: #8b949e;
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    
+    .code-tab:hover {
+      color: var(--text);
+    }
+    
+    .code-tab.active {
+      background: #238636;
+      color: white;
+    }
+    
+    .code-copy {
+      padding: 6px 12px;
+      border: 1px solid #30363d;
+      background: transparent;
+      color: #8b949e;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .code-copy:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .code-content {
+      padding: 16px;
+      overflow-x: auto;
+    }
+    
+    .code-content pre {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      color: #e6edf3;
+    }
+    
+    .code-content code {
+      font-family: inherit;
+    }
+    
+    /* 语法高亮 */
+    .code-keyword { color: #ff7b72; }
+    .code-string { color: #a5d6ff; }
+    .code-number { color: #79c0ff; }
+    .code-comment { color: #8b949e; }
+    .code-function { color: #d2a8ff; }
+    
+    /* 参数表格 */
+    .params-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.875rem;
+    }
+    
+    .params-table th,
+    .params-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .params-table th {
+      background: var(--bg-glass);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .params-table td {
+      color: var(--text);
+    }
+    
+    .param-name {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    .param-type {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    
+    .param-required {
+      color: #ef4444;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .param-optional {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    
+    /* 响应状态 */
+    .response-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      margin-right: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .status-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .status-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    
+    /* 沙盒测试区 */
+    .sandbox-section {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      border: 2px solid var(--primary);
+      border-radius: 20px;
+      padding: 32px;
+      margin: 40px 0;
+    }
+    
+    .sandbox-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .sandbox-header h3 {
+      margin: 0;
+      color: var(--text);
+    }
+    
+    .sandbox-badge {
+      padding: 4px 12px;
+      background: var(--primary-gradient);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .sandbox-form {
+      display: grid;
+      gap: 20px;
+    }
+    
+    .sandbox-result {
+      margin-top: 24px;
+      padding: 20px;
+      background: #0d1117;
+      border-radius: 12px;
+      display: none;
+    }
+    
+    .sandbox-result.show {
+      display: block;
+    }
+    
+    /* 快速开始 */
+    .quick-start-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .quick-start-steps {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    
+    .quick-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    
+    .step-number {
+      width: 32px;
+      height: 32px;
+      background: var(--primary-gradient);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    
+    .step-content h4 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+    }
+    
+    .step-content p {
+      margin: 0;
+      font-size: 0.875rem;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1024px) {
+      .docs-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .docs-sidebar {
+        display: none;
+      }
+    }
+    
+    /* 返回顶部按钮 */
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      z-index: 1000;
+    }
+    
+    .back-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .back-to-top:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <!-- 页面加载动画 -->
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <p>加载文档...</p>
+    </div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">🚀</div>
+        <span class="navbar-logo-text">沐美服务</span>
+      </a>
+      
+      <div class="navbar-nav">
+        <a href="/tools" class="navbar-link">工具箱</a>
+        <a href="/panel" class="navbar-link">用户面板</a>
+        <a href="/docs" class="navbar-link active">API文档</a>
+        <a href="/#pricing" class="navbar-link">定价</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <a href="/panel" class="btn btn-primary btn-sm">开始使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero区域 -->
+  <header class="hero small">
+    <div class="container">
+      <h1>API文档</h1>
+      <p style="color: var(--text-muted);">完整的API参考，包含示例代码和沙盒测试</p>
+    </div>
+  </header>
+
+  <!-- 文档主体 -->
+  <div class="docs-container">
+    <!-- 侧边导航 -->
+    <aside class="docs-sidebar">
+      <div class="docs-nav-title">快速开始</div>
+      <ul class="docs-nav-list">
+        <li><a href="#intro" class="active">简介</a></li>
+        <li><a href="#auth">认证</a></li>
+        <li><a href="#quickstart">快速开始</a></li>
+        <li><a href="#sandbox">沙盒测试</a></li>
+      </ul>
+      
+      <div class="docs-nav-title">API端点</div>
+      <ul class="docs-nav-list">
+        <li><a href="#auth-api">认证</a></li>
+        <li><a href="#pdf-api">PDF转文字</a></li>
+        <li><a href="#tools-api">工具API</a></li>
+        <li><a href="#user-api">用户管理</a></li>
+      </ul>
+      
+      <div class="docs-nav-title">SDK</div>
+      <ul class="docs-nav-list">
+        <li><a href="#javascript">JavaScript</a></li>
+        <li><a href="#python">Python</a></li>
+        <li><a href="#php">PHP</a></li>
+      </ul>
+    </aside>
+
+    <!-- 内容区域 -->
+    <main class="docs-content">
+      <!-- 简介 -->
+      <section class="docs-section" id="intro">
+        <h2>简介</h2>
+        <p>沐美服务提供简单易用的REST API，帮助开发者快速集成PDF转换、AI工具、数据处理等功能到应用中。</p>
+        
+        <div class="quick-start-card">
+          <h3>🚀 基础信息</h3>
+          <div class="quick-start-steps">
+            <div class="quick-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h4>Base URL</h4>
+                <p><code>https://api.mumei.dev</code></p>
+              </div>
+            </div>
+            <div class="quick-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h4>数据格式</h4>
+                <p>所有请求和响应均为 JSON 格式，Content-Type: application/json</p>
+              </div>
+            </div>
+            <div class="quick-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h4>字符编码</h4>
+                <p>UTF-8</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 认证 -->
+      <section class="docs-section" id="auth">
+        <h2>认证</h2>
+        <p>API使用API Token进行认证。在请求头中添加 <code>X-API-Token</code> 字段。</p>
+        
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs">
+              <button class="code-tab active">Header</button>
+            </div>
+            <button class="code-copy" onclick="copyCode(this)">复制</button>
+          </div>
+          <div class="code-content">
+            <pre><code>X-API-Token: your_api_token_here</code></pre>
+          </div>
+        </div>
+        
+        <h3>获取API Token</h3>
+        <p>1. 登录用户面板<br>2. 进入"我的Token"页面<br>3. 点击"创建Token"<br>4. 复制生成的Token</p>
+      </section>
+
+      <!-- 沙盒测试 -->
+      <section class="docs-section sandbox-section" id="sandbox">
+        <div class="sandbox-header">
+          <h3>🧪 沙盒测试</h3>
+          <span class="sandbox-badge">无需登录</span>
+        </div>
+        <p>无需API Token即可测试API，每天限制3次请求。</p>
+        
+        <div class="sandbox-form">
+          <div class="form-group">
+            <label>选择API</label>
+            <select id="sandboxEndpoint" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);">
+              <option value="/api/sandbox/pdf-to-text">PDF转文字</option>
+              <option value="/api/sandbox/json-format">JSON格式化</option>
+              <option value="/api/sandbox/base64">Base64编解码</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>请求内容</label>
+            <textarea id="sandboxBody" rows="6" placeholder='{"text": "Hello World"}' style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text); font-family: monospace;"></textarea>
+          </div>
+          
+          <button class="btn btn-primary" onclick="testSandbox()" style="width: 100%; padding: 16px;">
+            🚀 发送请求
+          </button>
+          
+          <div id="sandboxResult" class="sandbox-result">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <span id="sandboxStatus" class="response-status status-success">200 OK</span>
+              <button class="code-copy" onclick="copyResult()">复制结果</button>
+            </div>
+            <pre id="sandboxResponse" style="margin: 0; color: #e6edf3;"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- PDF转文字API -->
+      <section class="docs-section" id="pdf-api">
+        <h2>PDF转文字</h2>
+        
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="endpoint-method method-post">POST</span>
+            <code class="endpoint-path">/api/pdf-to-text</code>
+          </div>
+          <div class="endpoint-body">
+            <p class="endpoint-description">将PDF文件转换为纯文本内容。</p>
+            
+            <h4>请求参数</h4>
+            <table class="params-table">
+              <thead>
+                <tr>
+                  <th>参数</th>
+                  <th>类型</th>
+                  <th>必填</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="param-name">pdf</span></td>
+                  <td><span class="param-type">File</span></td>
+                  <td><span class="param-required">是</span></td>
+                  <td>PDF文件，最大10MB</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <h4>响应示例</h4>
+            <div class="code-block">
+              <div class="code-header">
+                <div class="code-tabs">
+                  <button class="code-tab active">200 Success</button>
+                </div>
+                <button class="code-copy" onclick="copyCode(this)">复制</button>
+              </div>
+              <div class="code-content">
+                <pre><code>{
+  <span class="code-string">"success"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"text"</span>: <span class="code-string">"提取的文字内容..."</span>,
+  <span class="code-string">"pages"</span>: <span class="code-number">5</span>,
+  <span class="code-string">"info"</span>: {
+    <span class="code-string">"Title"</span>: <span class="code-string">"文档标题"</span>,
+    <span class="code-string">"Author"</span>: <span class="code-string">"作者"</span>
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 代码示例 -->
+      <section class="docs-section" id="javascript">
+        <h2>JavaScript SDK</h2>
+        
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-tabs">
+              <button class="code-tab active">JavaScript</button>
+              <button class="code-tab">cURL</button>
+              <button class="code-tab">Python</button>
+              <button class="code-tab">PHP</button>
+            </div>
+            <button class="code-copy" onclick="copyCode(this)">复制</button>
+          </div>
+          <div class="code-content">
+            <pre><code><span class="code-comment">// 初始化客户端</span>
+<span class="code-keyword">const</span> <span class="code-function">MumeiClient</span> = {
+  baseURL: <span class="code-string">'https://api.mumei.dev'</span>,
+  token: <span class="code-string">'your_api_token'</span>
+};
+
+<span class="code-comment">// PDF转文字</span>
+<span class="code-keyword">async function</span> <span class="code-function">convertPDF</span>(file) {
+  <span class="code-keyword">const</span> formData = <span class="code-keyword">new</span> FormData();
+  formData.append(<span class="code-string">'pdf'</span>, file);
+  
+  <span class="code-keyword">const</span> response = <span class="code-keyword">await</span> fetch(<span class="code-string">`${MumeiClient.baseURL}/api/pdf-to-text`</span>, {
+    method: <span class="code-string">'POST'</span>,
+    headers: {
+      <span class="code-string">'X-API-Token'</span>: MumeiClient.token
+    },
+    body: formData
+  });
+  
+  <span class="code-keyword">return</span> response.json();
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 错误码 -->
+      <section class="docs-section">
+        <h2>错误码</h2>
+        
+        <table class="params-table">
+          <thead>
+            <tr>
+              <th>状态码</th>
+              <th>说明</th>
+              <th>解决方案</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="response-status status-error">400</span></td>
+              <td>请求参数错误</td>
+              <td>检查请求参数格式</td>
+            </tr>
+            <tr>
+              <td><span class="response-status status-error">401</span></td>
+              <td>未授权</td>
+              <td>检查API Token是否有效</td>
+            </tr>
+            <tr>
+              <td><span class="response-status status-error">429</span></td>
+              <td>请求过于频繁</td>
+              <td>降低请求频率或升级套餐</td>
+            </tr>
+            <tr>
+              <td><span class="response-status status-error">500</span></td>
+              <td>服务器错误</td>
+              <td>稍后重试或联系支持</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- 返回顶部按钮 -->
+  <button id="backToTop" class="back-to-top" onclick="scrollToTop()">↑</button>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- 加载动画样式 -->
+  <style>
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .page-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .loader-content {
+      text-align: center;
+    }
+    
+    .loader-spinner {
+      width: 80px;
+      height: 80px;
+      border: 4px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 24px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    // 页面加载完成后隐藏加载动画
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('pageLoader').classList.add('hidden');
+      }, 500);
+    });
+
+    // 返回顶部
+    const backToTop = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 500) {
+        backToTop.classList.add('show');
+      } else {
+        backToTop.classList.remove('show');
+      }
+    });
+    
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 复制代码
+    function copyCode(btn) {
+      const code = btn.closest('.code-block').querySelector('code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '已复制!';
+        setTimeout(() => btn.textContent = '复制', 2000);
+      });
+    }
+
+    // 沙盒测试
+    async function testSandbox() {
+      const endpoint = document.getElementById('sandboxEndpoint').value;
+      const body = document.getElementById('sandboxBody').value;
+      const resultDiv = document.getElementById('sandboxResult');
+      const statusSpan = document.getElementById('sandboxStatus');
+      const responsePre = document.getElementById('sandboxResponse');
+      
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body || '{}'
+        });
+        
+        const data = await response.json();
+        
+        statusSpan.textContent = `${response.status} ${response.statusText}`;
+        statusSpan.className = `response-status ${response.ok ? 'status-success' : 'status-error'}`;
+        responsePre.textContent = JSON.stringify(data, null, 2);
+        resultDiv.classList.add('show');
+      } catch (error) {
+        statusSpan.textContent = 'Error';
+        statusSpan.className = 'response-status status-error';
+        responsePre.textContent = error.message;
+        resultDiv.classList.add('show');
+      }
+    }
+
+    // 复制结果
+    function copyResult() {
+      const result = document.getElementById('sandboxResponse').textContent;
+      navigator.clipboard.writeText(result).then(() => {
+        alert('已复制到剪贴板');
+      });
+    }
+
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // 代码标签切换
+    document.querySelectorAll('.code-tabs').forEach(tabs => {
+      tabs.querySelectorAll('.code-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

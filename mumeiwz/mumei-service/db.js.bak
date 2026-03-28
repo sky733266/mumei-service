@@ -1,0 +1,562 @@
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
+
+// 数据文件路径
+const DATA_DIR = './data';
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
+const VERIFICATION_FILE = path.join(DATA_DIR, 'verification.json');
+const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
+const PLANS_FILE = path.join(DATA_DIR, 'plans.json');
+const SUBSCRIPTIONS_FILE = path.join(DATA_DIR, 'subscriptions.json');
+
+// 确保数据目录存在
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// 初始化数据文件
+function initDataFile(filePath, defaultData = {}) {
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
+  }
+}
+
+initDataFile(USERS_FILE, { users: [] });
+initDataFile(TOKENS_FILE, { tokens: [] });
+initDataFile(VERIFICATION_FILE, { codes: [] });
+initDataFile(LOGS_FILE, { logs: [] });
+initDataFile(PLANS_FILE, { plans: [
+  {
+    id: 'free',
+    name: '免费版',
+    nameEn: 'Free',
+    price: 0,
+    priceEn: 'Free',
+    features: {
+      dailyRequests: 100,
+      monthlyRequests: 1000,
+      maxTokens: 3,
+      pdfSize: 5, // MB
+      support: 'community'
+    },
+    description: '适合个人开发者试用',
+    descriptionEn: 'For individual developers to try'
+  },
+  {
+    id: 'pro',
+    name: '专业版',
+    nameEn: 'Pro',
+    price: 29,
+    priceEn: '$29',
+    currency: 'USD',
+    period: 'month',
+    features: {
+      dailyRequests: 10000,
+      monthlyRequests: 100000,
+      maxTokens: 20,
+      pdfSize: 50,
+      support: 'email'
+    },
+    description: '适合小型团队和项目',
+    descriptionEn: 'For small teams and projects'
+  },
+  {
+    id: 'enterprise',
+    name: '企业版',
+    nameEn: 'Enterprise',
+    price: 99,
+    priceEn: '$99',
+    currency: 'USD',
+    period: 'month',
+    features: {
+      dailyRequests: 100000,
+      monthlyRequests: 1000000,
+      maxTokens: 100,
+      pdfSize: 200,
+      support: 'priority'
+    },
+    description: '适合大型企业使用',
+    descriptionEn: 'For large enterprises'
+  }
+]});
+initDataFile(SUBSCRIPTIONS_FILE, { subscriptions: [] });
+
+// 读取数据
+function readData(filePath) {
+  try {
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    return { users: [], tokens: [], codes: [], logs: [], plans: { plans: [] }, subscriptions: { subscriptions: [] } };
+  }
+}
+
+// 写入数据
+function writeData(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+// 用户管理
+const UserDB = {
+  async createUser(email, password) {
+    const data = readData(USERS_FILE);
+    if (data.users.find(u => u.email === email)) {
+      throw new Error('邮箱已被注册');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = {
+      id: uuidv4(),
+      email,
+      password: hashedPassword,
+      verified: false,
+      plan: 'free',
+      createdAt: new Date().toISOString(),
+      lastLogin: null,
+      stats: {
+        totalRequests: 0,
+        totalTokens: 0,
+        lastMonthRequests: 0
+      }
+    };
+
+    data.users.push(user);
+    writeData(USERS_FILE, data);
+    return { id: user.id, email: user.email, verified: user.verified, plan: user.plan };
+  },
+
+  async validateUser(email, password) {
+    const data = readData(USERS_FILE);
+    const user = data.users.find(u => u.email === email);
+    
+    if (!user) throw new Error('用户不存在');
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) throw new Error('密码错误');
+
+    user.lastLogin = new Date().toISOString();
+    writeData(USERS_FILE, data);
+
+    return { 
+      id: user.id, 
+      email: user.email, 
+      verified: user.verified,
+      plan: user.plan,
+      stats: user.stats
+    };
+  },
+
+  findById(userId) {
+    const data = readData(USERS_FILE);
+    const user = data.users.find(u => u.id === userId);
+    if (user) {
+      return { 
+        id: user.id, 
+        email: user.email, 
+        verified: user.verified,
+        plan: user.plan,
+        stats: user.stats,
+        createdAt: user.createdAt
+      };
+    }
+    return null;
+  },
+
+  verifyEmail(userId) {
+    const data = readData(USERS_FILE);
+    const user = data.users.find(u => u.id === userId);
+    if (user) {
+      user.verified = true;
+      writeData(USERS_FILE, data);
+      return true;
+    }
+    return false;
+  },
+
+  updatePlan(userId, planId) {
+    const data = readData(USERS_FILE);
+    const user = data.users.find(u => u.id === userId);
+    if (user) {
+      user.plan = planId;
+      writeData(USERS_FILE, data);
+      return true;
+    }
+    return false;
+  },
+
+  updateStats(userId, updates) {
+    const data = readData(USERS_FILE);
+    const user = data.users.find(u => u.id === userId);
+    if (user) {
+      user.stats = { ...user.stats, ...updates };
+      writeData(USERS_FILE, data);
+      return user.stats;
+    }
+    return null;
+  },
+
+  getAllUsers() {
+    const data = readData(USERS_FILE);
+    return data.users.map(u => ({
+      id: u.id,
+      email: u.email,
+      verified: u.verified,
+      plan: u.plan,
+      stats: u.stats,
+      createdAt: u.createdAt,
+      lastLogin: u.lastLogin
+    }));
+  }
+};
+
+// API Token管理
+const TokenDB = {
+  createToken(userId, name) {
+    const data = readData(TOKENS_FILE);
+    const token = {
+      id: uuidv4(),
+      userId,
+      name: name || 'API Token',
+      token: `mumei_${uuidv4().replace(/-/g, '')}`,
+      createdAt: new Date().toISOString(),
+      lastUsed: null,
+      usageCount: 0,
+      active: true
+    };
+
+    data.tokens.push(token);
+    writeData(TOKENS_FILE, data);
+    return token;
+  },
+
+  validateToken(tokenString) {
+    const data = readData(TOKENS_FILE);
+    const token = data.tokens.find(t => t.token === tokenString && t.active);
+    
+    if (token) {
+      token.lastUsed = new Date().toISOString();
+      token.usageCount++;
+      writeData(TOKENS_FILE, data);
+      return { userId: token.userId, tokenId: token.id };
+    }
+    return null;
+  },
+
+  getUserTokens(userId) {
+    const data = readData(TOKENS_FILE);
+    return data.tokens
+      .filter(t => t.userId === userId)
+      .map(t => ({
+        id: t.id,
+        name: t.name,
+        createdAt: t.createdAt,
+        lastUsed: t.lastUsed,
+        usageCount: t.usageCount,
+        active: t.active
+      }));
+  },
+
+  deleteToken(tokenId, userId) {
+    const data = readData(TOKENS_FILE);
+    const index = data.tokens.findIndex(t => t.id === tokenId && t.userId === userId);
+    
+    if (index > -1) {
+      data.tokens.splice(index, 1);
+      writeData(TOKENS_FILE, data);
+      return true;
+    }
+    return false;
+  },
+
+  toggleToken(tokenId, userId) {
+    const data = readData(TOKENS_FILE);
+    const token = data.tokens.find(t => t.id === tokenId && t.userId === userId);
+    
+    if (token) {
+      token.active = !token.active;
+      writeData(TOKENS_FILE, data);
+      return token.active;
+    }
+    return null;
+  },
+
+  getTokenStats(userId) {
+    const data = readData(TOKENS_FILE);
+    const userTokens = data.tokens.filter(t => t.userId === userId);
+    return {
+      total: userTokens.length,
+      active: userTokens.filter(t => t.active).length,
+      totalUsage: userTokens.reduce((sum, t) => sum + t.usageCount, 0)
+    };
+  }
+};
+
+// 验证码管理
+const VerificationDB = {
+  createCode(email, userId) {
+    const data = readData(VERIFICATION_FILE);
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    data.codes = data.codes.filter(c => c.email !== email);
+    
+    data.codes.push({
+      email,
+      userId,
+      code,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+    });
+
+    writeData(VERIFICATION_FILE, data);
+    return code;
+  },
+
+  verifyCode(email, code) {
+    const data = readData(VERIFICATION_FILE);
+    const record = data.codes.find(c => 
+      c.email === email && 
+      c.code === code.toUpperCase() &&
+      new Date(c.expiresAt) > new Date()
+    );
+
+    if (record) {
+      data.codes = data.codes.filter(c => c.code !== code.toUpperCase());
+      writeData(VERIFICATION_FILE, data);
+      return record.userId;
+    }
+    return null;
+  }
+};
+
+// API调用日志管理
+const LogDB = {
+  createLog({ userId, tokenId, endpoint, method, status, duration, ip, userAgent, error }) {
+    const data = readData(LOGS_FILE);
+    const log = {
+      id: uuidv4(),
+      userId,
+      tokenId,
+      endpoint,
+      method,
+      status,
+      duration,
+      ip,
+      userAgent,
+      error,
+      timestamp: new Date().toISOString()
+    };
+
+    data.logs.push(log);
+    
+    // 只保留最近10000条日志
+    if (data.logs.length > 10000) {
+      data.logs = data.logs.slice(-10000);
+    }
+    
+    writeData(LOGS_FILE, data);
+    return log;
+  },
+
+  getUserLogs(userId, options = {}) {
+    const data = readData(LOGS_FILE);
+    let logs = data.logs.filter(l => l.userId === userId);
+    
+    if (options.endpoint) {
+      logs = logs.filter(l => l.endpoint === options.endpoint);
+    }
+    if (options.status) {
+      logs = logs.filter(l => l.status === options.status);
+    }
+    if (options.startDate) {
+      logs = logs.filter(l => new Date(l.timestamp) >= new Date(options.startDate));
+    }
+    if (options.endDate) {
+      logs = logs.filter(l => new Date(l.timestamp) <= new Date(options.endDate));
+    }
+    
+    // 排序和分页
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    const page = options.page || 1;
+    const limit = options.limit || 50;
+    const start = (page - 1) * limit;
+    const paginatedLogs = logs.slice(start, start + limit);
+    
+    return {
+      logs: paginatedLogs,
+      total: logs.length,
+      page,
+      totalPages: Math.ceil(logs.length / limit)
+    };
+  },
+
+  getUserStats(userId) {
+    const data = readData(LOGS_FILE);
+    const userLogs = data.logs.filter(l => l.userId === userId);
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    return {
+      total: userLogs.length,
+      today: userLogs.filter(l => new Date(l.timestamp) >= today).length,
+      thisMonth: userLogs.filter(l => new Date(l.timestamp) >= thisMonth).length,
+      success: userLogs.filter(l => l.status >= 200 && l.status < 300).length,
+      error: userLogs.filter(l => l.status >= 400).length,
+      avgDuration: userLogs.length > 0 
+        ? Math.round(userLogs.reduce((sum, l) => sum + (l.duration || 0), 0) / userLogs.length)
+        : 0
+    };
+  },
+
+  getEndpointStats(userId) {
+    const data = readData(LOGS_FILE);
+    const userLogs = data.logs.filter(l => l.userId === userId);
+    
+    const endpointMap = {};
+    userLogs.forEach(log => {
+      if (!endpointMap[log.endpoint]) {
+        endpointMap[log.endpoint] = { count: 0, success: 0, error: 0 };
+      }
+      endpointMap[log.endpoint].count++;
+      if (log.status >= 200 && log.status < 300) {
+        endpointMap[log.endpoint].success++;
+      } else if (log.status >= 400) {
+        endpointMap[log.endpoint].error++;
+      }
+    });
+    
+    return Object.entries(endpointMap)
+      .map(([endpoint, stats]) => ({ endpoint, ...stats }))
+      .sort((a, b) => b.count - a.count);
+  },
+
+  getAllLogs(options = {}) {
+    const data = readData(LOGS_FILE);
+    let logs = data.logs;
+    
+    if (options.userId) {
+      logs = logs.filter(l => l.userId === options.userId);
+    }
+    
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    const page = options.page || 1;
+    const limit = options.limit || 100;
+    const start = (page - 1) * limit;
+    
+    return {
+      logs: logs.slice(start, start + limit),
+      total: logs.length,
+      page,
+      totalPages: Math.ceil(logs.length / limit)
+    };
+  }
+};
+
+// 套餐管理
+const PlanDB = {
+  getAllPlans() {
+    const data = readData(PLANS_FILE);
+    return data.plans;
+  },
+
+  getPlan(planId) {
+    const data = readData(PLANS_FILE);
+    return data.plans.find(p => p.id === planId);
+  },
+
+  getPlanFeatures(planId) {
+    const plan = this.getPlan(planId);
+    return plan ? plan.features : null;
+  }
+};
+
+// 订阅管理
+const SubscriptionDB = {
+  createSubscription(userId, planId, paymentInfo = {}) {
+    const data = readData(SUBSCRIPTIONS_FILE);
+    const plan = PlanDB.getPlan(planId);
+    
+    // 取消现有订阅
+    data.subscriptions = data.subscriptions.filter(s => s.userId !== userId);
+    
+    const subscription = {
+      id: uuidv4(),
+      userId,
+      planId,
+      planName: plan.name,
+      price: plan.price,
+      currency: plan.currency,
+      status: 'active',
+      startedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天
+      paymentInfo,
+      autoRenew: true
+    };
+
+    data.subscriptions.push(subscription);
+    writeData(SUBSCRIPTIONS_FILE, data);
+    
+    // 更新用户套餐
+    UserDB.updatePlan(userId, planId);
+    
+    return subscription;
+  },
+
+  getUserSubscription(userId) {
+    const data = readData(SUBSCRIPTIONS_FILE);
+    const subscription = data.subscriptions.find(s => s.userId === userId && s.status === 'active');
+    
+    if (subscription && new Date(subscription.expiresAt) < new Date()) {
+      subscription.status = 'expired';
+      writeData(SUBSCRIPTIONS_FILE, data);
+      return null;
+    }
+    
+    return subscription;
+  },
+
+  cancelSubscription(userId) {
+    const data = readData(SUBSCRIPTIONS_FILE);
+    const subscription = data.subscriptions.find(s => s.userId === userId && s.status === 'active');
+    
+    if (subscription) {
+      subscription.status = 'cancelled';
+      subscription.autoRenew = false;
+      writeData(SUBSCRIPTIONS_FILE, data);
+      return true;
+    }
+    return false;
+  },
+
+  checkUsageLimit(userId, type = 'daily') {
+    const user = UserDB.findById(userId);
+    const plan = PlanDB.getPlan(user.plan);
+    const stats = LogDB.getUserStats(userId);
+    
+    const limit = type === 'daily' ? plan.features.dailyRequests : plan.features.monthlyRequests;
+    const used = type === 'daily' ? stats.today : stats.thisMonth;
+    
+    return {
+      allowed: used < limit,
+      limit,
+      used,
+      remaining: Math.max(0, limit - used),
+      percentage: Math.round((used / limit) * 100)
+    };
+  }
+};
+
+module.exports = { 
+  UserDB, 
+  TokenDB, 
+  VerificationDB, 
+  LogDB, 
+  PlanDB, 
+  SubscriptionDB 
+};

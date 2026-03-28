@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二维码生成器 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <style>
+    .qrcode-tool {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    .qrcode-preview {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .qrcode-preview img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .qrcode-placeholder {
+      width: 300px;
+      height: 300px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #a0aec0;
+    }
+    
+    .qrcode-placeholder svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .color-picker {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .color-picker input[type="color"] {
+      width: 50px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    
+    .size-slider {
+      width: 100%;
+      margin: 10px 0;
+    }
+    
+    .size-slider input {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .tool-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(255,255,255,0.05);
+      padding: 4px;
+      border-radius: 12px;
+      width: fit-content;
+    }
+    
+    .tool-tab {
+      padding: 10px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    
+    .tool-tab.active {
+      background: var(--primary-gradient);
+      color: white;
+    }
+    
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .history-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .history-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+    
+    .history-item-info {
+      flex: 1;
+    }
+    
+    .history-item-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+    
+    .history-item-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">🚀</div>
+        <span class="navbar-logo-text">沐美服务</span>
+      </a>
+      
+      <div class="navbar-nav">
+        <a href="/tools" class="navbar-link">工具箱</a>
+        <a href="/panel" class="navbar-link">用户面板</a>
+        <a href="/qrcode" class="navbar-link active">二维码</a>
+        <a href="/#pricing" class="navbar-link">定价</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <a href="/panel" class="btn btn-primary btn-sm">开始使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero区域 -->
+  <header class="hero small">
+    <div class="container">
+      <h1>二维码生成器</h1>
+      <p style="color: var(--text-muted);">免费生成高清二维码，支持自定义样式</p>
+    </div>
+  </header>
+
+  <!-- 工具主体 -->
+  <main class="container">
+    <div class="grid grid-2" style="grid-template-columns: 1fr 1fr; gap: 40px;">
+      <!-- 左侧：设置面板 -->
+      <div class="feature-card">
+        <h2 style="margin-bottom: 24px;">⚙️ 设置</h2>
+        
+        <!-- 内容类型切换 -->
+        <div class="tool-tabs">
+          <button class="tool-tab active" data-type="text">文本</button>
+          <button class="tool-tab" data-type="url">网址</button>
+          <button class="tool-tab" data-type="wifi">WiFi</button>
+          <button class="tool-tab" data-type="vcard">名片</button>
+        </div>
+        
+        <!-- 文本输入 -->
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label>内容</label>
+          <textarea id="qrContent" rows="4" placeholder="输入要生成二维码的内容..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);"></textarea>
+        </div>
+        
+        <!-- 尺寸设置 -->
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label>尺寸: <span id="sizeValue">300</span>px</label>
+          <div class="size-slider">
+            <input type="range" id="qrSize" min="100" max="1000" value="300" step="50">
+          </div>
+        </div>
+        
+        <!-- 颜色设置 -->
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label>颜色</label>
+          <div class="color-picker">
+            <div>
+              <small style="display: block; margin-bottom: 4px; color: var(--text-muted);">前景色</small>
+              <input type="color" id="qrColorDark" value="#000000">
+            </div>
+            <div>
+              <small style="display: block; margin-bottom: 4px; color: var(--text-muted);">背景色</small>
+              <input type="color" id="qrColorLight" value="#ffffff">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Logo上传 -->
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label>中心Logo（可选）</label>
+          <input type="file" id="qrLogo" accept="image/*" style="display: none;">
+          <button class="btn btn-secondary" onclick="document.getElementById('qrLogo').click()" style="width: 100%;">
+            📁 选择图片
+          </button>
+          <div id="logoPreview" style="margin-top: 12px; display: none;">
+            <img src="" alt="Logo预览" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+          </div>
+        </div>
+        
+        <!-- 生成按钮 -->
+        <button id="generateBtn" class="btn btn-primary" style="width: 100%; padding: 16px;">
+          🎨 生成二维码
+        </button>
+      </div>
+      
+      <!-- 右侧：预览面板 -->
+      <div>
+        <div class="qrcode-preview">
+          <div id="qrPlaceholder" class="qrcode-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <p>二维码将显示在这里</p>
+          </div>
+          <img id="qrResult" style="display: none; max-width: 100%;">
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+          <button id="downloadBtn" class="btn btn-primary" style="flex: 1;">
+            ⬇️ 下载PNG
+          </button>
+          <button id="copyBtn" class="btn btn-secondary" style="flex: 1;">
+            📋 复制图片
+          </button>
+        </div>
+        
+        <!-- 历史记录 -->
+        <div style="margin-top: 40px;">
+          <h3 style="margin-bottom: 16px;">📜 历史记录</h3>
+          <div id="historyList">
+            <p style="color: var(--text-muted); text-align: center; padding: 40px;">
+              暂无历史记录
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    // 历史记录
+    let history = JSON.parse(localStorage.getItem('qrcodeHistory') || '[]');
+    let currentQR = null;
+    
+    // 更新尺寸显示
+    document.getElementById('qrSize').addEventListener('input', (e) => {
+      document.getElementById('sizeValue').textContent = e.target.value;
+    });
+    
+    // Logo预览
+    document.getElementById('qrLogo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('logoPreview').style.display = 'block';
+          document.getElementById('logoPreview').querySelector('img').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // 生成二维码
+    document.getElementById('generateBtn').addEventListener('click', generateQRCode);
+    
+    function generateQRCode() {
+      const content = document.getElementById('qrContent').value.trim();
+      if (!content) {
+        alert('请输入内容');
+        return;
+      }
+      
+      const size = parseInt(document.getElementById('qrSize').value);
+      const colorDark = document.getElementById('qrColorDark').value;
+      const colorLight = document.getElementById('qrColorLight').value;
+      
+      // 隐藏占位符，显示结果
+      document.getElementById('qrPlaceholder').style.display = 'none';
+      const qrResult = document.getElementById('qrResult');
+      qrResult.style.display = 'block';
+      
+      // 使用QRCode.js生成
+      // 先清空
+      qrResult.src = '';
+      
+      // 创建临时容器
+      const container = document.createElement('div');
+      container.id = 'qrcode-temp';
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      document.body.appendChild(container);
+      
+      // 生成二维码
+      const qrcode = new QRCode(container, {
+        text: content,
+        width: size,
+        height: size,
+        colorDark: colorDark,
+        colorLight: colorLight,
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      
+      // 等待生成完成
+      setTimeout(() => {
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+          // 如果有Logo，添加Logo
+          const logoImg = document.getElementById('logoPreview').querySelector('img');
+          if (logoImg && logoImg.src) {
+            const ctx = canvas.getContext('2d');
+            const logoSize = size * 0.2;
+            const logoX = (size - logoSize) / 2;
+            const logoY = (size - logoSize) / 2;
+            
+            // 绘制白色背景
+            ctx.fillStyle = colorLight;
+            ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+            
+            // 绘制Logo
+            const img = new Image();
+            img.onload = () => {
+              ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
+              qrResult.src = canvas.toDataURL('image/png');
+              currentQR = qrResult.src;
+              
+              // 保存到历史
+              addToHistory(content, currentQR);
+              
+              // 显示操作按钮
+              document.getElementById('actionButtons').style.display = 'flex';
+            };
+            img.src = logoImg.src;
+          } else {
+            qrResult.src = canvas.toDataURL('image/png');
+            currentQR = qrResult.src;
+            
+            // 保存到历史
+            addToHistory(content, currentQR);
+            
+            // 显示操作按钮
+            document.getElementById('actionButtons').style.display = 'flex';
+          }
+        }
+        
+        // 清理
+        document.body.removeChild(container);
+      }, 100);
+    }
+    
+    // 添加到历史
+    function addToHistory(text, imageData) {
+      const item = {
+        text: text,
+        image: imageData,
+        time: new Date().toLocaleString()
+      };
+      
+      history.unshift(item);
+      if (history.length > 10) history.pop();
+      
+      localStorage.setItem('qrcodeHistory', JSON.stringify(history));
+      renderHistory();
+    }
+    
+    // 渲染历史
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      
+      if (history.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">暂无历史记录</p>';
+        return;
+      }
+      
+      container.innerHTML = history.map((item, index) => `
+        <div class="history-item" onclick="loadHistory(${index})">
+          <img src="${item.image}" alt="QR Code">
+          <div class="history-item-info">
+            <div class="history-item-text">${item.text}</div>
+            <div class="history-item-time">${item.time}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // 加载历史
+    window.loadHistory = function(index) {
+      const item = history[index];
+      document.getElementById('qrContent').value = item.text;
+      document.getElementById('qrPlaceholder').style.display = 'none';
+      document.getElementById('qrResult').style.display = 'block';
+      document.getElementById('qrResult').src = item.image;
+      document.getElementById('actionButtons').style.display = 'flex';
+      currentQR = item.image;
+    };
+    
+    // 下载
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!currentQR) return;
+      
+      const link = document.createElement('a');
+      link.download = 'qrcode-' + Date.now() + '.png';
+      link.href = currentQR;
+      link.click();
+    });
+    
+    // 复制
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      if (!currentQR) return;
+      
+      try {
+        const response = await fetch(currentQR);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+        alert('已复制到剪贴板');
+      } catch (err) {
+        alert('复制失败，请使用下载功能');
+      }
+    });
+    
+    // 标签切换
+    document.querySelectorAll('.tool-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const type = tab.dataset.type;
+        const textarea = document.getElementById('qrContent');
+        
+        switch(type) {
+          case 'url':
+            textarea.placeholder = 'https://example.com';
+            break;
+          case 'wifi':
+            textarea.placeholder = 'WIFI:T:WPA;S:网络名称;P:密码;;';
+            break;
+          case 'vcard':
+            textarea.placeholder = 'BEGIN:VCARD\nVERSION:3.0\nFN:姓名\nTEL:电话\nEMAIL:邮箱\nEND:VCARD';
+            break;
+          default:
+            textarea.placeholder = '输入要生成二维码的内容...';
+        }
+      });
+    });
+    
+    // 初始化
+    renderHistory();
+  </script>
+</body>
+</html>

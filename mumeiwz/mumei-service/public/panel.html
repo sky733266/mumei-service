@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户面板 | 沐美服务</title>
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <!-- 语言切换器 -->
+  <div class="language-switcher">
+    <select id="languageSelect">
+      <option value="zh">中文</option>
+      <option value="en">English</option>
+      <option value="ko">한국어</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="ja">日本語</option>
+    </select>
+  </div>
+
+  <!-- 头部 -->
+  <header class="hero small">
+    <div class="container">
+      <h1 id="userPanel">用户面板</h1>
+      <p id="userEmail"></p>
+    </div>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="container">
+    <!-- 登录/注册表单 -->
+    <div id="authSection" class="auth-section">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login" id="loginTab">登录</button>
+        <button class="auth-tab" data-tab="register" id="registerTab">注册</button>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label for="loginEmail" id="emailLabel">邮箱</label>
+          <input type="email" id="loginEmail" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword" id="passwordLabel">密码</label>
+          <input type="password" id="loginPassword" required placeholder="******">
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtn">登录</button>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="registerForm" class="auth-form hidden">
+        <div class="form-group">
+          <label for="registerEmail" id="registerEmailLabel">邮箱</label>
+          <input type="email" id="registerEmail" required placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label for="registerPassword" id="registerPasswordLabel">密码</label>
+          <input type="password" id="registerPassword" required placeholder="至少6位">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword" id="confirmPasswordLabel">确认密码</label>
+          <input type="password" id="confirmPassword" required placeholder="再次输入密码">
+        </div>
+        <div class="form-group verification-group">
+          <label for="verifyCode" id="verifyCodeLabel">验证码</label>
+          <div class="verification-input">
+            <input type="text" id="verifyCode" required placeholder="6位验证码" maxlength="6">
+            <button type="button" id="sendCodeBtn" class="btn-secondary">发送验证码</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="registerSubmitBtn">注册</button>
+      </form>
+    </div>
+
+    <!-- 用户面板内容 -->
+    <div id="panelContent" class="panel-content hidden">
+      
+      <!-- 使用统计卡片 -->
+      <section class="feature-card stats-card">
+        <h2 id="usageStats">使用统计</h2>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="dailyUsage">0</div>
+            <div class="stat-label" id="dailyUsageLabel">今日使用</div>
+            <div class="stat-bar">
+              <div class="stat-progress" id="dailyProgress"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="monthlyUsage">0</div>
+            <div class="stat-label" id="monthlyUsageLabel">本月使用</div>
+            <div class="stat-bar">
+              <div class="stat-progress" id="monthlyProgress"></div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="totalCalls">0</div>
+            <div class="stat-label" id="totalCallsLabel">总调用次数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="successRate">0%</div>
+            <div class="stat-label" id="successRateLabel">成功率</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="avgResponse">0ms</div>
+            <div class="stat-label" id="avgResponseLabel">平均响应</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="activeTokens">0</div>
+            <div class="stat-label" id="activeTokensLabel">活跃Token</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 当前套餐 -->
+      <section class="feature-card plan-card">
+        <div class="section-header">
+          <h2 id="currentPlan">当前套餐</h2>
+          <button id="viewPlansBtn" class="btn-primary">
+            <span id="upgrade">升级</span>
+          </button>
+        </div>
+        <div id="currentPlanInfo" class="current-plan-info">
+          <div class="plan-badge" id="planBadge">免费版</div>
+          <div class="plan-features">
+            <div class="plan-feature">
+              <span id="dailyLimit">日限额: 100</span>
+            </div>
+            <div class="plan-feature">
+              <span id="monthlyLimit">月限额: 1,000</span>
+            </div>
+            <div class="plan-feature">
+              <span id="maxTokens">最大Token: 3</span>
+            </div>
+            <div class="plan-feature">
+              <span id="maxFileSize">最大文件: 5MB</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Token管理 -->
+      <section class="feature-card">
+        <div class="section-header">
+          <h2 id="myTokens">我的Token</h2>
+          <button id="createTokenBtn" class="btn-primary">
+            <span id="createToken">创建Token</span>
+          </button>
+        </div>
+        <div id="tokenList" class="token-list"></div>
+      </section>
+
+      <!-- API日志 -->
+      <section class="feature-card">
+        <h2 id="apiLogs">API日志</h2>
+        <div class="logs-filter">
+          <select id="logFilter">
+            <option value="">全部接口</option>
+            <option value="/api/pdf-to-text">PDF转文字</option>
+            <option value="/api/cli/execute">CLI执行</option>
+          </select>
+        </div>
+        <div class="logs-table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th id="endpoint">接口</th>
+                <th id="status">状态</th>
+                <th id="time">时间</th>
+                <th id="duration">耗时</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="logs-pagination">
+          <button id="prevPage" class="btn-secondary" disabled>上一页</button>
+          <span id="pageInfo">1 / 1</span>
+          <button id="nextPage" class="btn-secondary" disabled>下一页</button>
+        </div>
+      </section>
+
+      <button id="logoutBtn" class="btn-secondary logout-btn">
+        <span id="logout">退出登录</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- 创建Token弹窗 -->
+  <div id="createTokenModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="createTokenTitle">创建新Token</h3>
+      <div class="form-group">
+        <label for="tokenName" id="tokenNameLabel">Token名称</label>
+        <input type="text" id="tokenName" placeholder="例如：我的应用">
+      </div>
+      <div class="modal-actions">
+        <button id="cancelCreateToken" class="btn-secondary">取消</button>
+        <button id="confirmCreateToken" class="btn-primary">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 显示新Token弹窗 -->
+  <div id="showTokenModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Token已创建</h3>
+      <p class="warning">请立即复制保存，此Token只显示一次！</p>
+      <div class="token-display">
+        <code id="newToken"></code>
+        <button id="copyNewToken" class="btn-secondary">复制</button>
+      </div>
+      <button id="closeTokenModal" class="btn-primary">确定</button>
+    </div>
+  </div>
+
+  <!-- 套餐选择弹窗 -->
+  <div id="plansModal" class="modal hidden">
+    <div class="modal-content large">
+      <h2 id="plansTitle">选择套餐</h2>
+      <div id="plansList" class="plans-list"></div>
+      <button id="closePlansModal" class="btn-secondary" style="margin-top: 24px; width: 100%;">关闭</button>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer>
+    <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+  </footer>
+
+  <script src="panel-simple.js"></script>
+</body>
+</html>

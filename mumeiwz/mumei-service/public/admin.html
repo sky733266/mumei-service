@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e4e4e7;
+      --text-muted: #71717a;
+      --primary: #6366f1;
+      --primary-hover: #818cf8;
+      --danger: #ef4444;
+      --danger-hover: #f87171;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    
+    .stat-card h3 {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .stat-card .sub {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .tab:hover:not(.active) {
+      background: var(--bg-card);
+    }
+    
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .section h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    th {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    
+    td {
+      font-size: 0.875rem;
+    }
+    
+    tr:hover {
+      background: var(--bg-secondary);
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .badge-pro {
+      background: rgba(168, 85, 247, 0.2);
+      color: #a855f7;
+    }
+    
+    .badge-enterprise {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+    
+    .badge-free {
+      background: rgba(113, 113, 122, 0.2);
+      color: #71717a;
+    }
+    
+    .badge-verified {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+    
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+    
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+    }
+    
+    .modal h3 {
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .modal-actions .btn {
+      flex: 1;
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    
+    .pagination button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text);
+      cursor: pointer;
+    }
+    
+    .pagination button.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .ip-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .ip-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .ip-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎛️ 管理后台</h1>
+      <button class="btn btn-secondary" onclick="logout()">退出管理</button>
+    </header>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>总用户</h3>
+        <div class="value" id="totalUsers">-</div>
+        <div class="sub">已验证: <span id="verifiedUsers">-</span></div>
+      </div>
+      <div class="stat-card">
+        <h3>活跃 Token</h3>
+        <div class="value" id="activeTokens">-</div>
+        <div class="sub">总计: <span id="totalTokens">-</span></div>
+      </div>
+      <div class="stat-card">
+        <h3>今日调用</h3>
+        <div class="value" id="todayCalls">-</div>
+        <div class="sub">API 调用总数</div>
+      </div>
+      <div class="stat-card">
+        <h3>套餐分布</h3>
+        <div class="value" id="proCount">-</div>
+        <div class="sub">专业版用户</div>
+      </div>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="users">用户管理</button>
+      <button class="tab" data-tab="security">安全设置</button>
+      <button class="tab" data-tab="logs">日志查询</button>
+    </div>
+    
+    <!-- 用户管理 -->
+    <div id="users-section" class="section">
+      <div class="section-header">
+        <h2>用户列表</h2>
+        <button class="btn btn-primary" onclick="refreshUsers()">刷新</button>
+      </div>
+      
+      <div style="margin-bottom: 16px;">
+        <select id="planFilter" onchange="refreshUsers()" style="padding: 8px 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
+          <option value="">全部套餐</option>
+          <option value="free">免费版</option>
+          <option value="pro">专业版</option>
+          <option value="enterprise">企业版</option>
+        </select>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>邮箱</th>
+            <th>套餐</th>
+            <th>状态</th>
+            <th>注册时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable">
+          <tr><td colspan="5" class="loading">加载中...</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="pagination" id="usersPagination"></div>
+    </div>
+    
+    <!-- 安全设置 -->
+    <div id="security-section" class="section" style="display: none;">
+      <div class="section-header">
+        <h2>IP 管理</h2>
+      </div>
+      
+      <h3 style="margin: 20px 0 12px;">可疑 IP</h3>
+      <div class="ip-list" id="suspiciousIPs">
+        <div class="loading">加载中...</div>
+      </div>
+      
+      <h3 style="margin: 20px 0 12px;">黑名单</h3>
+      <div class="ip-list" id="blacklistedIPs">
+        <div class="loading">加载中...</div>
+      </div>
+    </div>
+    
+    <!-- 日志查询 -->
+    <div id="logs-section" class="section" style="display: none;">
+      <div class="section-header">
+        <h2>API 日志</h2>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>用户</th>
+            <th>接口</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="logsTable">
+          <tr><td colspan="4" class="loading">加载中...</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="pagination" id="logsPagination"></div>
+    </div>
+  </div>
+  
+  <!-- 修改套餐弹窗 -->
+  <div class="modal" id="planModal">
+    <div class="modal-content">
+      <h3>修改用户套餐</h3>
+      <div class="form-group">
+        <label>选择套餐</label>
+        <select id="newPlan">
+          <option value="free">免费版</option>
+          <option value="pro">专业版</option>
+          <option value="enterprise">企业版</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="confirmPlanChange()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api/v1/admin';
+    let currentUserId = null;
+    let currentPage = 1;
+    let logsPage = 1;
+    
+    // 检查登录状态
+    async function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/panel';
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/user/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          window.location.href = '/panel';
+        }
+      } catch (e) {
+        window.location.href = '/panel';
+      }
+    }
+    
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/panel';
+    }
+    
+    // 加载统计数据
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API_BASE}/stats`, getAuthHeaders());
+        const data = await res.json();
+        
+        if (data.success) {
+          const { users, tokens, api, plans } = data.stats;
+          document.getElementById('totalUsers').textContent = users.total;
+          document.getElementById('verifiedUsers').textContent = users.verified;
+          document.getElementById('totalTokens').textContent = tokens.total;
+          document.getElementById('activeTokens').textContent = tokens.active;
+          document.getElementById('todayCalls').textContent = api.todayCalls;
+          document.getElementById('proCount').textContent = plans.pro || 0;
+        }
+      } catch (e) {
+        showError('加载统计数据失败');
+      }
+    }
+    
+    // 加载用户列表
+    async function loadUsers(page = 1) {
+      currentPage = page;
+      const plan = document.getElementById('planFilter').value;
+      
+      try {
+        const params = new URLSearchParams({ page, limit: 20 });
+        if (plan) params.append('plan', plan);
+        
+        const res = await fetch(`${API_BASE}/users?${params}`, getAuthHeaders());
+        const data = await res.json();
+        
+        if (data.success) {
+          renderUsers(data.users);
+          renderPagination(data.total, data.page, data.totalPages, 'usersPagination', (p) => loadUsers(p));
+        }
+      } catch (e) {
+        showError('加载用户列表失败');
+      }
+    }
+    
+    function renderUsers(users) {
+      const tbody = document.getElementById('usersTable');
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">暂无数据</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td>${u.email}</td>
+          <td><span class="badge badge-${u.plan}">${getPlanName(u.plan)}</span></td>
+          <td>${u.verified ? '<span class="badge badge-verified">已验证</span>' : '未验证'}</td>
+          <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td class="actions">
+            <button class="btn btn-secondary btn-sm" onclick="openPlanModal('${u.id}', '${u.plan}')">改套餐</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    function getPlanName(plan) {
+      const names = { free: '免费版', pro: '专业版', enterprise: '企业版' };
+      return names[plan] || plan;
+    }
+    
+    // 分页
+    function renderPagination(total, current, totalPages, containerId, callback) {
+      const container = document.getElementById(containerId);
+      if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="${i === current ? 'active' : ''}" onclick="(${callback})(${i})">${i}</button>`;
+      }
+      container.innerHTML = html;
+    }
+    
+    // 套餐修改
+    function openPlanModal(userId, currentPlan) {
+      currentUserId = userId;
+      document.getElementById('newPlan').value = currentPlan;
+      document.getElementById('planModal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('planModal').classList.remove('active');
+    }
+    
+    async function confirmPlanChange() {
+      const plan = document.getElementById('newPlan').value;
+      
+      try {
+        const res = await fetch(`${API_BASE}/users/${currentUserId}/plan`, {
+          method: 'PUT',
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan })
+        });
+        
+        if (res.ok) {
+          closeModal();
+          loadUsers(currentPage);
+          loadStats();
+        } else {
+          showError('修改套餐失败');
+        }
+      } catch (e) {
+        showError('修改套餐失败');
+      }
+    }
+    
+    // IP 管理
+    async function loadSuspiciousIPs() {
+      try {
+        const res = await fetch(`${API_BASE}/suspicious-ips`, getAuthHeaders());
+        const data = await res.json();
+        
+        if (data.success) {
+          renderIPs(data.suspicious, data.blacklisted);
+        }
+      } catch (e) {
+        showError('加载IP列表失败');
+      }
+    }
+    
+    function renderIPs(suspicious, blacklisted) {
+      document.getElementById('suspiciousIPs').innerHTML = suspicious.length === 0
+        ? '<p style="color: var(--text-muted); padding: 16px;">暂无可疑IP</p>'
+        : suspicious.map(ip => `
+          <div class="ip-item">
+            <div>
+              <strong>${ip.ip}</strong>
+              <span style="color: var(--text-muted); margin-left: 12px;">${ip.count} 次请求</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="addToBlacklist('${ip.ip}')">加入黑名单</button>
+          </div>
+        `).join('');
+      
+      document.getElementById('blacklistedIPs').innerHTML = blacklisted.length === 0
+        ? '<p style="color: var(--text-muted); padding: 16px;">暂无黑名单IP</p>'
+        : blacklisted.map(ip => `
+          <div class="ip-item">
+            <div>
+              <strong>${ip.ip}</strong>
+              <span style="color: var(--text-muted); margin-left: 12px;">${ip.reason?.reason || 'N/A'}</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="removeFromBlacklist('${ip.ip}')">解除</button>
+          </div>
+        `).join('');
+    }
+    
+    async function addToBlacklist(ip) {
+      await fetch(`${API_BASE}/blacklist/add`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip, reason: '手动封禁' })
+      });
+      loadSuspiciousIPs();
+    }
+    
+    async function removeFromBlacklist(ip) {
+      await fetch(`${API_BASE}/blacklist/remove`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip })
+      });
+      loadSuspiciousIPs();
+    }
+    
+    // 日志
+    async function loadLogs(page = 1) {
+      logsPage = page;
+      
+      try {
+        const res = await fetch(`${API_BASE}/logs?page=${page}&limit=50`, getAuthHeaders());
+        const data = await res.json();
+        
+        if (data.success) {
+          renderLogs(data.logs);
+          renderPagination(data.total, data.page, data.totalPages, 'logsPagination', (p) => loadLogs(p));
+        }
+      } catch (e) {
+        showError('加载日志失败');
+      }
+    }
+    
+    function renderLogs(logs) {
+      const tbody = document.getElementById('logsTable');
+      
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">暂无数据</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = logs.map(log => `
+        <tr>
+          <td>${new Date(log.timestamp).toLocaleString()}</td>
+          <td>${log.userId ? log.userId.slice(0, 8) + '...' : '游客'}</td>
+          <td>${log.endpoint || log.path || 'N/A'}</td>
+          <td>${log.status || log.success ? '<span style="color: var(--success);">成功</span>' : '<span style="color: var(--danger);">失败</span>'}</td>
+        </tr>
+      `).join('');
+    }
+    
+    // Tab 切换
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const tabId = tab.dataset.tab;
+        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+        document.getElementById(`${tabId}-section`).style.display = 'block';
+        
+        if (tabId === 'users') loadUsers();
+        if (tabId === 'security') loadSuspiciousIPs();
+        if (tabId === 'logs') loadLogs();
+      });
+    });
+    
+    function getAuthHeaders() {
+      return { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+    }
+    
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 5000);
+    }
+    
+    function refreshUsers() {
+      loadUsers(1);
+    }
+    
+    // 初始化
+    checkAuth();
+    loadStats();
+    loadUsers();
+  </script>
+</body>
+</html>

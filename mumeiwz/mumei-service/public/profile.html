@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人中心 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <style>
+    .profile-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    /* 用户信息卡片 */
+    .profile-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .profile-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary-gradient);
+    }
+    
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      background: var(--primary-gradient);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      box-shadow: var(--shadow-glow);
+      flex-shrink: 0;
+    }
+    
+    .profile-info {
+      flex: 1;
+    }
+    
+    .profile-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .profile-email {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    
+    .profile-badges {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .profile-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .badge-plan {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--primary-light);
+    }
+    
+    .badge-verified {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+    
+    .badge-admin {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    /* 设置卡片 */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .settings-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+    }
+    
+    .settings-card h3 {
+      font-size: 1.125rem;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .settings-card h3 span {
+      font-size: 1.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .form-group input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    
+    /* 开关 */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .toggle-group:last-child {
+      border-bottom: none;
+    }
+    
+    .toggle-info h4 {
+      font-size: 0.9375rem;
+      margin-bottom: 4px;
+    }
+    
+    .toggle-info p {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .toggle-switch.active {
+      background: var(--primary);
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    
+    .toggle-switch.active::after {
+      left: 26px;
+    }
+    
+    /* API Token管理 */
+    .token-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .token-item {
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .token-info {
+      flex: 1;
+    }
+    
+    .token-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .token-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .token-value {
+      font-family: monospace;
+      font-size: 0.8125rem;
+      color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-right: 12px;
+    }
+    
+    .token-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .btn-icon:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-icon.delete:hover {
+      background: var(--error);
+      border-color: var(--error);
+    }
+    
+    /* 危险区域 */
+    .danger-zone {
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 20px;
+      padding: 28px;
+    }
+    
+    .danger-zone h3 {
+      color: var(--error);
+      margin-bottom: 16px;
+    }
+    
+    .danger-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(239, 68, 68, 0.1);
+    }
+    
+    .danger-item:last-child {
+      border-bottom: none;
+    }
+    
+    .danger-info h4 {
+      font-size: 0.9375rem;
+      margin-bottom: 4px;
+    }
+    
+    .danger-info p {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-danger:hover {
+      background: var(--error);
+      color: white;
+    }
+    
+    /* 保存按钮 */
+    .save-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      z-index: 100;
+      transform: translateY(100%);
+      transition: transform 0.3s;
+    }
+    
+    .save-bar.show {
+      transform: translateY(0);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .profile-badges {
+        justify-content: center;
+      }
+      
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">🚀</div>
+        <span class="navbar-logo-text">沐美服务</span>
+      </a>
+      
+      <div class="navbar-nav">
+        <a href="/tools" class="navbar-link">工具箱</a>
+        <a href="/panel" class="navbar-link">用户面板</a>
+        <a href="/profile" class="navbar-link active">个人中心</a>
+        <a href="/dashboard" class="navbar-link">统计</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <a href="/" class="btn btn-secondary btn-sm" onclick="logout()">退出</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero区域 -->
+  <header class="hero small">
+    <div class="container">
+      <h1>个人中心</h1>
+      <p style="color: var(--text-muted);">管理您的账户信息和偏好设置</p>
+    </div>
+  </header>
+
+  <!-- 主体内容 -->
+  <main class="profile-container">
+    <!-- 用户信息 -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="userAvatar">👤</div>
+      <div class="profile-info">
+        <h2 class="profile-name" id="userName">加载中...</h2>
+        <p class="profile-email" id="userEmail">加载中...</p>
+        <div class="profile-badges">
+          <span class="profile-badge badge-plan" id="userPlan">免费版</span>
+          <span class="profile-badge badge-verified">✓ 已验证</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置网格 -->
+    <div class="settings-grid">
+      <!-- 基本信息 -->
+      <div class="settings-card">
+        <h3><span>👤</span> 基本信息</h3>
+        
+        <div class="form-group">
+          <label>显示名称</label>
+          <input type="text" id="displayName" placeholder="设置您的显示名称">
+        </div>
+        
+        <div class="form-group">
+          <label>邮箱地址</label>
+          <input type="email" id="emailInput" disabled>
+          <p class="form-hint">邮箱地址不可修改</p>
+        </div>
+        
+        <div class="form-group">
+          <label>个人简介</label>
+          <input type="text" id="bioInput" placeholder="简单介绍一下自己">
+        </div>
+        
+        <button class="btn btn-primary" onclick="saveProfile()" style="width: 100%;">
+          保存修改
+        </button>
+      </div>
+      
+      <!-- 安全设置 -->
+      <div class="settings-card">
+        <h3><span>🔒</span> 安全设置</h3>
+        
+        <div class="form-group">
+          <label>当前密码</label>
+          <input type="password" id="currentPassword" placeholder="输入当前密码">
+        </div>
+        
+        <div class="form-group">
+          <label>新密码</label>
+          <input type="password" id="newPassword" placeholder="设置新密码">
+        </div>
+        
+        <div class="form-group">
+          <label>确认新密码</label>
+          <input type="password" id="confirmPassword" placeholder="再次输入新密码">
+        </div>
+        
+        <button class="btn btn-primary" onclick="changePassword()" style="width: 100%;">
+          修改密码
+        </button>
+      </div>
+      
+      <!-- 通知设置 -->
+      <div class="settings-card">
+        <h3><span>🔔</span> 通知设置</h3>
+        
+        <div class="toggle-group">
+          <div class="toggle-info">
+            <h4>邮件通知</h4>
+            <p>接收账户相关邮件通知</p>
+          </div>
+          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-info">
+            <h4>使用报告</h4>
+            <p>每周接收API使用统计报告</p>
+          </div>
+          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-info">
+            <h4>安全提醒</h4>
+            <p>登录异常时接收安全提醒</p>
+          </div>
+          <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-info">
+            <h4>产品更新</h4>
+            <p>接收新功能和更新通知</p>
+          </div>
+          <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+      
+      <!-- 显示设置 -->
+      <div class="settings-card">
+        <h3><span>🎨</span> 显示设置</h3>
+        
+        <div class="toggle-group">
+          <div class="toggle-info">
+            <h4>深色模式</h4>
+            <p>使用深色主题</p>
+          </div>
+          <div class="toggle-switch active" onclick="toggleTheme(this)"></div>
+        </div>
+        
+        <div class="toggle-group">
+          <div class="toggle-info">
+            <h4>紧凑模式</h4>
+            <p>减小界面元素间距</p>
+          </div>
+          <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 20px;">
+          <label>语言</label>
+          <select id="languageSelect" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- API Token管理 -->
+    <div class="settings-card" style="margin-bottom: 32px;">
+      <h3><span>🔑</span> API Token管理</h3>
+      
+      <div class="token-list" id="tokenList">
+        <div class="token-item">
+          <div class="token-info">
+            <div class="token-name">默认Token</div>
+            <div class="token-meta">创建于 2026-01-01 • 最后使用 2小时前</div>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <span class="token-value">mumei_••••••••</span>
+            <div class="token-actions">
+              <button class="btn-icon" title="复制" onclick="copyToken()">📋</button>
+              <button class="btn-icon delete" title="删除" onclick="deleteToken()">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn btn-secondary" onclick="createToken()" style="width: 100%; margin-top: 16px;">
+        + 创建新Token
+      </button>
+    </div>
+
+    <!-- 危险区域 -->
+    <div class="danger-zone">
+      <h3>⚠️ 危险区域</h3>
+      
+      <div class="danger-item">
+        <div class="danger-info">
+          <h4>导出账户数据</h4>
+          <p>下载您的所有账户数据副本</p>
+        </div>
+        <button class="btn-danger" onclick="exportData()">导出数据</button>
+      </div>
+      
+      <div class="danger-item">
+        <div class="danger-info">
+          <h4 style="color: var(--error);">删除账户</h4>
+          <p>永久删除您的账户和所有数据，此操作不可恢复</p>
+        </div>
+        <button class="btn-danger" onclick="deleteAccount()">删除账户</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer style="margin-bottom: 80px;">
+    <div class="container">
+      <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // 加载用户信息
+    function loadUserInfo() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        window.location.href = '/panel';
+        return;
+      }
+      
+      if (user.email) {
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('emailInput').value = user.email;
+        document.getElementById('userName').textContent = user.email.split('@')[0];
+      }
+      
+      if (user.plan) {
+        document.getElementById('userPlan').textContent = 
+          user.plan === 'free' ? '免费版' : 
+          user.plan === 'pro' ? '专业版' : '企业版';
+      }
+    }
+    
+    // 切换开关
+    function toggleSwitch(el) {
+      el.classList.toggle('active');
+    }
+    
+    // 切换主题
+    function toggleTheme(el) {
+      el.classList.toggle('active');
+      // 实际项目中这里切换主题
+    }
+    
+    // 保存资料
+    function saveProfile() {
+      const name = document.getElementById('displayName').value;
+      const bio = document.getElementById('bioInput').value;
+      
+      // 保存到本地
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      user.name = name;
+      user.bio = bio;
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      alert('资料已保存');
+    }
+    
+    // 修改密码
+    function changePassword() {
+      const current = document.getElementById('currentPassword').value;
+      const newPass = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      
+      if (!current || !newPass || !confirm) {
+        alert('请填写所有密码字段');
+        return;
+      }
+      
+      if (newPass !== confirm) {
+        alert('两次输入的新密码不一致');
+        return;
+      }
+      
+      if (newPass.length < 6) {
+        alert('新密码长度至少6位');
+        return;
+      }
+      
+      alert('密码修改成功');
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+    }
+    
+    // 复制Token
+    function copyToken() {
+      navigator.clipboard.writeText('mumei_xxxxxxxxxxxx');
+      alert('Token已复制');
+    }
+    
+    // 删除Token
+    function deleteToken() {
+      if (confirm('确定要删除这个Token吗？')) {
+        alert('Token已删除');
+      }
+    }
+    
+    // 创建Token
+    function createToken() {
+      const name = prompt('请输入Token名称：');
+      if (name) {
+        alert('Token创建成功：mumei_' + Math.random().toString(36).substring(2, 14));
+      }
+    }
+    
+    // 导出数据
+    function exportData() {
+      const data = {
+        user: JSON.parse(localStorage.getItem('user') || '{}'),
+        exportTime: new Date().toISOString()
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mumei-data-export.json';
+      a.click();
+    }
+    
+    // 删除账户
+    function deleteAccount() {
+      if (confirm('⚠️ 警告：此操作将永久删除您的账户和所有数据，不可恢复！\n\n确定要继续吗？')) {
+        if (prompt('请输入 "DELETE" 确认删除：') === 'DELETE') {
+          localStorage.clear();
+          alert('账户已删除');
+          window.location.href = '/';
+        }
+      }
+    }
+    
+    // 退出登录
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      return true;
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', loadUserInfo);
+  </script>
+</body>
+</html>

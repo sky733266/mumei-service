@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>统计仪表盘 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    /* 概览卡片 */
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-glow);
+      box-shadow: var(--shadow-glow);
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary-gradient);
+    }
+    
+    .stat-card-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--bg-glass);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+    
+    .stat-card-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    
+    .stat-card-label {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    .stat-card-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .stat-card-change.up {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+    
+    .stat-card-change.down {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--error);
+    }
+    
+    /* 图表区域 */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    
+    .chart-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .chart-card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    
+    .chart-card-filter {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .chart-filter-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .chart-filter-btn:hover,
+    .chart-filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+    }
+    
+    /* 工具使用排行 */
+    .tools-ranking {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .tools-ranking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .tools-ranking-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-glass);
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+    
+    .ranking-item:hover {
+      background: rgba(99, 102, 241, 0.1);
+    }
+    
+    .ranking-number {
+      width: 32px;
+      height: 32px;
+      background: var(--primary-gradient);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    
+    .ranking-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .ranking-info {
+      flex: 1;
+    }
+    
+    .ranking-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .ranking-category {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .ranking-stats {
+      text-align: right;
+    }
+    
+    .ranking-count {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .ranking-bar {
+      width: 150px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    
+    .ranking-bar-fill {
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    
+    /* 时间线 */
+    .timeline-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    
+    .timeline-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-left: 2px solid var(--border);
+      margin-left: 12px;
+      padding-left: 24px;
+      position: relative;
+    }
+    
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 20px;
+      width: 12px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 50%;
+      border: 2px solid var(--bg-card);
+    }
+    
+    .timeline-item:last-child {
+      border-left-color: transparent;
+    }
+    
+    .timeline-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 80px;
+    }
+    
+    .timeline-content {
+      flex: 1;
+    }
+    
+    .timeline-action {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .timeline-detail {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .ranking-bar {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 页面加载动画 -->
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <p>加载统计数据...</p>
+    </div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">🚀</div>
+        <span class="navbar-logo-text">沐美服务</span>
+      </a>
+      
+      <div class="navbar-nav">
+        <a href="/tools" class="navbar-link">工具箱</a>
+        <a href="/panel" class="navbar-link">用户面板</a>
+        <a href="/dashboard" class="navbar-link active">统计</a>
+        <a href="/docs" class="navbar-link">API文档</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <a href="/panel" class="btn btn-primary btn-sm">开始使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero区域 -->
+  <header class="hero small">
+    <div class="container">
+      <h1>统计仪表盘</h1>
+      <p style="color: var(--text-muted);">实时查看API使用情况、工具调用统计和流量分析</p>
+    </div>
+  </header>
+
+  <!-- 仪表盘主体 -->
+  <main class="dashboard-container">
+    <!-- 概览卡片 -->
+    <div class="stats-overview">
+      <div class="stat-card">
+        <div class="stat-card-icon">📊</div>
+        <div class="stat-card-value" id="totalCalls">12,847</div>
+        <div class="stat-card-label">总API调用</div>
+        <div class="stat-card-change up">
+          <span>↑</span> 23.5% 较上月
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-card-icon">⚡</div>
+        <div class="stat-card-value" id="todayCalls">1,234</div>
+        <div class="stat-card-label">今日调用</div>
+        <div class="stat-card-change up">
+          <span>↑</span> 15.2% 较昨日
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-card-icon">🛠️</div>
+        <div class="stat-card-value" id="toolsUsed">18</div>
+        <div class="stat-card-label">使用工具数</div>
+        <div class="stat-card-change up">
+          <span>↑</span> 5 新增
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-card-icon">📈</div>
+        <div class="stat-card-value" id="successRate">99.8%</div>
+        <div class="stat-card-label">成功率</div>
+        <div class="stat-card-change up">
+          <span>↑</span> 0.3% 提升
+        </div>
+      </div>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="charts-grid">
+      <!-- API调用趋势 -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-card-title">📈 API调用趋势</h3>
+          <div class="chart-card-filter">
+            <button class="chart-filter-btn active" data-period="7d">7天</button>
+            <button class="chart-filter-btn" data-period="30d">30天</button>
+            <button class="chart-filter-btn" data-period="90d">90天</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- 工具使用分布 -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-card-title">🥧 工具使用分布</h3>
+          <div class="chart-card-filter">
+            <button class="chart-filter-btn active" data-type="pie">饼图</button>
+            <button class="chart-filter-btn" data-type="bar">柱状</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="distributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 工具使用排行 -->
+    <div class="tools-ranking">
+      <div class="tools-ranking-header">
+        <h3 class="tools-ranking-title">🏆 工具使用排行</h3>
+        <select class="chart-filter-btn" style="padding: 8px 16px;">
+          <option>最近7天</option>
+          <option>最近30天</option>
+          <option>全部时间</option>
+        </select>
+      </div>
+      <div class="ranking-list" id="rankingList">
+        <!-- 动态生成 -->
+      </div>
+    </div>
+
+    <!-- 最近活动 & 流量消耗 -->
+    <div class="charts-grid">
+      <!-- 最近活动 -->
+      <div class="timeline-card">
+        <h3 class="timeline-title">🕐 最近活动</h3>
+        <div class="timeline-list" id="timelineList">
+          <!-- 动态生成 -->
+        </div>
+      </div>
+      
+      <!-- 流量消耗 -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3 class="chart-card-title">📊 流量消耗</h3>
+          <div class="chart-card-filter">
+            <button class="chart-filter-btn active">本月</button>
+            <button class="chart-filter-btn">上月</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="bandwidthChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- 加载动画样式 -->
+  <style>
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .page-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .loader-content {
+      text-align: center;
+    }
+    
+    .loader-spinner {
+      width: 80px;
+      height: 80px;
+      border: 4px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 24px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    // 页面加载完成后隐藏加载动画
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('pageLoader').classList.add('hidden');
+      }, 500);
+    });
+
+    // 模拟数据
+    const mockData = {
+      trend: {
+        labels: ['1日', '2日', '3日', '4日', '5日', '6日', '7日'],
+        data: [850, 920, 1050, 980, 1200, 1150, 1234]
+      },
+      distribution: {
+        labels: ['PDF转换', '图片压缩', '二维码', 'JSON工具', '其他'],
+        data: [35, 25, 20, 15, 5]
+      },
+      ranking: [
+        { name: 'PDF转文字', category: '文件处理', icon: '📄', count: 4520, percent: 100 },
+        { name: '图片压缩', category: '图片处理', icon: '🖼️', count: 3210, percent: 71 },
+        { name: '二维码生成', category: '生成工具', icon: '🔲', count: 2560, percent: 57 },
+        { name: 'JSON格式化', category: '开发工具', icon: '📋', count: 1920, percent: 42 },
+        { name: 'Base64编解码', category: '开发工具', icon: '🔢', count: 1450, percent: 32 },
+        { name: '密码生成器', category: '安全工具', icon: '🔐', count: 980, percent: 22 },
+        { name: '时间戳转换', category: '开发工具', icon: '🕐', count: 650, percent: 14 }
+      ],
+      timeline: [
+        { time: '10:23', action: 'PDF转文字', detail: '成功转换 document.pdf', type: 'success' },
+        { time: '09:45', action: '图片压缩', detail: '压缩 3 张图片，节省 2.5MB', type: 'success' },
+        { time: '09:12', action: '二维码生成', detail: '生成 WiFi 连接二维码', type: 'success' },
+        { time: '08:56', action: 'API调用失败', detail: '请求超时，已重试', type: 'error' },
+        { time: '08:30', action: 'JSON格式化', detail: '格式化 12KB JSON数据', type: 'success' },
+        { time: '昨天', action: '创建API Token', detail: '创建新Token: my-app-token', type: 'info' }
+      ],
+      bandwidth: {
+        labels: ['1日', '2日', '3日', '4日', '5日', '6日', '7日'],
+        upload: [120, 135, 150, 140, 180, 165, 175],
+        download: [450, 520, 580, 490, 650, 600, 680]
+      }
+    };
+
+    // 初始化图表
+    function initCharts() {
+      // API调用趋势图
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: mockData.trend.labels,
+          datasets: [{
+            label: 'API调用次数',
+            data: mockData.trend.data,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#6366f1',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#718096' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#718096' }
+            }
+          }
+        }
+      });
+
+      // 工具使用分布图
+      const distCtx = document.getElementById('distributionChart').getContext('2d');
+      new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+          labels: mockData.distribution.labels,
+          datasets: [{
+            data: mockData.distribution.data,
+            backgroundColor: [
+              '#6366f1',
+              '#8b5cf6',
+              '#ec4899',
+              '#10b981',
+              '#f59e0b'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '60%',
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: '#a0aec0', padding: 20 }
+            }
+          }
+        }
+      });
+
+      // 流量消耗图
+      const bandwidthCtx = document.getElementById('bandwidthChart').getContext('2d');
+      new Chart(bandwidthCtx, {
+        type: 'bar',
+        data: {
+          labels: mockData.bandwidth.labels,
+          datasets: [
+            {
+              label: '上传 (MB)',
+              data: mockData.bandwidth.upload,
+              backgroundColor: 'rgba(99, 102, 241, 0.8)',
+              borderRadius: 6
+            },
+            {
+              label: '下载 (MB)',
+              data: mockData.bandwidth.download,
+              backgroundColor: 'rgba(139, 92, 246, 0.8)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#a0aec0' }
+            }
+          },
+          scales: {
+            y: {
+              stacked: true,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#718096' }
+            },
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { color: '#718096' }
+            }
+          }
+        }
+      });
+    }
+
+    // 渲染工具排行
+    function renderRanking() {
+      const container = document.getElementById('rankingList');
+      container.innerHTML = mockData.ranking.map((item, index) => `
+        <div class="ranking-item">
+          <div class="ranking-number">${index + 1}</div>
+          <div class="ranking-icon">${item.icon}</div>
+          <div class="ranking-info">
+            <div class="ranking-name">${item.name}</div>
+            <div class="ranking-category">${item.category}</div>
+          </div>
+          <div class="ranking-stats">
+            <div class="ranking-count">${item.count.toLocaleString()}</div>
+            <div class="ranking-bar">
+              <div class="ranking-bar-fill" style="width: ${item.percent}%"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 渲染时间线
+    function renderTimeline() {
+      const container = document.getElementById('timelineList');
+      container.innerHTML = mockData.timeline.map(item => `
+        <div class="timeline-item">
+          <div class="timeline-time">${item.time}</div>
+          <div class="timeline-content">
+            <div class="timeline-action">${item.action}</div>
+            <div class="timeline-detail">${item.detail}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 数字动画
+    function animateNumbers() {
+      const animateValue = (id, start, end, duration) => {
+        const obj = document.getElementById(id);
+        const range = end - start;
+        const minTimer = 50;
+        let stepTime = Math.abs(Math.floor(duration / range));
+        stepTime = Math.max(stepTime, minTimer);
+        let startTime = new Date().getTime();
+        let endTime = startTime + duration;
+        let timer;
+        
+        const run = () => {
+          let now = new Date().getTime();
+          let remaining = Math.max((endTime - now) / duration, 0);
+          let value = Math.round(end - (remaining * range));
+          obj.textContent = value.toLocaleString();
+          if (value == end) clearInterval(timer);
+        };
+        
+        timer = setInterval(run, stepTime);
+        run();
+      };
+
+      animateValue('totalCalls', 0, 12847, 1500);
+      animateValue('todayCalls', 0, 1234, 1000);
+      animateValue('toolsUsed', 0, 18, 800);
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      renderRanking();
+      renderTimeline();
+      animateNumbers();
+    });
+
+    // 筛选按钮事件
+    document.querySelectorAll('.chart-filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        this.parentElement.querySelectorAll('.chart-filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

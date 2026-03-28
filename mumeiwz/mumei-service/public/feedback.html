@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户反馈 | 沐美服务</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <style>
+    .feedback-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    .feedback-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .feedback-header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    
+    .feedback-header p {
+      color: var(--text-muted);
+      font-size: 1.125rem;
+    }
+    
+    /* 反馈类型选择 */
+    .feedback-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    
+    .feedback-type {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .feedback-type:hover {
+      border-color: var(--primary-light);
+      transform: translateY(-4px);
+    }
+    
+    .feedback-type.active {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+    
+    .feedback-type-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    
+    .feedback-type-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .feedback-type-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    /* 表单 */
+    .feedback-form {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+    }
+    
+    .form-group {
+      margin-bottom: 24px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .form-group textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    
+    /* 评分 */
+    .rating-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .rating-star {
+      font-size: 2.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0.3;
+    }
+    
+    .rating-star:hover,
+    .rating-star.active {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    
+    /* 截图上传 */
+    .screenshot-upload {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .screenshot-upload:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+    
+    .screenshot-upload.has-file {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.05);
+    }
+    
+    .screenshot-preview {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      margin-top: 16px;
+    }
+    
+    /* 提交按钮 */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 1rem;
+      margin-top: 16px;
+    }
+    
+    /* 成功状态 */
+    .success-state {
+      text-align: center;
+      padding: 60px 40px;
+      display: none;
+    }
+    
+    .success-state.show {
+      display: block;
+    }
+    
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 50px;
+      margin: 0 auto 24px;
+      animation: scaleIn 0.5s ease;
+    }
+    
+    @keyframes scaleIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    
+    .success-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+    
+    .success-state p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    
+    /* 反馈列表 */
+    .feedback-list {
+      margin-top: 60px;
+    }
+    
+    .feedback-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .feedback-list-header h3 {
+      font-size: 1.5rem;
+    }
+    
+    .feedback-filter {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .feedback-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+    
+    .feedback-item:hover {
+      border-color: var(--border-glow);
+    }
+    
+    .feedback-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    
+    .feedback-item-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .type-bug { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .type-feature { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .type-praise { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .type-other { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    
+    .feedback-item-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .status-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status-processing { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .status-resolved { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    
+    .feedback-item-content {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    
+    .feedback-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    
+    .feedback-item-rating {
+      color: #f59e0b;
+    }
+    
+    /* 浮动反馈按钮 */
+    .feedback-float-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+      transition: all 0.3s ease;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .feedback-float-btn:hover {
+      transform: scale(1.1) rotate(10deg);
+      box-shadow: 0 6px 30px rgba(99, 102, 241, 0.6);
+    }
+    
+    /* 弹窗 */
+    .feedback-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    
+    .feedback-modal.show {
+      display: flex;
+    }
+    
+    .feedback-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    
+    .feedback-modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .feedback-modal-close:hover {
+      background: var(--error);
+      color: white;
+      border-color: var(--error);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .feedback-types {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .feedback-float-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 页面加载动画 -->
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <p>加载中...</p>
+    </div>
+  </div>
+
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-logo">
+        <div class="navbar-logo-icon">🚀</div>
+        <span class="navbar-logo-text">沐美服务</span>
+      </a>
+      
+      <div class="navbar-nav">
+        <a href="/tools" class="navbar-link">工具箱</a>
+        <a href="/panel" class="navbar-link">用户面板</a>
+        <a href="/dashboard" class="navbar-link">统计</a>
+        <a href="/feedback" class="navbar-link active">反馈</a>
+      </div>
+      
+      <div class="navbar-actions">
+        <a href="/panel" class="btn btn-primary btn-sm">开始使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero区域 -->
+  <header class="hero small">
+    <div class="container">
+      <h1>用户反馈</h1>
+      <p style="color: var(--text-muted);">帮助我们改进产品，您的意见对我们很重要</p>
+    </div>
+  </header>
+
+  <!-- 反馈主体 -->
+  <main class="feedback-container">
+    <!-- 反馈类型 -->
+    <div class="feedback-types">
+      <div class="feedback-type active" data-type="bug">
+        <div class="feedback-type-icon">🐛</div>
+        <div class="feedback-type-name">报告Bug</div>
+        <div class="feedback-type-desc">功能异常或错误</div>
+      </div>
+      <div class="feedback-type" data-type="feature">
+        <div class="feedback-type-icon">💡</div>
+        <div class="feedback-type-name">功能建议</div>
+        <div class="feedback-type-desc">新功能或改进</div>
+      </div>
+      <div class="feedback-type" data-type="praise">
+        <div class="feedback-type-icon">❤️</div>
+        <div class="feedback-type-name">表扬鼓励</div>
+        <div class="feedback-type-desc">分享使用体验</div>
+      </div>
+      <div class="feedback-type" data-type="other">
+        <div class="feedback-type-icon">💬</div>
+        <div class="feedback-type-name">其他</div>
+        <div class="feedback-type-desc">其他问题或建议</div>
+      </div>
+    </div>
+
+    <!-- 反馈表单 -->
+    <div class="feedback-form" id="feedbackForm">
+      <div class="form-group">
+        <label>反馈类型</label>
+        <select id="feedbackTypeSelect">
+          <option value="bug">🐛 报告Bug</option>
+          <option value="feature">💡 功能建议</option>
+          <option value="praise">❤️ 表扬鼓励</option>
+          <option value="other">💬 其他</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>标题</label>
+        <input type="text" id="feedbackTitle" placeholder="简要描述您的问题或建议">
+      </div>
+      
+      <div class="form-group">
+        <label>详细描述</label>
+        <textarea id="feedbackContent" placeholder="请详细描述您遇到的问题或建议...
+
+如果是Bug报告，请包含：
+1. 复现步骤
+2. 期望结果
+3. 实际结果
+4. 浏览器/设备信息"></textarea>
+      </div>
+      
+      <!-- 评分（仅表扬类型显示） -->
+      <div class="form-group" id="ratingGroup" style="display: none;">
+        <label>评分</label>
+        <div class="rating-group">
+          <span class="rating-star" data-rating="1">⭐</span>
+          <span class="rating-star" data-rating="2">⭐</span>
+          <span class="rating-star" data-rating="3">⭐</span>
+          <span class="rating-star" data-rating="4">⭐</span>
+          <span class="rating-star" data-rating="5">⭐</span>
+        </div>
+      </div>
+      
+      <!-- 截图上传 -->
+      <div class="form-group">
+        <label>截图（可选）</label>
+        <div class="screenshot-upload" id="screenshotUpload">
+          <input type="file" id="screenshotInput" accept="image/*" style="display: none;">
+          <div id="uploadPrompt">
+            <div style="font-size: 3rem; margin-bottom: 12px;">📸</div>
+            <p>点击上传截图</p>
+            <small style="color: var(--text-muted);">支持 JPG、PNG，最大 5MB</small>
+          </div>
+          <img id="screenshotPreview" class="screenshot-preview" style="display: none;">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>联系邮箱（可选）</label>
+        <input type="email" id="feedbackEmail" placeholder="留下邮箱以便我们回复您">
+      </div>
+      
+      <button class="btn btn-primary submit-btn" onclick="submitFeedback()">
+        📤 提交反馈
+      </button>
+    </div>
+
+    <!-- 成功状态 -->
+    <div class="success-state" id="successState">
+      <div class="success-icon">✓</div>
+      <h3>感谢您的反馈！</h3>
+      <p>我们会认真阅读您的建议，并在需要时与您联系。</p>
+      <button class="btn btn-secondary" onclick="resetForm()">
+        提交新的反馈
+      </button>
+    </div>
+
+    <!-- 反馈列表 -->
+    <div class="feedback-list">
+      <div class="feedback-list-header">
+        <h3>📝 最近反馈</h3>
+        <div class="feedback-filter">
+          <button class="chart-filter-btn active">全部</button>
+          <button class="chart-filter-btn">我的</button>
+        </div>
+      </div>
+      
+      <div id="feedbackList">
+        <!-- 动态生成 -->
+      </div>
+    </div>
+  </main>
+
+  <!-- 浮动反馈按钮 -->
+  <button class="feedback-float-btn" onclick="openFeedbackModal()" title="快速反馈">
+    💬
+  </button>
+
+  <!-- 快速反馈弹窗 -->
+  <div class="feedback-modal" id="feedbackModal">
+    <div class="feedback-modal-content">
+      <button class="feedback-modal-close" onclick="closeFeedbackModal()">×</button>
+      <div style="padding: 32px;">
+        <h3 style="margin-bottom: 20px;">💬 快速反馈</h3>
+        <textarea id="quickFeedback" rows="6" placeholder="有什么想法或建议？告诉我们..." style="width: 100%; padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text); resize: vertical;"></textarea>
+        <button class="btn btn-primary" onclick="submitQuickFeedback()" style="width: 100%; margin-top: 20px; padding: 14px;">
+          发送反馈
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- 加载动画样式 -->
+  <style>
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .page-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .loader-content {
+      text-align: center;
+    }
+    
+    .loader-spinner {
+      width: 80px;
+      height: 80px;
+      border: 4px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 24px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    // 页面加载完成后隐藏加载动画
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('pageLoader').classList.add('hidden');
+      }, 500);
+    });
+
+    // 反馈类型选择
+    let selectedType = 'bug';
+    let selectedRating = 0;
+
+    document.querySelectorAll('.feedback-type').forEach(type => {
+      type.addEventListener('click', () => {
+        document.querySelectorAll('.feedback-type').forEach(t => t.classList.remove('active'));
+        type.classList.add('active');
+        selectedType = type.dataset.type;
+        document.getElementById('feedbackTypeSelect').value = selectedType;
+        
+        // 显示/隐藏评分
+        document.getElementById('ratingGroup').style.display = 
+          selectedType === 'praise' ? 'block' : 'none';
+      });
+    });
+
+    // 评分选择
+    document.querySelectorAll('.rating-star').forEach((star, index) => {
+      star.addEventListener('click', () => {
+        selectedRating = index + 1;
+        document.querySelectorAll('.rating-star').forEach((s, i) => {
+          s.classList.toggle('active', i <= index);
+        });
+      });
+    });
+
+    // 截图上传
+    const screenshotUpload = document.getElementById('screenshotUpload');
+    const screenshotInput = document.getElementById('screenshotInput');
+    const screenshotPreview = document.getElementById('screenshotPreview');
+    const uploadPrompt = document.getElementById('uploadPrompt');
+
+    screenshotUpload.addEventListener('click', () => screenshotInput.click());
+
+    screenshotInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          screenshotPreview.src = e.target.result;
+          screenshotPreview.style.display = 'block';
+          uploadPrompt.style.display = 'none';
+          screenshotUpload.classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // 提交反馈
+    function submitFeedback() {
+      const title = document.getElementById('feedbackTitle').value.trim();
+      const content = document.getElementById('feedbackContent').value.trim();
+      const email = document.getElementById('feedbackEmail').value.trim();
+
+      if (!title || !content) {
+        alert('请填写标题和详细描述');
+        return;
+      }
+
+      // 模拟提交
+      const feedback = {
+        id: Date.now(),
+        type: selectedType,
+        title,
+        content,
+        email,
+        rating: selectedRating,
+        screenshot: screenshotPreview.src,
+        status: 'pending',
+        time: new Date().toLocaleString()
+      };
+
+      // 保存到本地存储
+      let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+      feedbacks.unshift(feedback);
+      localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+
+      // 显示成功状态
+      document.getElementById('feedbackForm').style.display = 'none';
+      document.getElementById('successState').classList.add('show');
+
+      // 刷新列表
+      renderFeedbackList();
+    }
+
+    // 重置表单
+    function resetForm() {
+      document.getElementById('feedbackForm').style.display = 'block';
+      document.getElementById('successState').classList.remove('show');
+      document.getElementById('feedbackTitle').value = '';
+      document.getElementById('feedbackContent').value = '';
+      document.getElementById('feedbackEmail').value = '';
+      screenshotPreview.style.display = 'none';
+      uploadPrompt.style.display = 'block';
+      screenshotUpload.classList.remove('has-file');
+      selectedRating = 0;
+      document.querySelectorAll('.rating-star').forEach(s => s.classList.remove('active'));
+    }
+
+    // 渲染反馈列表
+    function renderFeedbackList() {
+      const feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+      const container = document.getElementById('feedbackList');
+
+      if (feedbacks.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">暂无反馈记录</p>';
+        return;
+      }
+
+      const typeLabels = {
+        bug: { label: 'Bug报告', class: 'type-bug' },
+        feature: { label: '功能建议', class: 'type-feature' },
+        praise: { label: '表扬鼓励', class: 'type-praise' },
+        other: { label: '其他', class: 'type-other' }
+      };
+
+      const statusLabels = {
+        pending: { label: '待处理', class: 'status-pending' },
+        processing: { label: '处理中', class: 'status-processing' },
+        resolved: { label: '已解决', class: 'status-resolved' }
+      };
+
+      container.innerHTML = feedbacks.slice(0, 5).map(fb => `
+        <div class="feedback-item">
+          <div class="feedback-item-header">
+            <span class="feedback-item-type ${typeLabels[fb.type].class}">
+              ${typeLabels[fb.type].label}
+            </span>
+            <span class="feedback-item-status ${statusLabels[fb.status].class}">
+              ${statusLabels[fb.status].label}
+            </span>
+          </div>
+          <h4 style="margin-bottom: 8px;">${fb.title}</h4>
+          <p class="feedback-item-content">${fb.content.substring(0, 100)}${fb.content.length > 100 ? '...' : ''}</p>
+          <div class="feedback-item-footer">
+            <span>${fb.time}</span>
+            ${fb.rating ? `<span class="feedback-item-rating">${'⭐'.repeat(fb.rating)}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 弹窗
+    function openFeedbackModal() {
+      document.getElementById('feedbackModal').classList.add('show');
+    }
+
+    function closeFeedbackModal() {
+      document.getElementById('feedbackModal').classList.remove('show');
+    }
+
+    function submitQuickFeedback() {
+      const content = document.getElementById('quickFeedback').value.trim();
+      if (!content) {
+        alert('请输入反馈内容');
+        return;
+      }
+
+      const feedback = {
+        id: Date.now(),
+        type: 'other',
+        title: '快速反馈',
+        content,
+        status: 'pending',
+        time: new Date().toLocaleString()
+      };
+
+      let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+      feedbacks.unshift(feedback);
+      localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+
+      closeFeedbackModal();
+      document.getElementById('quickFeedback').value = '';
+      alert('感谢您的反馈！');
+      renderFeedbackList();
+    }
+
+    // 点击弹窗外部关闭
+    document.getElementById('feedbackModal').addEventListener('click', (e) => {
+      if (e.target.id === 'feedbackModal') {
+        closeFeedbackModal();
+      }
+    });
+
+    // 初始化
+    renderFeedbackList();
+  </script>
+</body>
+</html>
