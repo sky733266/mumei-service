@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>沐美服务 | Mumei Service - 一人公司API平台</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -19,10 +20,11 @@
       </a>
       
       <div class="navbar-nav">
+        <a href="/" class="navbar-link active">首页</a>
         <a href="/tools" class="navbar-link">工具箱</a>
-        <a href="/panel" class="navbar-link">用户面板</a>
         <a href="#pricing" class="navbar-link">定价</a>
-        <a href="#docs" class="navbar-link">文档</a>
+        <a href="/docs" class="navbar-link">文档</a>
+        <a href="/feedback" class="navbar-link">反馈</a>
       </div>
       
       <div class="navbar-actions">
@@ -247,6 +249,40 @@
           </ul>
           <a href="/panel" class="btn btn-secondary" style="width: 100%;">联系销售</a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 文档入口 -->
+  <section id="docs" class="tool-section" style="background: var(--bg-secondary);">
+    <div class="container">
+      <div class="tool-section-header">
+        <h2>完善的开发文档</h2>
+        <p>快速集成，简单API，轻松上手</p>
+      </div>
+      
+      <div class="grid grid-3">
+        <a href="/docs" class="feature-card" style="text-decoration: none; color: inherit;">
+          <div class="feature-icon">📚</div>
+          <h2>快速开始</h2>
+          <p>5分钟快速上手，完整的示例代码</p>
+        </a>
+        
+        <a href="/docs#api-reference" class="feature-card" style="text-decoration: none; color: inherit;">
+          <div class="feature-icon">⚡</div>
+          <h2>API参考</h2>
+          <p>完整的REST API文档，实时测试</p>
+        </a>
+        
+        <a href="/docs#sdks" class="feature-card" style="text-decoration: none; color: inherit;">
+          <div class="feature-icon">🔌</div>
+          <h2>SDK下载</h2>
+          <p>JavaScript、Python、Go等多语言SDK</p>
+        </a>
+      </div>
+      
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="/docs" class="btn btn-primary btn-lg">查看完整文档</a>
       </div>
     </div>
   </section>

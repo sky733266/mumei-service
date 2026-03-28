@@ -842,6 +842,30 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/docs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'docs.html'));
+});
+
+app.get('/feedback', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'feedback.html'));
+});
+
+app.get('/compress', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'compress.html'));
+});
+
+app.get('/qrcode', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'qrcode.html'));
+});
+
+app.get('/profile', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+});
+
 // API v1 版本控制
 app.use('/api/v1/admin', adminRoutes);
 
