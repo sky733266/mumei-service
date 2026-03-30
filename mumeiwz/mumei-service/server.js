@@ -19,6 +19,14 @@ const { requestLogger } = require('./logger');
 const { createPaymentIntent, confirmPayment, mockPayment, isConfigured: isPaymentConfigured, handleWebhook } = require('./payment');
 const { WebhookEvents, WebhookDB, WebhookTrigger } = require('./webhook');
 
+// 导入增强功能（包含认证路由）
+const enhancements = require('./enhancements');
+const { handleSendVerification, handleRegister, handleLogin, authLimiterConfig, verifyLimiterConfig } = enhancements;
+
+// 创建限流器
+const authLimiter = rateLimit(authLimiterConfig);
+const verifyLimiter = rateLimit(verifyLimiterConfig);
+
 // 导入路由
 const adminRoutes = require('./routes/admin');
 
@@ -107,11 +115,6 @@ const limiter = rateLimit({
   max: 100
 });
 app.use('/api/', limiter);
-
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 10
-});
 
 // 文件上传配置
 const storage = multer.diskStorage({
@@ -455,8 +458,12 @@ app.post('/api/tools/data/sql-format', async (req, res) => {
 // 正则测试
 app.post('/api/tools/data/regex-test', async (req, res) => {
   try {
-    const { pattern, flags = '', testStrings = [] } = req.body;
-    const result = DataProcessingService.testRegex(pattern, flags, testStrings);
+    const { pattern, flags = '', testStrings = [], text } = req.body;
+    const strings = testStrings.length > 0 ? testStrings : (text ? [text] : []);
+    if (!pattern || strings.length === 0) {
+      return res.status(400).json({ error: '请提供pattern和text/testStrings参数' });
+    }
+    const result = DataProcessingService.testRegex(pattern, flags, strings);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -466,8 +473,12 @@ app.post('/api/tools/data/regex-test', async (req, res) => {
 // Base64编码
 app.post('/api/tools/data/base64-encode', async (req, res) => {
   try {
-    const { data, options = {} } = req.body;
-    const result = DataProcessingService.base64Encode(data, options);
+    const { text, data, options = {} } = req.body;
+    const input = text || data;
+    if (!input) {
+      return res.status(400).json({ error: '请提供text或data参数' });
+    }
+    const result = DataProcessingService.base64Encode(input, options);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -477,8 +488,12 @@ app.post('/api/tools/data/base64-encode', async (req, res) => {
 // Base64解码
 app.post('/api/tools/data/base64-decode', async (req, res) => {
   try {
-    const { encoded, options = {} } = req.body;
-    const result = DataProcessingService.base64Decode(encoded, options);
+    const { encoded, text, options = {} } = req.body;
+    const input = encoded || text;
+    if (!input) {
+      return res.status(400).json({ error: '请提供encoded或text参数' });
+    }
+    const result = DataProcessingService.base64Decode(input, options);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -865,6 +880,12 @@ app.get('/qrcode', (req, res) => {
 app.get('/profile', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
+
+// API 认证路由
+app.post('/api/auth/send-verification', verifyLimiter, handleSendVerification);
+app.post('/api/auth/send-code', verifyLimiter, handleSendVerification);
+app.post('/api/auth/register', authLimiter, handleRegister);
+app.post('/api/auth/login', authLimiter, handleLogin);
 
 // API v1 版本控制
 app.use('/api/v1/admin', adminRoutes);
