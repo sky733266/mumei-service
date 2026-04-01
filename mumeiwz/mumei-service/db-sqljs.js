@@ -422,6 +422,101 @@ const PlanDB = {
   }
 };
 
+// ============ 订单数据库 ============
+const OrderDB = {
+  // 初始化订单表（在 createTables 之后调用）
+  initOrderTable() {
+    try {
+      db.run(`CREATE TABLE IF NOT EXISTS orders (
+        id TEXT PRIMARY KEY,
+        userId TEXT NOT NULL,
+        planId TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT DEFAULT 'CNY',
+        method TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        paymentId TEXT,
+        outTradeNo TEXT,
+        createdAt TEXT,
+        completedAt TEXT
+      )`);
+      saveDatabase();
+    } catch (e) {
+      // 表已存在
+    }
+  },
+
+  createOrder(userId, planId, amount, method, outTradeNo) {
+    const orderId = `ORD_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      db.run(
+        `INSERT INTO orders (id, userId, planId, amount, method, outTradeNo, createdAt, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        [orderId, userId, planId, amount, method, outTradeNo, new Date().toISOString()]
+      );
+      saveDatabase();
+      return { success: true, orderId };
+    } catch (e) {
+      console.error('创建订单失败:', e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  getOrder(orderId) {
+    const result = db.exec('SELECT * FROM orders WHERE id = ?', [orderId]);
+    if (!result.length || !result[0].values.length) return null;
+    const cols = result[0].columns;
+    const vals = result[0].values[0];
+    return Object.fromEntries(cols.map((c, i) => [c, vals[i]]));
+  },
+
+  getOrderByOutTradeNo(outTradeNo) {
+    const result = db.exec('SELECT * FROM orders WHERE outTradeNo = ?', [outTradeNo]);
+    if (!result.length || !result[0].values.length) return null;
+    const cols = result[0].columns;
+    const vals = result[0].values[0];
+    return Object.fromEntries(cols.map((c, i) => [c, vals[i]]));
+  },
+
+  getOrderByPaymentId(paymentId) {
+    const result = db.exec('SELECT * FROM orders WHERE paymentId = ?', [paymentId]);
+    if (!result.length || !result[0].values.length) return null;
+    const cols = result[0].columns;
+    const vals = result[0].values[0];
+    return Object.fromEntries(cols.map((c, i) => [c, vals[i]]));
+  },
+
+  completeOrder(orderId, paymentId) {
+    try {
+      db.run(
+        `UPDATE orders SET status = 'completed', paymentId = ?, completedAt = ? WHERE id = ?`,
+        [paymentId, new Date().toISOString(), orderId]
+      );
+      // 升级用户套餐
+      const order = this.getOrder(orderId);
+      if (order) {
+        db.run(`UPDATE users SET plan = ? WHERE id = ?`, [order.planId, order.userId]);
+        console.log(`✅ 用户 ${order.userId} 套餐已升级为 ${order.planId}`);
+      }
+      saveDatabase();
+      return { success: true };
+    } catch (e) {
+      console.error('完成订单失败:', e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  getUserOrders(userId, limit = 10) {
+    const result = db.exec(
+      'SELECT * FROM orders WHERE userId = ? ORDER BY createdAt DESC LIMIT ?',
+      [userId, limit]
+    );
+    if (!result.length) return [];
+    const cols = result[0].columns;
+    return result[0].values.map(vals => Object.fromEntries(cols.map((c, i) => [c, vals[i]])));
+  }
+};
+
 // 备份数据库
 function backupDatabase() {
   const backupPath = path.join(DATA_DIR, `backup_${Date.now()}.db`);
@@ -438,5 +533,6 @@ module.exports = {
   LogDB,
   PlanDB,
   SubscriptionDB,
+  OrderDB,
   backupDatabase
 };

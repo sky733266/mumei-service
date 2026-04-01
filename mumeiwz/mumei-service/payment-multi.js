@@ -141,6 +141,9 @@ async function createPayPalPayment(amount, currency, description) {
     throw new Error('PayPal 未配置');
   }
 
+  // 确保 amount 是数字
+  const numAmount = parseFloat(amount);
+
   try {
     const accessToken = await getPayPalAccessToken();
     
@@ -149,7 +152,7 @@ async function createPayPalPayment(amount, currency, description) {
       purchase_units: [{
         amount: {
           currency_code: currency || 'USD',
-          value: amount.toFixed(2)
+          value: numAmount.toFixed(2)
         },
         description
       }]
@@ -258,7 +261,7 @@ async function createPayment(method, amount, plan, user) {
 
     case PaymentMethod.PAYPAL:
       return await createPayPalPayment(
-        currency === 'cny' ? (amount * 0.14).toFixed(2) : amount, // 汇率转换
+        currency === 'cny' ? parseFloat((amount * 0.14).toFixed(2)) : parseFloat(amount), // 汇率转换，保持数字类型
         currency === 'cny' ? 'USD' : currency,
         subject
       );

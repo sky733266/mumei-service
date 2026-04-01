@@ -1,4 +1,4 @@
-const { LogDB } = require('./db');
+const { LogDB } = require('./db-sqljs');
 
 // 请求日志中间件
 function requestLogger(req, res, next) {
@@ -22,17 +22,18 @@ function requestLogger(req, res, next) {
     
     // 只记录API请求
     if (req.path.startsWith('/api/')) {
-      LogDB.createLog({
-        userId,
-        tokenId,
-        endpoint: req.path,
-        method: req.method,
-        status: res.statusCode,
-        duration,
-        ip: req.ip || req.connection.remoteAddress,
-        userAgent: req.headers['user-agent'],
-        error: res.statusCode >= 400 ? res.statusMessage : null
-      });
+      try {
+        LogDB.addLog(
+          userId,
+          req.path,
+          req.method,
+          req.ip || req.connection.remoteAddress,
+          res.statusCode,
+          duration
+        );
+      } catch (e) {
+        // 日志记录失败不影响主流程
+      }
     }
   };
   

@@ -957,7 +957,7 @@ app.get('/api/plans', (req, res) => {
 // ============ 支付系统 ============
 // 引入支付模块
 const paymentModule = require('./payment-multi');
-const OrderDB = require('./db-orders');
+const { OrderDB } = require('./db-sqljs');
 
 // 获取可用支付方式
 app.get('/api/payments/methods', (req, res) => {
@@ -980,23 +980,24 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
     const result = await paymentModule.createPayment(method, plan.price, plan, req.user);
     
     if (result.success) {
-      // 保存订单到数据库
-      const outTradeNo = result.outTradeNo || result.paymentId;
-      const orderResult = await OrderDB.createOrder(
-        req.user.id,
+      // 保存订单到数据库（outTradeNo 用 PayPal orderId 或 epay outTradeNo）
+      const outTradeNo = result.outTradeNo || result.orderId || result.paymentId || `MU_${Date.now()}`;
+      const userId = req.user.id || req.user.userId || req.user.sub;
+      const orderResult = OrderDB.createOrder(
+        userId,
         planId,
         plan.price,
         method,
         outTradeNo
       );
       
-      res.json({
+      return res.json({
         success: true,
         orderId: orderResult.orderId,
         ...result
       });
     } else {
-      res.status(400).json({ success: false, error: result.error });
+      return res.status(400).json({ success: false, error: result.error });
     }
   } catch (error) {
     console.error('创建支付失败:', error);
@@ -1073,9 +1074,10 @@ app.post('/api/payments/paypal/capture', async (req, res) => {
 });
 
 // 获取用户订单列表
-app.get('/api/orders', authMiddleware, async (req, res) => {
+app.get('/api/orders', authMiddleware, (req, res) => {
   try {
-    const orders = await OrderDB.getUserOrders(req.user.id);
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const orders = OrderDB.getUserOrders(userId);
     res.json({ success: true, orders });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1109,6 +1111,9 @@ app.use('/api/v1/admin', adminRoutes);
 async function startServer() {
   // 初始化数据库
   await initDatabase();
+  
+  // 初始化订单表
+  OrderDB.initOrderTable();
   
   const server = app.listen(PORT, () => {
     console.log(`沐美服务运行在 http://localhost:${PORT}`);
