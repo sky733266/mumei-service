@@ -214,22 +214,34 @@ async function handleLogin() {
   }
 }
 
-// 处理注册
+// 处理注册 (简化版 - 无需验证码)
 async function handleRegister() {
-  console.log('handleRegister called');
+  console.log('handleRegister called - 简化注册');
   
   const emailInput = document.getElementById('registerEmail');
   const passwordInput = document.getElementById('registerPassword');
   const confirmPasswordInput = document.getElementById('confirmPassword');
-  const verifyCodeInput = document.getElementById('verifyCode');
   
-  const email = emailInput ? emailInput.value : '';
+  const email = emailInput ? emailInput.value.trim() : '';
   const password = passwordInput ? passwordInput.value : '';
   const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
-  const code = verifyCodeInput ? verifyCodeInput.value : '';
   
-  if (!email || !password || !code) {
-    alert('请填写所有必填项');
+  // 基础验证
+  if (!email || !password) {
+    alert('请填写邮箱和密码');
+    return;
+  }
+  
+  // 邮箱格式验证
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert('请输入有效的邮箱地址');
+    return;
+  }
+  
+  // 密码验证
+  if (password.length < 6) {
+    alert('密码至少6位');
     return;
   }
   
@@ -239,10 +251,11 @@ async function handleRegister() {
   }
   
   try {
-    const response = await fetch('/api/auth/register', {
+    // 使用简化注册 API
+    const response = await fetch('/api/auth/quick-register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, confirmPassword, code, lang: currentLang })
+      body: JSON.stringify({ email, password })
     });
     
     const data = await response.json();
@@ -250,7 +263,16 @@ async function handleRegister() {
     if (data.success) {
       authToken = data.token;
       localStorage.setItem('authToken', authToken);
-      alert('注册成功！');
+      
+      // 显示欢迎消息
+      let welcomeMsg = '🎉 注册成功！\n\n';
+      if (data.welcomeBonus) {
+        welcomeMsg += `✨ 欢迎礼包：${data.welcomeBonus.count}次免费调用\n`;
+        welcomeMsg += `⏰ 有效期7天\n\n`;
+      }
+      welcomeMsg += '现在可以开始使用工具了！';
+      
+      alert(welcomeMsg);
       showPanel(data.user);
     } else {
       alert(data.error || '注册失败');

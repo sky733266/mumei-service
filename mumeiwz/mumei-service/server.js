@@ -12,7 +12,7 @@ const path = require('path');
 const fs = require('fs');
 const schedule = require('node-schedule');
 
-const { UserDB, TokenDB, VerificationDB, LogDB, PlanDB, SubscriptionDB } = require('./db');
+const { UserDB, TokenDB, VerificationDB, LogDB, PlanDB, SubscriptionDB, initDatabase } = require('./db-sqljs');
 const { generateToken, authMiddleware } = require('./auth');
 const { sendVerificationEmail } = require('./email');
 const { requestLogger } = require('./logger');
@@ -887,51 +887,112 @@ app.post('/api/auth/send-code', verifyLimiter, handleSendVerification);
 app.post('/api/auth/register', authLimiter, handleRegister);
 app.post('/api/auth/login', authLimiter, handleLogin);
 
+// 简化注册 (无需验证码)
+app.post('/api/auth/quick-register', authLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: '请填写邮箱和密码' });
+    }
+    
+    // 验证邮箱格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: '请输入有效的邮箱地址' });
+    }
+    
+    // 验证密码长度
+    if (password.length < 6) {
+      return res.status(400).json({ error: '密码至少6位' });
+    }
+    
+    // 检查是否已注册
+    const existingUser = UserDB.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ error: '该邮箱已注册，请直接登录' });
+    }
+    
+    // 创建用户
+    const user = await UserDB.createUser(email, password);
+    
+    // 创建欢迎 Token
+    const token = generateToken({ id: user.id, email: user.email, verified: true, plan: user.plan });
+    
+    // 记录赠送配额（7天有效期）
+    const welcomeBonus = {
+      type: 'welcome_bonus',
+      count: 50,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    };
+    
+    res.json({ 
+      success: true,
+      message: '注册成功！欢迎加入沐美服务',
+      token,
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        verified: true, 
+        plan: user.plan,
+        welcomeBonus
+      }
+    });
+  } catch (error) {
+    console.error('Quick register error:', error);
+    res.status(500).json({ error: '注册失败，请稍后重试' });
+  }
+});
+
+// 套餐路由
+app.get('/api/plans', (req, res) => {
+  const plans = PlanDB.getAllPlans();
+  res.json({ success: true, plans });
+});
+
 // API v1 版本控制
 app.use('/api/v1/admin', adminRoutes);
 
 // 启动服务器
-const server = app.listen(PORT, () => {
-  console.log(`沐美服务运行在 http://localhost:${PORT}`);
-  console.log(`用户面板: http://localhost:${PORT}/panel`);
-  console.log(`工具箱: http://localhost:${PORT}/tools`);
-  console.log(`已加载 ${Object.keys(toolPricing).length} 个工具`);
-});
-
-// Graceful Shutdown - 优雅关闭
-function gracefulShutdown(signal) {
-  console.log(`\n${signal} 收到信号，开始优雅关闭...`);
+async function startServer() {
+  // 初始化数据库
+  await initDatabase();
   
-  // 停止接受新连接
-  server.close(() => {
-    console.log('✅ HTTP 服务器已关闭');
-    
-    // 关闭数据库连接
-    try {
-      const { UserDB } = require('./db');
-      if (UserDB && UserDB.close) UserDB.close();
-    } catch (e) {}
-    
-    // 关闭定时任务
-    try {
-      schedule.cancelJob('quotaCheck');
-      schedule.cancelJob('logCleanup');
-    } catch (e) {}
-    
-    console.log('✅ 所有资源已释放');
-    process.exit(0);
+  const server = app.listen(PORT, () => {
+    console.log(`沐美服务运行在 http://localhost:${PORT}`);
+    console.log(`用户面板: http://localhost:${PORT}/panel`);
+    console.log(`工具箱: http://localhost:${PORT}/tools`);
+    console.log(`已加载 ${Object.keys(toolPricing).length} 个工具`);
   });
-  
-  // 30秒后强制退出
-  setTimeout(() => {
-    console.error('⚠️ 强制退出（超时）');
-    process.exit(1);
-  }, 30000);
+
+  // Graceful Shutdown - 优雅关闭
+  function gracefulShutdown(signal) {
+    console.log(`\n${signal} 收到信号，开始优雅关闭...`);
+    
+    // 停止接受新连接
+    server.close(() => {
+      console.log('✅ HTTP 服务器已关闭');
+      console.log('✅ 所有资源已释放');
+      process.exit(0);
+    });
+    
+    // 30秒后强制退出
+    setTimeout(() => {
+      console.error('⚠️ 强制退出（超时）');
+      process.exit(1);
+    }, 30000);
+  }
+
+  // 注册信号处理器
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
-// 注册信号处理器
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+// 启动应用
+startServer().catch(err => {
+  console.error('❌ 启动失败:', err.message);
+  process.exit(1);
+});
 
 // 捕获未处理错误
 process.on('uncaughtException', (err) => {

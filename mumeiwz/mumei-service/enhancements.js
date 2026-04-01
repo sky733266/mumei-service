@@ -254,7 +254,7 @@ const translations = {
 
 // 发送验证码
 async function handleSendVerification(req, res, next) {
-  const { UserDB, VerificationDB } = require('./db');
+  const { VerificationDB } = require('./db-sqljs');
   const { sendVerificationEmail } = require('./email');
   
   try {
@@ -262,9 +262,7 @@ async function handleSendVerification(req, res, next) {
     if (!email) return res.status(400).json({ error: '请输入邮箱地址' });
     
     // 创建验证码
-    const crypto = require('crypto');
-    const tempUserId = crypto.randomUUID();
-    const code = VerificationDB.createCode(email, tempUserId);
+    const code = VerificationDB.createCode(email);
     
     try {
       await sendVerificationEmail(email, code);
@@ -284,27 +282,20 @@ async function handleSendVerification(req, res, next) {
 
 // 注册
 async function handleRegister(req, res, next) {
-  const { UserDB, VerificationDB } = require('./db');
+  const { UserDB } = require('./db-sqljs');
   const { generateToken } = require('./auth');
   
   try {
     const { email, password, code } = req.body;
-    if (!email || !password || !code) {
+    if (!email || !password) {
       return res.status(400).json({ error: '请填写完整信息' });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: '密码至少8位' });
-    }
-
-    const userId = VerificationDB.verifyCode(email, code);
-    if (!userId) {
-      return res.status(400).json({ error: '验证码无效或已过期' });
+    if (password.length < 6) {
+      return res.status(400).json({ error: '密码至少6位' });
     }
 
     const user = await UserDB.createUser(email, password);
-    UserDB.verifyEmail(user.id);
-    
-    const token = generateToken({ id: user.id, email: user.email, verified: true });
+    const token = generateToken({ id: user.id, email: user.email, verified: true, plan: user.plan });
     
     res.json({ 
       success: true, 
@@ -312,13 +303,13 @@ async function handleRegister(req, res, next) {
       user: { id: user.id, email: user.email, verified: true, plan: user.plan }
     });
   } catch (error) {
-    next(error);
+    res.status(400).json({ error: error.message });
   }
 }
 
 // 登录
 async function handleLogin(req, res, next) {
-  const { UserDB } = require('./db');
+  const { UserDB } = require('./db-sqljs');
   const { generateToken } = require('./auth');
   
   try {
