@@ -957,6 +957,7 @@ app.get('/api/plans', (req, res) => {
 // ============ 支付系统 ============
 // 引入支付模块
 const paymentModule = require('./payment-multi');
+const OrderDB = require('./db-orders');
 
 // 获取可用支付方式
 app.get('/api/payments/methods', (req, res) => {
@@ -980,10 +981,18 @@ app.post('/api/payments/create', authMiddleware, async (req, res) => {
     
     if (result.success) {
       // 保存订单到数据库
-      // TODO: 保存订单信息
+      const outTradeNo = result.outTradeNo || result.paymentId;
+      const orderResult = await OrderDB.createOrder(
+        req.user.id,
+        planId,
+        plan.price,
+        method,
+        outTradeNo
+      );
       
       res.json({
         success: true,
+        orderId: orderResult.orderId,
         ...result
       });
     } else {
@@ -1005,9 +1014,12 @@ app.post('/api/payments/epay/notify', async (req, res) => {
       const { out_trade_no, trade_status, money } = params;
       
       if (trade_status === 'TRADE_SUCCESS') {
-        // 更新用户套餐
-        // TODO: 根据订单号查找用户并升级套餐
-        console.log(`支付成功: ${out_trade_no}, 金额: ${money}`);
+        // 根据订单号查找订单
+        const order = await OrderDB.getOrderByOutTradeNo(out_trade_no);
+        if (order) {
+          await OrderDB.completeOrder(order.id, out_trade_no);
+          console.log(`✅ 易支付成功: ${out_trade_no}, 金额: ${money}`);
+        }
       }
       
       res.send('success');
@@ -1029,8 +1041,11 @@ app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' 
   
   if (result.success && result.event === 'payment_success') {
     // 支付成功，更新用户套餐
-    console.log('Stripe 支付成功:', result.data);
-    // TODO: 更新用户套餐
+    const order = await OrderDB.getOrderByPaymentId(result.data.paymentId);
+    if (order) {
+      await OrderDB.completeOrder(order.id, result.data.paymentId);
+      console.log('✅ Stripe 支付成功:', result.data);
+    }
   }
   
   res.json({ received: true });
@@ -1043,11 +1058,45 @@ app.post('/api/payments/paypal/capture', async (req, res) => {
     const result = await paymentModule.capturePayPalOrder(orderId);
     
     if (result.success) {
-      console.log('PayPal 订单完成:', result);
-      // TODO: 更新用户套餐
+      // 根据 PayPal orderId 查找订单
+      const order = await OrderDB.getOrderByPaymentId(orderId);
+      if (order) {
+        await OrderDB.completeOrder(order.id, orderId);
+        console.log('✅ PayPal 订单完成:', result);
+      }
     }
     
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取用户订单列表
+app.get('/api/orders', authMiddleware, async (req, res) => {
+  try {
+    const orders = await OrderDB.getUserOrders(req.user.id);
+    res.json({ success: true, orders });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 获取订单详情
+app.get('/api/orders/:orderId', authMiddleware, async (req, res) => {
+  try {
+    const order = await OrderDB.getOrder(req.params.orderId);
+    
+    if (!order) {
+      return res.status(404).json({ success: false, error: '订单不存在' });
+    }
+    
+    // 检查权限
+    if (order.userId !== req.user.id) {
+      return res.status(403).json({ success: false, error: '无权访问此订单' });
+    }
+    
+    res.json({ success: true, order });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
