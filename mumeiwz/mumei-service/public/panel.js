@@ -260,7 +260,10 @@ async function handleRegister(e) {
   const email = document.getElementById('registerEmail').value;
   const password = document.getElementById('registerPassword').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
-  const code = document.getElementById('verifyCode').value;
+  const codeEl = document.getElementById('verifyCode');
+  const code = codeEl ? codeEl.value : '';
+  // 读取 URL 中的邀请码
+  const ref = new URLSearchParams(location.search).get('ref') || '';
 
   try {
     const response = await fetch('/api/auth/register', {
@@ -271,6 +274,7 @@ async function handleRegister(e) {
         password, 
         confirmPassword, 
         code,
+        ref,
         lang: currentLang 
       })
     });
@@ -322,6 +326,9 @@ function showPanel(user) {
   loadCurrentPlan();
   loadTokens();
   loadLogs();
+  loadOrders();
+  loadRecentUsage();
+  loadReferrals();
 }
 
 // 加载统计数据
@@ -332,23 +339,24 @@ async function loadStats() {
     });
 
     const data = await response.json();
-    
-    // 更新统计卡片
-    document.getElementById('dailyUsage').textContent = data.stats.today;
-    document.getElementById('monthlyUsage').textContent = data.stats.thisMonth;
-    document.getElementById('totalCalls').textContent = data.stats.total;
-    document.getElementById('successRate').textContent = 
-      data.stats.total > 0 ? Math.round((data.stats.success / data.stats.total) * 100) + '%' : '0%';
-    document.getElementById('avgResponse').textContent = data.stats.avgDuration + 'ms';
-    document.getElementById('activeTokens').textContent = data.tokenStats.active;
-    
-    // 更新进度条
-    if (data.limits) {
-      const dailyPercent = (data.limits.daily.used / data.limits.daily.limit) * 100;
-      const monthlyPercent = (data.limits.monthly.used / data.limits.monthly.limit) * 100;
-      
-      document.getElementById('dailyProgress').style.width = Math.min(dailyPercent, 100) + '%';
-      document.getElementById('monthlyProgress').style.width = Math.min(monthlyPercent, 100) + '%';
+    if (!data.success) return;
+
+    const s = data.stats;
+    document.getElementById('dailyUsage').textContent = s.dailyUsage ?? 0;
+    document.getElementById('monthlyUsage').textContent = s.monthlyUsage ?? 0;
+    document.getElementById('totalCalls').textContent = s.totalCalls ?? 0;
+    document.getElementById('successRate').textContent = (s.successRate ?? 100) + '%';
+    document.getElementById('avgResponse').textContent = (s.avgResponse ?? 0) + 'ms';
+    document.getElementById('activeTokens').textContent = s.activeTokens ?? 0;
+
+    // 进度条（需要套餐限额）
+    const planRes = await fetch('/api/plans/current', { headers: { 'Authorization': `Bearer ${authToken}` } });
+    const planData = await planRes.json();
+    if (planData.plan) {
+      const dailyLimit = planData.plan.features.dailyRequests;
+      const monthlyLimit = planData.plan.features.monthlyRequests;
+      document.getElementById('dailyProgress').style.width = Math.min((s.dailyUsage / dailyLimit) * 100, 100) + '%';
+      document.getElementById('monthlyProgress').style.width = Math.min((s.monthlyUsage / monthlyLimit) * 100, 100) + '%';
     }
   } catch (error) {
     console.error('加载统计失败:', error);
@@ -477,8 +485,8 @@ async function loadTokens() {
 // 渲染Token列表
 function renderTokenList(tokens) {
   const tokenList = document.getElementById('tokenList');
-  
-  if (tokens.length === 0) {
+
+  if (!tokens || tokens.length === 0) {
     tokenList.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -491,24 +499,31 @@ function renderTokenList(tokens) {
     return;
   }
 
-  tokenList.innerHTML = tokens.map(token => `
-    <div class="token-item ${token.active ? '' : 'inactive'}">
-      <div class="token-info">
-        <div class="token-name">${token.name}</div>
-        <div class="token-meta">
-          创建于 ${new Date(token.createdAt).toLocaleDateString()} | 
-          ${token.usageCount} 次调用 |
-          ${token.active ? '启用中' : '已禁用'}
+  tokenList.innerHTML = tokens.map(token => {
+    // 数据库字段：revoked=0 表示启用，revoked=1 表示禁用
+    const isActive = !token.revoked;
+    const createdAt = token.created_at || token.createdAt || '';
+    const lastUsed = token.last_used ? new Date(token.last_used).toLocaleDateString('zh-CN') : '从未使用';
+
+    return `
+      <div class="token-item ${isActive ? '' : 'inactive'}">
+        <div class="token-info">
+          <div class="token-name">${token.name || 'API Token'}</div>
+          <div class="token-meta">
+            创建于 ${createdAt ? new Date(createdAt).toLocaleDateString('zh-CN') : '-'} |
+            最后使用: ${lastUsed} |
+            <span style="color:${isActive ? '#22c55e' : '#ef4444'}">${isActive ? '启用中' : '已禁用'}</span>
+          </div>
+        </div>
+        <div class="token-actions">
+          <button class="btn-secondary" onclick="toggleToken('${token.id}')">
+            ${isActive ? '禁用' : '启用'}
+          </button>
+          <button class="btn-secondary" onclick="deleteToken('${token.id}')">删除</button>
         </div>
       </div>
-      <div class="token-actions">
-        <button class="btn-secondary" onclick="toggleToken('${token.id}')">
-          ${token.active ? '禁用' : '启用'}
-        </button>
-        <button class="btn-secondary" onclick="deleteToken('${token.id}')">删除</button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // 创建Token
@@ -621,23 +636,28 @@ async function loadLogs() {
 function renderLogs(logs) {
   const tbody = document.getElementById('logsTableBody');
   
-  if (logs.length === 0) {
+  if (!logs || logs.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">暂无日志</td></tr>';
     return;
   }
   
-  tbody.innerHTML = logs.map(log => `
-    <tr>
-      <td>${log.endpoint}</td>
-      <td>
-        <span class="status-badge ${log.status >= 200 && log.status < 300 ? 'status-success' : 'status-error'}">
-          ${log.status}
-        </span>
-      </td>
-      <td>${new Date(log.timestamp).toLocaleString()}</td>
-      <td>${log.duration}ms</td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = logs.map(log => {
+    const statusCode = log.status_code || log.status || 200;
+    const duration = log.response_time || log.duration || 0;
+    const isSuccess = statusCode >= 200 && statusCode < 300;
+    return `
+      <tr>
+        <td>${log.endpoint || '-'}</td>
+        <td>
+          <span class="status-badge ${isSuccess ? 'status-success' : 'status-error'}">
+            ${statusCode}
+          </span>
+        </td>
+        <td>${log.timestamp ? new Date(log.timestamp).toLocaleString('zh-CN') : '-'}</td>
+        <td>${duration}ms</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 // 退出登录
@@ -670,3 +690,171 @@ function showToast(message) {
 
 // 启动
 document.addEventListener('DOMContentLoaded', init);
+
+// ============ 忘记密码 ============
+function showForgotPassword() {
+  document.getElementById('loginForm').classList.add('hidden');
+  document.getElementById('registerForm').classList.add('hidden');
+  document.getElementById('forgotForm').classList.remove('hidden');
+}
+
+function showLogin() {
+  document.getElementById('forgotForm').classList.add('hidden');
+  document.getElementById('loginForm').classList.remove('hidden');
+}
+
+async function submitForgotPassword() {
+  const email = document.getElementById('forgotEmail').value;
+  const msgEl = document.getElementById('forgotMsg');
+  if (!email) { msgEl.textContent = '请输入邮箱'; msgEl.style.color = '#ef4444'; return; }
+
+  try {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    msgEl.textContent = data.message || '重置链接已发送，请查收邮件';
+    msgEl.style.color = '#22c55e';
+  } catch (e) {
+    msgEl.textContent = '发送失败，请稍后重试';
+    msgEl.style.color = '#ef4444';
+  }
+}
+
+// ============ 订单历史 ============
+async function loadOrders() {
+  const container = document.getElementById('orderList');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/orders', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.orders || data.orders.length === 0) {
+      container.innerHTML = '<p style="color:#71717a;font-size:14px;padding:8px 0;">暂无订单记录</p>';
+      return;
+    }
+
+    const planNames = { free: '免费版', pro: '专业版', enterprise: '企业版' };
+    const methodNames = { paypal: 'PayPal', stripe_card: '信用卡', epay_alipay: '支付宝', epay_wechat: '微信支付' };
+    const statusMap = { pending: '⏳ 待支付', completed: '✅ 已完成', failed: '❌ 失败', cancelled: '🚫 已取消' };
+
+    container.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="color:#71717a;border-bottom:1px solid #2a2a3a;">
+            <th style="text-align:left;padding:8px 4px;">套餐</th>
+            <th style="text-align:left;padding:8px 4px;">金额</th>
+            <th style="text-align:left;padding:8px 4px;">方式</th>
+            <th style="text-align:left;padding:8px 4px;">状态</th>
+            <th style="text-align:left;padding:8px 4px;">时间</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.orders.map(o => `
+            <tr style="border-bottom:1px solid #1a1a24;">
+              <td style="padding:10px 4px;">${planNames[o.planId] || o.planId}</td>
+              <td style="padding:10px 4px;">$${parseFloat(o.amount || 0).toFixed(2)}</td>
+              <td style="padding:10px 4px;">${methodNames[o.method] || o.method}</td>
+              <td style="padding:10px 4px;">${statusMap[o.status] || o.status}</td>
+              <td style="padding:10px 4px;color:#71717a;">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('zh-CN') : '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    container.innerHTML = '<p style="color:#71717a;font-size:14px;">加载失败</p>';
+  }
+}
+
+// ============ 最近使用记录 ============
+async function loadRecentUsage() {
+  const container = document.getElementById('recentUsage');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/logs?limit=5&page=1', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+
+    if (!data.success || !data.logs || data.logs.length === 0) {
+      container.innerHTML = '<p style="color:#71717a;">暂无使用记录，开始使用工具吧！</p>';
+      return;
+    }
+
+    // 工具名映射
+    const toolNameMap = {
+      '/api/tools/data/json-format': '📋 JSON格式化',
+      '/api/tools/data/base64-encode': '🔢 Base64编码',
+      '/api/tools/data/base64-decode': '🔢 Base64解码',
+      '/api/tools/security/password-generate': '🔑 密码生成',
+      '/api/tools/security/hash': '#️⃣ 哈希计算',
+      '/api/tools/security/url-encode': '🔗 URL编码',
+      '/api/tools/security/uuid-generate': '🆔 UUID生成',
+      '/api/tools/dev/code-format': '✨ 代码格式化',
+      '/api/tools/dev/cron-parse': '⏰ Cron解析',
+      '/api/tools/dev/timestamp-convert': '🕐 时间戳转换',
+      '/api/tools/ai/text-generate': '🤖 AI文本生成',
+      '/api/tools/ai/translate': '🌐 AI翻译'
+    };
+
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${data.logs.map(log => {
+          const name = toolNameMap[log.endpoint] || log.endpoint || '未知工具';
+          const time = log.timestamp ? new Date(log.timestamp).toLocaleString('zh-CN') : '';
+          const status = (log.status_code || log.status || 200) >= 200 && (log.status_code || log.status || 200) < 300
+            ? '✅'
+            : '❌';
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#12121a;border-radius:8px;border:1px solid #2a2a3a;">
+              <span style="display:flex;align-items:center;gap:8px;">
+                <span>${status}</span>
+                <span style="color:#e4e4e7;font-size:13px;">${name}</span>
+              </span>
+              <span style="color:#71717a;font-size:12px;">${time}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch (e) {
+    container.innerHTML = '<p style="color:#71717a;">加载失败</p>';
+  }
+}
+
+// ============ 邀请奖励 ============
+async function loadReferrals() {
+  try {
+    const res = await fetch('/api/referrals', {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    if (!data.success) return;
+
+    const linkEl = document.getElementById('inviteLink');
+    if (linkEl) linkEl.value = data.inviteLink || '';
+
+    const s = data.stats || {};
+    const totalEl = document.getElementById('refTotal');
+    const regEl   = document.getElementById('refRegistered');
+    const rewEl   = document.getElementById('refReward');
+    if (totalEl) totalEl.textContent = s.total || 0;
+    if (regEl)   regEl.textContent   = s.registered || 0;
+    if (rewEl)   rewEl.textContent   = s.totalReward || 0;
+  } catch (e) {
+    console.error('加载邀请数据失败:', e);
+  }
+}
+
+function copyInviteLink() {
+  const linkEl = document.getElementById('inviteLink');
+  if (!linkEl || !linkEl.value) return;
+  navigator.clipboard.writeText(linkEl.value).then(() => showToast('✅ 邀请链接已复制'));
+}

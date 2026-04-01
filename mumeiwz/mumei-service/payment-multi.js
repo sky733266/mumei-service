@@ -136,7 +136,7 @@ async function getPayPalAccessToken() {
   });
 }
 
-async function createPayPalPayment(amount, currency, description) {
+async function createPayPalPayment(amount, currency, description, returnUrl, cancelUrl) {
   if (!PAYPAL_CONFIG.clientId || !PAYPAL_CONFIG.clientSecret) {
     throw new Error('PayPal 未配置');
   }
@@ -146,8 +146,8 @@ async function createPayPalPayment(amount, currency, description) {
 
   try {
     const accessToken = await getPayPalAccessToken();
-    
-    const orderData = JSON.stringify({
+
+    const orderBody = {
       intent: 'CAPTURE',
       purchase_units: [{
         amount: {
@@ -156,7 +156,19 @@ async function createPayPalPayment(amount, currency, description) {
         },
         description
       }]
-    });
+    };
+
+    // 如果提供了 return/cancel URL，加入 application_context
+    if (returnUrl || cancelUrl) {
+      orderBody.application_context = {
+        return_url: returnUrl || 'http://localhost:3000/payment/paypal/return',
+        cancel_url: cancelUrl || 'http://localhost:3000/pricing',
+        brand_name: 'LONGXIA',
+        user_action: 'PAY_NOW'
+      };
+    }
+
+    const orderData = JSON.stringify(orderBody);
 
     return new Promise((resolve, reject) => {
       const options = {
@@ -175,11 +187,13 @@ async function createPayPalPayment(amount, currency, description) {
         res.on('end', () => {
           try {
             const result = JSON.parse(data);
+            const approveUrl = result.links?.find(l => l.rel === 'approve')?.href;
             resolve({
               success: true,
               type: 'paypal',
               orderId: result.id,
-              approveUrl: result.links.find(l => l.rel === 'approve')?.href
+              approveUrl,
+              checkoutUrl: approveUrl  // 前端统一用 checkoutUrl
             });
           } catch (e) {
             reject(e);
@@ -244,7 +258,7 @@ function createEpayPayment(type, outTradeNo, amount, subject) {
 }
 
 // ============ 创建订单 ============
-async function createPayment(method, amount, plan, user) {
+async function createPayment(method, amount, plan, user, returnUrl, cancelUrl) {
   const outTradeNo = `MU_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const subject = `沐美服务 - ${plan.name}套餐`;
   const currency = plan.currency || 'cny';
@@ -261,9 +275,11 @@ async function createPayment(method, amount, plan, user) {
 
     case PaymentMethod.PAYPAL:
       return await createPayPalPayment(
-        currency === 'cny' ? parseFloat((amount * 0.14).toFixed(2)) : parseFloat(amount), // 汇率转换，保持数字类型
+        currency === 'cny' ? parseFloat((amount * 0.14).toFixed(2)) : parseFloat(amount),
         currency === 'cny' ? 'USD' : currency,
-        subject
+        subject,
+        returnUrl,
+        cancelUrl
       );
 
     case PaymentMethod.EPAY_ALIPAY:

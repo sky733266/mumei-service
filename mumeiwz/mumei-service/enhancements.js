@@ -295,6 +295,16 @@ async function handleRegister(req, res, next) {
     }
 
     const user = await UserDB.createUser(email, password);
+
+    // 处理邀请奖励
+    const refFrom = req.body?.ref;
+    if (refFrom) {
+      const { ReferralDB } = require('./db-sqljs');
+      ReferralDB.createReferral(refFrom, user.id);
+      ReferralDB.rewardReferrer(refFrom, user.id);
+      console.log(`🎁 邀请奖励: ${refFrom} 邀请 ${email} 注册成功`);
+    }
+
     const token = generateToken({ id: user.id, email: user.email, verified: true, plan: user.plan });
     
     res.json({ 

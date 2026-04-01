@@ -415,9 +415,15 @@
   </div>
   
   <script>
+    const authToken = localStorage.getItem('authToken');
     let selectedPlan = null;
     let selectedPayment = null;
     let availablePayments = [];
+    
+    // 页面加载时检查登录
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPayments();
+    });
     
     // 加载可用支付方式
     async function loadPayments() {
@@ -427,10 +433,8 @@
         availablePayments = data.payments || [];
         renderPayments();
       } catch (e) {
-        console.error('加载支付方式失败:', e);
-        // 显示默认支付方式
         availablePayments = [
-          { id: 'stripe', name: '💳 信用卡', fee: '2.9%+$0.3', recommended: true },
+          { id: 'stripe_card', name: '💳 信用卡', fee: '2.9%+$0.3', recommended: true },
           { id: 'paypal', name: 'PayPal', fee: '3.4%+$0.3', global: true }
         ];
         renderPayments();
@@ -470,23 +474,30 @@
     
     function getPaymentIcon(id) {
       const icons = {
-        'stripe': '💳',
-        'stripe_card': '💳',
-        'stripe_alipay': 'Alipay',
-        'stripe_wechat': 'WeChat',
+        'stripe': '💳', 'stripe_card': '💳',
+        'stripe_alipay': 'Alipay', 'stripe_wechat': 'WeChat',
         'paypal': 'PayPal',
-        'epay_alipay': '💚',
-        'epay_wechat': '💙'
+        'epay_alipay': '💚', 'epay_wechat': '💙'
       };
       return icons[id] || '💳';
     }
     
     function selectPlan(planId) {
-      selectedPlan = planId;
+      // 未登录，先去登录
+      if (!authToken) {
+        alert('请先登录后再购买');
+        location.href = '/panel';
+        return;
+      }
+      // 免费版直接跳转
+      if (planId === 'free') {
+        location.href = '/panel';
+        return;
+      }
       
+      selectedPlan = planId;
       const prices = { pro: 29, enterprise: 99 };
       document.getElementById('payAmount').textContent = prices[planId] || 0;
-      
       selectedPayment = null;
       document.getElementById('payBtn').disabled = true;
       
@@ -508,7 +519,10 @@
       try {
         const res = await fetch('/api/payments/create', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
           body: JSON.stringify({
             planId: selectedPlan,
             method: selectedPayment
@@ -519,14 +533,19 @@
         
         if (data.success) {
           if (data.payUrl) {
-            // 跳转到支付页面
+            // 易支付跳转
             window.location.href = data.payUrl;
           } else if (data.checkoutUrl) {
             // PayPal 跳转到批准页面
             window.location.href = data.checkoutUrl;
           } else if (data.clientSecret) {
-            // Stripe 显示支付表单或二维码
+            // Stripe 显示支付窗口
             showStripePayment(data.clientSecret);
+          } else {
+            // 未知响应
+            alert('创建订单成功，请稍后查看');
+            btn.disabled = false;
+            btn.textContent = '确认支付';
           }
         } else {
           alert(data.error || '创建订单失败');
@@ -543,13 +562,18 @@
     function showStripePayment(clientSecret) {
       document.getElementById('paymentContent').innerHTML = `
         <div class="modal-header">
-          <h3 class="modal-title">扫码支付</h3>
+          <h3 class="modal-title">💳 信用卡支付</h3>
           <button class="modal-close" onclick="location.reload()">×</button>
         </div>
         <div class="qr-container">
-          <p style="margin-bottom:16px">请使用信用卡完成支付</p>
-          <p style="color:var(--text-muted)">clientSecret: ${clientSecret.substring(0, 20)}...</p>
-          <p style="margin-top:24px">Stripe 支付功能需要配置 Stripe.js</p>
+          <p style="margin-bottom:16px;font-size:14px;">Stripe 支付需要配置正式密钥</p>
+          <p style="margin-bottom:24px;color:var(--text-muted);font-size:12px;">
+            请在 <code>.env</code> 中配置 <code>STRIPE_SECRET_KEY</code> 和 <code>STRIPE_WEBHOOK_SECRET</code><br>
+            或联系客服完成支付
+          </p>
+          <a href="mailto:support@mumei.dev?subject=购买专业版" class="pay-btn" style="text-decoration:none;display:inline-block;">
+            📧 联系客服购买
+          </a>
         </div>
       `;
     }

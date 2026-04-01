@@ -554,7 +554,6 @@ async function executeTool(toolId, config) {
   const formData = new FormData(form);
   const data = {};
 
-  // 收集表单数据
   config.fields.forEach(field => {
     if (field.type === 'checkbox') {
       data[field.name] = formData.get(field.name) === 'on';
@@ -571,18 +570,15 @@ async function executeTool(toolId, config) {
 
   try {
     const headers = { 'Content-Type': 'application/json' };
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
     let url = config.endpoint;
-    let options = {
-      method: config.method,
-      headers
-    };
+    let options = { method: config.method, headers };
 
     if (config.method === 'GET') {
-      const params = new URLSearchParams(data);
+      const params = new URLSearchParams(
+        Object.fromEntries(Object.entries(data).filter(([, v]) => v !== '' && v !== null))
+      );
       url += '?' + params.toString();
     } else {
       options.body = JSON.stringify(data);
@@ -590,54 +586,121 @@ async function executeTool(toolId, config) {
 
     const response = await fetch(url, options);
     const result = await response.json();
-
-    displayResult(result, config.resultType);
+    displayResult(result, config, url, options, data);
   } catch (error) {
     resultDiv.innerHTML = `<div class="tool-error">执行失败: ${error.message}</div>`;
   }
 }
 
+// 生成代码示例
+function generateCodeExamples(endpoint, method, body, authHeader) {
+  const examples = [];
+
+  // JavaScript
+  let jsCode = '';
+  if (method === 'GET') {
+    jsCode = `const res = await fetch('${endpoint}', {\n  headers: { ${authHeader ? `'Authorization': '${authHeader}'` : ''} }\n});\nconst data = await res.json();`;
+  } else {
+    const hasBody = body && Object.keys(body).length > 0;
+    jsCode = `const res = await fetch('${endpoint}', {\n  method: '${method}',\n  headers: {\n    'Content-Type': 'application/json'${authHeader ? `,\n    'Authorization': '${authHeader}'` : ''}\n  }${hasBody ? `,\n  body: JSON.stringify(${JSON.stringify(body, null, 8).replace(/\n/g, '\n  ').replace(/^  "(\w+)": /gm, '$1: ')})` : ''}\n});\nconst data = await res.json();`;
+  }
+  examples.push({ lang: 'JavaScript', code: jsCode, icon: '🟨' });
+
+  // Python
+  let pyCode = '';
+  if (method === 'GET') {
+    pyCode = `import requests\n\nres = requests.get('${endpoint}'${authHeader ? `,\n    headers={'Authorization': '${authHeader}'}` : ''})\ndata = res.json()`;
+  } else {
+    pyCode = `import requests\n\nres = requests.${method.toLowerCase()}('${endpoint}',\n    headers={'Content-Type': 'application/json'${authHeader ? `,\n             'Authorization': '${authHeader}'` : ''}}${body && Object.keys(body).length ? `,\n    json=${JSON.stringify(body, null, 8)}` : ''})\ndata = res.json()`;
+  }
+  examples.push({ lang: 'Python', code: pyCode, icon: '🐍' });
+
+  // cURL
+  let curlCode = `curl -X ${method} '${endpoint}'`;
+  if (authHeader) curlCode += ` \\\n  -H 'Authorization: ${authHeader}'`;
+  if (method !== 'GET' && body && Object.keys(body).length) {
+    curlCode += ` \\\n  -H 'Content-Type: application/json' \\\n  -d '${JSON.stringify(body)}'`;
+  }
+  examples.push({ lang: 'cURL', code: curlCode, icon: '🟧' });
+
+  return examples;
+}
+
 // 显示结果
-function displayResult(result, resultType) {
+function displayResult(result, config, endpoint, requestOptions, formData) {
   const resultDiv = document.getElementById('toolResult');
-  
-  if (!result.success) {
-    resultDiv.innerHTML = `<div class="tool-error">错误: ${result.error || '未知错误'}</div>`;
+  const resultType = config.resultType || '';
+
+  if (!result.success && !result.text && !result.formatted && !result.decoded) {
+    resultDiv.innerHTML = `<div class="tool-error">❌ 错误: ${result.error || '未知错误'}</div>`;
     return;
   }
 
-  let html = '<h4>执行结果</h4>';
+  const hasAuth = !!(authToken);
+  const authHeader = hasAuth ? 'Bearer YOUR_TOKEN' : '';
+  const method = config.method || 'POST';
+  const cleanEndpoint = endpoint.replace('http://localhost:3000', '');
+  const examples = generateCodeExamples(cleanEndpoint, method, formData, authHeader);
 
+  let html = '<div class="result-tabs"><button class="result-tab active" onclick="showResultTab(\'output\')">📤 输出</button><button class="result-tab" onclick="showResultTab(\'code\')">💻 代码</button></div>';
+
+  // 输出区
+  html += '<div id="resultOutput">';
   if (resultType === 'image' && result.images) {
     result.images.forEach(img => {
-      html += `<img src="${img.url}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px;">`;
+      html += `<img src="${img.url}" style="max-width:100%;border-radius:8px;margin-bottom:12px;">`;
     });
   } else if (resultType === 'audio' && result.audioUrl) {
-    html += `<audio controls src="${result.audioUrl}" style="width: 100%;"></audio>`;
-  } else if (result.text || result.formatted || result.decoded || result.translated) {
-    const content = result.text || result.formatted || result.decoded || result.translated;
-    html += `<pre>${escapeHtml(content)}</pre>`;
+    html += `<audio controls src="${result.audioUrl}" style="width:100%;"></audio>`;
   } else {
-    html += `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+    let content = result.text || result.formatted || result.decoded || result.translated || result.result || JSON.stringify(result, null, 2);
+    html += `<pre class="result-pre">${escapeHtml(typeof content === 'string' ? content : JSON.stringify(content, null, 2))}</pre>`;
   }
+  html += `<div class="result-actions">`;
+  html += `<button class="btn-secondary btn-sm" onclick="copyResult()">📋 复制结果</button>`;
+  if (result.cost !== undefined) html += `<span style="color:var(--text-muted);font-size:0.75rem;">💰 消耗: $${result.cost.toFixed(4)}</span>`;
+  html += `</div></div>`;
 
-  // 添加操作按钮
-  html += `
-    <div class="result-actions">
-      <button class="btn-secondary" onclick="copyResult()">复制结果</button>
-      ${result.cost !== undefined ? `<span style="color: var(--text-muted); font-size: 0.75rem;">消耗: $${result.cost.toFixed(4)}</span>` : ''}
-    </div>
-  `;
+  // 代码示例区
+  html += '<div id="resultCode" style="display:none;">';
+  examples.forEach(ex => {
+    html += `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:13px;color:var(--text-secondary);">${ex.icon} ${ex.lang}</span>
+          <button class="btn-secondary btn-sm" onclick="copyCodeExample(this)" data-lang="${ex.lang}">复制</button>
+        </div>
+        <pre class="code-example">${escapeHtml(ex.code)}</pre>
+      </div>`;
+  });
+  html += '</div>';
 
   resultDiv.innerHTML = html;
 }
 
+// 切换结果标签
+function showResultTab(tab) {
+  document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('resultOutput').style.display = tab === 'output' ? 'block' : 'none';
+  document.getElementById('resultCode').style.display = tab === 'code' ? 'block' : 'none';
+}
+
+// 复制代码示例
+function copyCodeExample(btn) {
+  const code = btn.closest('div').nextElementSibling.textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '已复制!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
 // 复制结果
 function copyResult() {
-  const pre = document.querySelector('#toolResult pre');
+  const pre = document.querySelector('#resultOutput .result-pre');
   if (pre) {
-    navigator.clipboard.writeText(pre.textContent);
-    showToast('已复制到剪贴板');
+    navigator.clipboard.writeText(pre.textContent).then(() => showToast('✅ 已复制到剪贴板'));
   }
 }
 

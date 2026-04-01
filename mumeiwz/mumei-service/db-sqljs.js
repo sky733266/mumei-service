@@ -92,6 +92,19 @@ function createTables() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     )`,
 
+    `CREATE TABLE IF NOT EXISTS referrals (
+      id TEXT PRIMARY KEY,
+      referrer_id TEXT NOT NULL,
+      referred_id TEXT NOT NULL,
+      reward_type TEXT DEFAULT 'bonus',
+      reward_amount INTEGER DEFAULT 20,
+      rewarded INTEGER DEFAULT 0,
+      paid_reward INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (referrer_id) REFERENCES users(id),
+      FOREIGN KEY (referred_id) REFERENCES users(id)
+    )`,
+
     `CREATE TABLE IF NOT EXISTS webhooks (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -202,6 +215,13 @@ const UserDB = {
   updateUserPlan(userId, plan) {
     db.run('UPDATE users SET plan = ? WHERE id = ?', [plan, userId]);
     saveDatabase();
+  },
+
+  async updatePassword(userId, newPassword) {
+    const bcrypt = require('bcryptjs');
+    const hashed = await bcrypt.hash(newPassword, 10);
+    db.run('UPDATE users SET password = ? WHERE id = ?', [hashed, userId]);
+    saveDatabase();
   }
 };
 
@@ -233,6 +253,18 @@ const TokenDB = {
     return t;
   },
 
+  // validateToken：验证 API Token 并返回关联用户信息
+  validateToken(apiToken) {
+    const tokenRow = this.getTokenByToken(apiToken);
+    if (!tokenRow) return null;
+    // 更新最后使用时间
+    this.updateLastUsed(apiToken);
+    // 返回用户信息
+    const user = UserDB.getUserById(tokenRow.user_id);
+    if (!user) return null;
+    return { id: user.id, email: user.email, plan: user.plan, tokenId: tokenRow.id };
+  },
+
   getUserTokens(userId) {
     const result = db.exec(
       'SELECT id, name, created_at, last_used, revoked FROM tokens WHERE user_id = ? ORDER BY created_at DESC',
@@ -253,6 +285,17 @@ const TokenDB = {
   revokeToken(tokenId, userId) {
     db.run('UPDATE tokens SET revoked = 1 WHERE id = ? AND user_id = ?', [tokenId, userId]);
     saveDatabase();
+  },
+
+  toggleToken(tokenId, userId) {
+    // 查当前状态
+    const result = db.exec('SELECT revoked FROM tokens WHERE id = ? AND user_id = ?', [tokenId, userId]);
+    if (!result.length || !result[0].values.length) return null;
+    const currentRevoked = result[0].values[0][0];
+    const newRevoked = currentRevoked ? 0 : 1;
+    db.run('UPDATE tokens SET revoked = ? WHERE id = ? AND user_id = ?', [newRevoked, tokenId, userId]);
+    saveDatabase();
+    return { active: newRevoked === 0 };
   },
 
   updateLastUsed(token) {
@@ -517,6 +560,64 @@ const OrderDB = {
   }
 };
 
+// ============ 邀请推荐数据库 ============
+const ReferralDB = {
+  // 创建邀请记录
+  createReferral(referrerId, referredId) {
+    const id = uuidv4();
+    try {
+      db.run(
+        'INSERT INTO referrals (id, referrer_id, referred_id) VALUES (?, ?, ?)',
+        [id, referrerId, referredId]
+      );
+      saveDatabase();
+      return { success: true, id };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  // 奖励邀请人（被邀请人注册成功）
+  rewardReferrer(referrerId, referredId) {
+    db.run(
+      'UPDATE referrals SET rewarded = 1, reward_type = ?, reward_amount = ? WHERE referrer_id = ? AND referred_id = ?',
+      ['bonus', 20, referrerId, referredId]
+    );
+    saveDatabase();
+    return { success: true, reward: 20 };
+  },
+
+  // 奖励邀请人（被邀请人付费）
+  rewardReferrerPaid(referrerId, referredId, amount) {
+    db.run(
+      'UPDATE referrals SET paid_reward = 1, reward_type = ?, reward_amount = ? WHERE referrer_id = ? AND referred_id = ?',
+      ['cashback', Math.min(amount, 5), referrerId, referredId]
+    );
+    saveDatabase();
+    return { success: true, reward: Math.min(amount, 5) };
+  },
+
+  // 获取用户的邀请记录
+  getReferralStats(userId) {
+    const result = db.exec(
+      'SELECT * FROM referrals WHERE referrer_id = ? ORDER BY created_at DESC',
+      [userId]
+    );
+    if (!result.length) return { total: 0, registered: 0, paid: 0, totalReward: 0 };
+
+    const rows = result[0].values.map(vals => {
+      const cols = result[0].columns;
+      return Object.fromEntries(cols.map((c, i) => [c, vals[i]]));
+    });
+
+    const registered = rows.filter(r => r.rewarded).length;
+    const paid = rows.filter(r => r.paid_reward).length;
+    const totalReward = rows.reduce((sum, r) => sum + (r.reward_amount || 0), 0);
+
+    return { total: rows.length, registered, paid, totalReward, referrals: rows.slice(0, 10) };
+  }
+};
+
 // 备份数据库
 function backupDatabase() {
   const backupPath = path.join(DATA_DIR, `backup_${Date.now()}.db`);
@@ -534,5 +635,6 @@ module.exports = {
   PlanDB,
   SubscriptionDB,
   OrderDB,
+  ReferralDB,
   backupDatabase
 };

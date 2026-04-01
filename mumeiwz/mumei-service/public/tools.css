@@ -555,3 +555,81 @@
   color: var(--text-muted);
   margin-top: var(--space-1);
 }
+
+/* ========== 第四阶段新增样式 ========== */
+
+/* 结果标签页切换 */
+.result-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.result-tab {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border-radius: 6px 6px 0 0;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.result-tab.active {
+  background: var(--bg);
+  color: var(--primary);
+  border-bottom-color: var(--bg);
+  font-weight: 600;
+}
+
+.result-tab:hover:not(.active) {
+  color: var(--text);
+}
+
+/* 代码示例 */
+.code-example {
+  background: #0d1117;
+  padding: 14px 16px;
+  border-radius: 0 8px 8px 8px;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: #c9d1d9;
+  overflow-x: auto;
+  white-space: pre;
+  line-height: 1.7;
+  max-height: 240px;
+  overflow-y: auto;
+  tab-size: 2;
+}
+
+.code-example::-webkit-scrollbar { height: 4px; }
+.code-example::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+/* 按钮小尺寸 */
+.btn-sm {
+  padding: 4px 12px !important;
+  font-size: 0.75rem !important;
+}
+
+/* 结果区 pre 样式 */
+.result-pre {
+  background: var(--bg) !important;
+  padding: 14px 16px !important;
+  border-radius: 8px !important;
+  font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 0.8125rem !important;
+  color: var(--text-secondary) !important;
+  overflow-x: auto !important;
+  max-height: 300px !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+.tool-result .result-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
