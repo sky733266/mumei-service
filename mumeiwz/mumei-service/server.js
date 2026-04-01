@@ -857,6 +857,10 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+app.get('/pricing', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pricing.html'));
+});
+
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
@@ -948,6 +952,105 @@ app.post('/api/auth/quick-register', authLimiter, async (req, res) => {
 app.get('/api/plans', (req, res) => {
   const plans = PlanDB.getAllPlans();
   res.json({ success: true, plans });
+});
+
+// ============ 支付系统 ============
+// 引入支付模块
+const paymentModule = require('./payment-multi');
+
+// 获取可用支付方式
+app.get('/api/payments/methods', (req, res) => {
+  const payments = paymentModule.getAvailablePayments();
+  res.json({ success: true, payments });
+});
+
+// 创建支付订单
+app.post('/api/payments/create', authMiddleware, async (req, res) => {
+  try {
+    const { planId, method } = req.body;
+    
+    // 获取套餐信息
+    const plan = PlanDB.getPlan(planId);
+    if (!plan) {
+      return res.status(400).json({ success: false, error: '套餐不存在' });
+    }
+    
+    // 创建支付
+    const result = await paymentModule.createPayment(method, plan.price, plan, req.user);
+    
+    if (result.success) {
+      // 保存订单到数据库
+      // TODO: 保存订单信息
+      
+      res.json({
+        success: true,
+        ...result
+      });
+    } else {
+      res.status(400).json({ success: false, error: result.error });
+    }
+  } catch (error) {
+    console.error('创建支付失败:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 易支付回调
+app.post('/api/payments/epay/notify', async (req, res) => {
+  try {
+    const params = req.query;
+    
+    if (paymentModule.verifyEpaySign(params)) {
+      // 支付成功
+      const { out_trade_no, trade_status, money } = params;
+      
+      if (trade_status === 'TRADE_SUCCESS') {
+        // 更新用户套餐
+        // TODO: 根据订单号查找用户并升级套餐
+        console.log(`支付成功: ${out_trade_no}, 金额: ${money}`);
+      }
+      
+      res.send('success');
+    } else {
+      res.send('fail');
+    }
+  } catch (error) {
+    console.error('易支付回调处理失败:', error);
+    res.send('fail');
+  }
+});
+
+// Stripe Webhook
+app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const result = await paymentModule.handleStripeWebhook(
+    req.body,
+    req.headers['stripe-signature']
+  );
+  
+  if (result.success && result.event === 'payment_success') {
+    // 支付成功，更新用户套餐
+    console.log('Stripe 支付成功:', result.data);
+    // TODO: 更新用户套餐
+  }
+  
+  res.json({ received: true });
+});
+
+// PayPal 订单完成回调
+app.post('/api/payments/paypal/capture', async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const result = await paymentModule.capturePayPalOrder(orderId);
+    
+    if (result.success) {
+      console.log('PayPal 订单完成:', result);
+      // TODO: 更新用户套餐
+    }
+    
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // API v1 版本控制

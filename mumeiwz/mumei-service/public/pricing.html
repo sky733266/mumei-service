@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选择套餐 - 沐美服务</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --border: #2a2a3a;
+      --text: #e4e4e7;
+      --text-muted: #71717a;
+      --primary: #6366f1;
+      --primary-hover: #818cf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 100px 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+    
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .plan-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
+    }
+    
+    .plan-card.popular {
+      border-color: var(--primary);
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, var(--bg-card) 100%);
+    }
+    
+    .popular-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 20px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 100px;
+    }
+    
+    .plan-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .plan-price {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    
+    .plan-price span {
+      font-size: 1rem;
+      font-weight: 400;
+    }
+    
+    .plan-period {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+    
+    .plan-features {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    
+    .plan-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    
+    .plan-features li:last-child {
+      border-bottom: none;
+    }
+    
+    .plan-features li span:first-child {
+      color: var(--success);
+      font-size: 1.1rem;
+    }
+    
+    .select-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .select-btn.primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+    
+    .select-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+    
+    .select-btn.secondary {
+      background: var(--bg-secondary);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    /* 支付弹窗 */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 500px;
+      width: 100%;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .payment-methods {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .payment-method:hover {
+      border-color: var(--primary);
+    }
+    
+    .payment-method.selected {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+    
+    .payment-method input {
+      display: none;
+    }
+    
+    .payment-icon {
+      font-size: 2rem;
+    }
+    
+    .payment-info {
+      flex: 1;
+    }
+    
+    .payment-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .payment-fee {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .payment-check {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .payment-method.selected .payment-check {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+    }
+    
+    .pay-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .pay-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .qr-container {
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .qr-container img {
+      max-width: 200px;
+      margin-bottom: 16px;
+    }
+    
+    .qr-hint {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    /* 支付成功 */
+    .success-container {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 24px;
+    }
+    
+    .success-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .success-desc {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>选择适合你的套餐</h1>
+    <p class="subtitle">简单透明，按月订阅，随时取消</p>
+    
+    <div class="plans-grid">
+      <!-- 免费版 -->
+      <div class="plan-card">
+        <div class="plan-name">免费版</div>
+        <div class="plan-price">¥0</div>
+        <div class="plan-period">永久免费</div>
+        <ul class="plan-features">
+          <li><span>✓</span> 每日 100 次调用</li>
+          <li><span>✓</span> 8 个基础工具</li>
+          <li><span>✓</span> 3 个 API Token</li>
+          <li><span>✓</span> 社区支持</li>
+        </ul>
+        <button class="select-btn secondary" onclick="location.href='/panel'">
+          免费开始
+        </button>
+      </div>
+      
+      <!-- 专业版 -->
+      <div class="plan-card popular">
+        <div class="popular-badge">推荐</div>
+        <div class="plan-name">专业版</div>
+        <div class="plan-price">¥29 <span>/月</span></div>
+        <div class="plan-period">每月 · 随时取消</div>
+        <ul class="plan-features">
+          <li><span>✓</span> 每日 10,000 次调用</li>
+          <li><span>✓</span> 50+ 全部工具</li>
+          <li><span>✓</span> 20 个 API Token</li>
+          <li><span>✓</span> AI 工具</li>
+          <li><span>✓</span> 优先邮件支持</li>
+        </ul>
+        <button class="select-btn primary" onclick="selectPlan('pro')">
+          选择专业版
+        </button>
+      </div>
+      
+      <!-- 企业版 -->
+      <div class="plan-card">
+        <div class="plan-name">企业版</div>
+        <div class="plan-price">¥99 <span>/月</span></div>
+        <div class="plan-period">每月 · SLA 保障</div>
+        <ul class="plan-features">
+          <li><span>✓</span> 无限 API 调用</li>
+          <li><span>✓</span> 100 个 API Token</li>
+          <li><span>✓</span> 专属客户经理</li>
+          <li><span>✓</span> 99.9% 可用性</li>
+          <li><span>✓</span> 7x24 电话支持</li>
+        </ul>
+        <button class="select-btn secondary" onclick="selectPlan('enterprise')">
+          联系咨询
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 支付方式弹窗 -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-content" id="paymentContent">
+      <div class="modal-header">
+        <h3 class="modal-title">选择支付方式</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      
+      <div id="paymentMethods" class="payment-methods">
+        <!-- 动态加载 -->
+      </div>
+      
+      <button class="pay-btn" id="payBtn" onclick="startPayment()" disabled>
+        确认支付 ¥<span id="payAmount">29</span>
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    let selectedPlan = null;
+    let selectedPayment = null;
+    let availablePayments = [];
+    
+    // 加载可用支付方式
+    async function loadPayments() {
+      try {
+        const res = await fetch('/api/payments/methods');
+        const data = await res.json();
+        availablePayments = data.payments || [];
+        renderPayments();
+      } catch (e) {
+        console.error('加载支付方式失败:', e);
+        // 显示默认支付方式
+        availablePayments = [
+          { id: 'stripe', name: '💳 信用卡', fee: '2.9%+$0.3', recommended: true },
+          { id: 'paypal', name: 'PayPal', fee: '3.4%+$0.3', global: true }
+        ];
+        renderPayments();
+      }
+    }
+    
+    function renderPayments() {
+      const container = document.getElementById('paymentMethods');
+      
+      if (availablePayments.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-muted)">暂无可用支付方式，请联系客服</p>';
+        return;
+      }
+      
+      container.innerHTML = availablePayments.map(p => `
+        <label class="payment-method" data-id="${p.id}">
+          <input type="radio" name="payment" value="${p.id}">
+          <span class="payment-icon">${getPaymentIcon(p.id)}</span>
+          <div class="payment-info">
+            <div class="payment-name">${p.name} ${p.recommended ? '<span style="color:var(--primary)">推荐</span>' : ''}</div>
+            <div class="payment-fee">费率: ${p.fee}</div>
+          </div>
+          <div class="payment-check">✓</div>
+        </label>
+      `).join('');
+      
+      // 绑定选择事件
+      container.querySelectorAll('.payment-method').forEach(el => {
+        el.addEventListener('click', () => {
+          container.querySelectorAll('.payment-method').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedPayment = el.dataset.id;
+          document.getElementById('payBtn').disabled = false;
+        });
+      });
+    }
+    
+    function getPaymentIcon(id) {
+      const icons = {
+        'stripe': '💳',
+        'stripe_card': '💳',
+        'stripe_alipay': 'Alipay',
+        'stripe_wechat': 'WeChat',
+        'paypal': 'PayPal',
+        'epay_alipay': '💚',
+        'epay_wechat': '💙'
+      };
+      return icons[id] || '💳';
+    }
+    
+    function selectPlan(planId) {
+      selectedPlan = planId;
+      
+      const prices = { pro: 29, enterprise: 99 };
+      document.getElementById('payAmount').textContent = prices[planId] || 0;
+      
+      selectedPayment = null;
+      document.getElementById('payBtn').disabled = true;
+      
+      loadPayments();
+      document.getElementById('paymentModal').classList.add('active');
+    }
+    
+    function closeModal() {
+      document.getElementById('paymentModal').classList.remove('active');
+    }
+    
+    async function startPayment() {
+      if (!selectedPlan || !selectedPayment) return;
+      
+      const btn = document.getElementById('payBtn');
+      btn.disabled = true;
+      btn.textContent = '正在创建订单...';
+      
+      try {
+        const res = await fetch('/api/payments/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planId: selectedPlan,
+            method: selectedPayment
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+          if (data.payUrl) {
+            // 跳转到支付页面
+            window.location.href = data.payUrl;
+          } else if (data.checkoutUrl) {
+            // PayPal 跳转到批准页面
+            window.location.href = data.checkoutUrl;
+          } else if (data.clientSecret) {
+            // Stripe 显示支付表单或二维码
+            showStripePayment(data.clientSecret);
+          }
+        } else {
+          alert(data.error || '创建订单失败');
+          btn.disabled = false;
+          btn.textContent = '确认支付';
+        }
+      } catch (e) {
+        alert('支付创建失败: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = '确认支付';
+      }
+    }
+    
+    function showStripePayment(clientSecret) {
+      document.getElementById('paymentContent').innerHTML = `
+        <div class="modal-header">
+          <h3 class="modal-title">扫码支付</h3>
+          <button class="modal-close" onclick="location.reload()">×</button>
+        </div>
+        <div class="qr-container">
+          <p style="margin-bottom:16px">请使用信用卡完成支付</p>
+          <p style="color:var(--text-muted)">clientSecret: ${clientSecret.substring(0, 20)}...</p>
+          <p style="margin-top:24px">Stripe 支付功能需要配置 Stripe.js</p>
+        </div>
+      `;
+    }
+    
+    // 点击外部关闭
+    document.getElementById('paymentModal').addEventListener('click', (e) => {
+      if (e.target.id === 'paymentModal') closeModal();
+    });
+  </script>
+</body>
+</html>
