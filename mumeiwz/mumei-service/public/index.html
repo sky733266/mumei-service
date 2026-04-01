@@ -3,12 +3,340 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>沐美服务 | Mumei Service - 一人公司API平台</title>
+  <title>沐美服务 | 一人公司API平台 - 免费工具</title>
+  <meta name="description" content="免费AI工具、JSON格式化、Base64编码、密码生成等50+开发者工具。注册即送50次免费调用！">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles-beautiful.css">
+  <style>
+    /* 首页专属样式 */
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 40px;
+    }
+    
+    .hero-stat {
+      text-align: center;
+    }
+    
+    .hero-stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .hero-stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* 免费工具区域 */
+    .free-tools-section {
+      padding: 80px 0;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    }
+    
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 100px;
+      font-size: 0.875rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    
+    .section-badge span:first-child {
+      font-size: 1.2em;
+    }
+    
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+    
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tool-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+    }
+    
+    .tool-card.free {
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+    
+    .tool-card.free::before {
+      content: '免费';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 100px;
+    }
+    
+    .tool-card.premium {
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+    
+    .tool-card.premium::before {
+      content: '专业版';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 100px;
+    }
+    
+    .tool-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-glass);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .tool-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .tool-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    
+    .tool-action {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .tool-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    
+    .tool-link:hover {
+      text-decoration: underline;
+    }
+    
+    /* 升级提示卡片 */
+    .upgrade-card {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(99, 102, 241, 0.1));
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    
+    .upgrade-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+    
+    .upgrade-card p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    
+    .upgrade-features {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .upgrade-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border-radius: 100px;
+      font-size: 0.875rem;
+    }
+    
+    .upgrade-feature span:first-child {
+      color: var(--success);
+    }
+    
+    /* 定价表格优化 */
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 40px auto 0;
+    }
+    
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2);
+    }
+    
+    .pricing-card.popular {
+      border-color: var(--primary);
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, var(--bg-card) 100%);
+    }
+    
+    .pricing-card.popular::before {
+      content: '推荐';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 20px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 100px;
+    }
+    
+    .pricing-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .pricing-price {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    
+    .pricing-period {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+    
+    .pricing-features {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    .pricing-features li span:first-child {
+      color: var(--success);
+    }
+    
+    /* 快速开始 */
+    .quickstart-section {
+      background: var(--bg-secondary);
+    }
+    
+    .code-block {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 24px 0;
+      position: relative;
+    }
+    
+    .code-block pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      color: #c9d1d9;
+      margin: 0;
+      overflow-x: auto;
+    }
+    
+    .code-block .copy-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    
+    .code-block .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .hero-stats {
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .pricing-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- 导航栏 -->
@@ -24,21 +352,11 @@
         <a href="/tools" class="navbar-link">工具箱</a>
         <a href="#pricing" class="navbar-link">定价</a>
         <a href="/docs" class="navbar-link">文档</a>
-        <a href="/feedback" class="navbar-link">反馈</a>
       </div>
       
       <div class="navbar-actions">
-        <div class="language-switcher">
-          <select id="languageSelect">
-            <option value="zh">中文</option>
-            <option value="en">English</option>
-            <option value="ko">한국어</option>
-            <option value="fr">Français</option>
-            <option value="es">Español</option>
-            <option value="ja">日本語</option>
-          </select>
-        </div>
-        <a href="/panel" class="btn btn-primary btn-sm">开始使用</a>
+        <a href="/panel" class="btn btn-secondary btn-sm">登录</a>
+        <a href="/panel" class="btn btn-primary btn-sm">免费注册</a>
       </div>
     </div>
   </nav>
@@ -48,35 +366,33 @@
     <div class="hero-bg">
       <div class="hero-bg-grid"></div>
       <div class="hero-bg-glow"></div>
-      <div class="hero-bg-orb hero-bg-orb-1"></div>
-      <div class="hero-bg-orb hero-bg-orb-2"></div>
-      <div class="hero-bg-orb hero-bg-orb-3"></div>
     </div>
     
     <div class="hero-content">
-      <div class="hero-badge">
-        <span class="hero-badge-dot"></span>
-        <span>50+ 开发者工具现已上线</span>
+      <div class="section-badge">
+        <span>🎁</span>
+        <span>注册即送 50 次免费 API 调用</span>
       </div>
       
       <h1>
-        <span class="hero-title-gradient">沐美服务</span>
+        <span class="hero-title-gradient">50+ 开发者工具</span>
         <br>
-        一人公司API平台
+        全部免费使用
       </h1>
       
       <p class="hero-subtitle">
-        为独立开发者和一人公司打造的全栈API服务平台。
+        JSON格式化、Base64编码、密码生成、URL编码...
         <br>
-        AI工具、文件处理、数据分析、网络安全，一站式解决。
+        无需注册即可使用基础工具，注册解锁更多高级功能！
       </p>
       
       <div class="hero-actions">
-        <a href="/tools" class="btn btn-primary btn-lg">
+        <a href="#free-tools" class="btn btn-primary btn-lg">
           <span>🛠️</span>
-          <span>探索工具箱</span>
+          <span>免费使用工具</span>
         </a>
         <a href="/panel" class="btn btn-secondary btn-lg">
+          <span>📧</span>
           <span>免费注册</span>
         </a>
       </div>
@@ -84,205 +400,302 @@
       <div class="hero-stats">
         <div class="hero-stat">
           <div class="hero-stat-value">50+</div>
-          <div class="hero-stat-label">开发工具</div>
+          <div class="hero-stat-label">开发者工具</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-value">6</div>
-          <div class="hero-stat-label">语言支持</div>
+          <div class="hero-stat-value">100</div>
+          <div class="hero-stat-label">每日免费调用</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-value">99.9%</div>
-          <div class="hero-stat-label">服务可用性</div>
+          <div class="hero-stat-value">0</div>
+          <div class="hero-stat-label">门槛限制</div>
         </div>
         <div class="hero-stat">
           <div class="hero-stat-value">24/7</div>
-          <div class="hero-stat-label">技术支持</div>
+          <div class="hero-stat-label">稳定服务</div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- 功能展示 -->
-  <section class="tool-section">
+  <!-- 免费工具展示 -->
+  <section id="free-tools" class="free-tools-section">
     <div class="container">
       <div class="tool-section-header">
-        <h2>强大功能，简单使用</h2>
-        <p>从AI生成到数据处理，从网络安全到开发工具，满足您的所有需求</p>
+        <div class="section-badge">
+          <span>✅</span>
+          <span>无需注册，直接使用</span>
+        </div>
+        <h2>免费工具</h2>
+        <p>点击即可使用，无需注册。注册后每日可免费使用100次</p>
       </div>
       
-      <div class="grid grid-3">
-        <!-- AI工具 -->
-        <div class="feature-card animate-fade-in">
-          <div class="feature-icon">🤖</div>
-          <h2>AI智能工具</h2>
-          <p>文本生成、图像创作、语音合成、智能翻译。集成GPT、DALL-E等顶尖AI模型。</p>
+      <div class="tools-grid">
+        <!-- JSON 格式化 -->
+        <div class="tool-card free" onclick="location.href='/tools#json-format'">
+          <div class="tool-icon">📋</div>
+          <div class="tool-name">JSON 格式化</div>
+          <div class="tool-desc">美化、压缩、验证JSON数据。支持实时预览和语法高亮</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
         </div>
         
-        <!-- 文件处理 -->
-        <div class="feature-card animate-fade-in" style="animation-delay: 0.1s">
-          <div class="feature-icon">📁</div>
-          <h2>文件处理</h2>
-          <p>PDF转换、图片处理、视频转码、文档压缩。支持50+文件格式互转。</p>
+        <!-- Base64 -->
+        <div class="tool-card free" onclick="location.href='/tools#base64'">
+          <div class="tool-icon">🔤</div>
+          <div class="tool-name">Base64 编解码</div>
+          <div class="tool-desc">文本、图片、文件 Base64 互转。URL 安全编码支持</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
         </div>
         
-        <!-- 数据处理 -->
-        <div class="feature-card animate-fade-in" style="animation-delay: 0.2s">
-          <div class="feature-icon">📊</div>
-          <h2>数据分析</h2>
-          <p>JSON格式化、CSV转换、SQL美化、正则测试。让数据处理更高效。</p>
+        <!-- URL 编码 -->
+        <div class="tool-card free" onclick="location.href='/tools#url-encode'">
+          <div class="tool-icon">🔗</div>
+          <div class="tool-name">URL 编码解码</div>
+          <div class="tool-desc">URL 参数编码解码，处理特殊字符</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
         </div>
         
-        <!-- 网络工具 -->
-        <div class="feature-card animate-fade-in" style="animation-delay: 0.3s">
-          <div class="feature-icon">🌐</div>
-          <h2>网络工具</h2>
-          <p>DNS查询、IP定位、SSL检测、网站测速。网络问题一站式诊断。</p>
+        <!-- 密码生成 -->
+        <div class="tool-card free" onclick="location.href='/tools#password'">
+          <div class="tool-icon">🔑</div>
+          <div class="tool-name">密码生成器</div>
+          <div class="tool-desc">生成强密码、自定义长度、多种字符类型</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
         </div>
         
-        <!-- 安全工具 -->
-        <div class="feature-card animate-fade-in" style="animation-delay: 0.4s">
-          <div class="feature-icon">🔒</div>
-          <h2>安全工具</h2>
-          <p>密码生成、哈希计算、JWT处理、数据脱敏。保护您的数据安全。</p>
+        <!-- UUID 生成 -->
+        <div class="tool-card free" onclick="location.href='/tools#uuid'">
+          <div class="tool-icon">🎲</div>
+          <div class="tool-name">UUID 生成器</div>
+          <div class="tool-desc">批量生成 UUID v4，支持多种格式</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
         </div>
         
-        <!-- 开发工具 -->
-        <div class="feature-card animate-fade-in" style="animation-delay: 0.5s">
-          <div class="feature-icon">⚡</div>
-          <h2>开发工具</h2>
-          <p>代码格式化、差异对比、Cron解析、时间戳转换。提升开发效率。</p>
+        <!-- 哈希计算 -->
+        <div class="tool-card free" onclick="location.href='/tools#hash'">
+          <div class="tool-icon">#️⃣</div>
+          <div class="tool-name">哈希计算</div>
+          <div class="tool-desc">MD5、SHA1、SHA256 等常用哈希算法</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
+        </div>
+        
+        <!-- 正则测试 -->
+        <div class="tool-card free" onclick="location.href='/tools#regex'">
+          <div class="tool-icon">🎯</div>
+          <div class="tool-name">正则表达式测试</div>
+          <div class="tool-desc">实时匹配测试，支持多种编程语言代码导出</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
+        </div>
+        
+        <!-- Cron 解析 -->
+        <div class="tool-card free" onclick="location.href='/tools#cron'">
+          <div class="tool-icon">⏰</div>
+          <div class="tool-name">Cron 表达式</div>
+          <div class="tool-desc">Cron 解析、生成、可视化时间预览</div>
+          <div class="tool-action">
+            <span class="tool-link">立即使用 →</span>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- PDF转换器 -->
-  <section class="tool-section" style="background: var(--bg-secondary);">
+  <!-- 专业版工具 -->
+  <section class="tool-section">
     <div class="container">
       <div class="tool-section-header">
-        <h2>PDF转文字</h2>
-        <p>上传PDF文件，瞬间提取文字内容</p>
+        <div class="section-badge" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.3);">
+          <span>⚡</span>
+          <span>专业版专属</span>
+        </div>
+        <h2>高级工具</h2>
+        <p>注册专业版，解锁 AI 工具、PDF 处理、高级分析等功能</p>
       </div>
       
-      <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
-        <div class="upload-area" id="uploadArea">
-          <input type="file" id="pdfInput" accept=".pdf" hidden>
-          <div class="upload-content">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <h3>点击或拖拽PDF文件到这里</h3>
-            <p class="upload-hint">支持多页PDF，最大文件大小取决于您的套餐</p>
+      <div class="tools-grid">
+        <!-- AI 文本生成 -->
+        <div class="tool-card premium" onclick="location.href='/panel'">
+          <div class="tool-icon">🤖</div>
+          <div class="tool-name">AI 文本生成</div>
+          <div class="tool-desc">GPT-4 智能文本创作，支持自定义风格和长度</div>
+          <div class="tool-action">
+            <span class="tool-link">升级解锁 →</span>
           </div>
         </div>
         
-        <button id="convertBtn" class="btn btn-primary" disabled style="width: 100%; margin-top: 20px;">
-          <span>开始转换</span>
-        </button>
-        
-        <div id="resultArea" class="result-area hidden">
-          <div class="result-header">
-            <h3>转换结果</h3>
-            <div class="result-actions">
-              <button id="copyBtn" class="btn btn-secondary btn-sm">复制</button>
-              <button id="downloadBtn" class="btn btn-secondary btn-sm">下载</button>
-            </div>
+        <!-- PDF 转文字 -->
+        <div class="tool-card premium" onclick="location.href='/panel'">
+          <div class="tool-icon">📄</div>
+          <div class="tool-name">PDF 转文字</div>
+          <div class="tool-desc">PDF 文字提取、表格识别、批量处理</div>
+          <div class="tool-action">
+            <span class="tool-link">升级解锁 →</span>
           </div>
-          <div id="resultContent" class="result-content"></div>
         </div>
+        
+        <!-- 图片压缩 -->
+        <div class="tool-card premium" onclick="location.href='/compress'">
+          <div class="tool-icon">🖼️</div>
+          <div class="tool-name">图片压缩</div>
+          <div class="tool-desc">PNG、JPG、WebP 无损压缩，最高压缩90%</div>
+          <div class="tool-action">
+            <span class="tool-link">升级解锁 →</span>
+          </div>
+        </div>
+        
+        <!-- 二维码 -->
+        <div class="tool-card premium" onclick="location.href='/qrcode'">
+          <div class="tool-icon">📱</div>
+          <div class="tool-name">二维码生成</div>
+          <div class="tool-desc">Logo 二维码、彩色码、批量生成</div>
+          <div class="tool-action">
+            <span class="tool-link">升级解锁 →</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 升级卡片 -->
+      <div class="upgrade-card">
+        <h3>🚀 升级专业版，解锁全部工具</h3>
+        <p>一次订阅，尽享 50+ 高级工具和无限使用</p>
+        
+        <div class="upgrade-features">
+          <div class="upgrade-feature">
+            <span>✓</span>
+            <span>AI 文本生成</span>
+          </div>
+          <div class="upgrade-feature">
+            <span>✓</span>
+            <span>PDF 转换</span>
+          </div>
+          <div class="upgrade-feature">
+            <span>✓</span>
+            <span>图片压缩</span>
+          </div>
+          <div class="upgrade-feature">
+            <span>✓</span>
+            <span>每日 10000 次调用</span>
+          </div>
+          <div class="upgrade-feature">
+            <span>✓</span>
+            <span>优先技术支持</span>
+          </div>
+        </div>
+        
+        <a href="#pricing" class="btn btn-primary btn-lg">
+          <span>¥29/月</span>
+          <span>立即升级</span>
+        </a>
       </div>
     </div>
   </section>
 
   <!-- 定价 -->
-  <section id="pricing" class="tool-section">
+  <section id="pricing" class="tool-section" style="background: var(--bg-secondary);">
     <div class="container">
       <div class="tool-section-header">
         <h2>简单透明的定价</h2>
-        <p>免费开始使用，按需升级，无隐藏费用</p>
+        <p>选择适合你的方案，按月订阅，随时取消</p>
       </div>
       
-      <div class="grid grid-3">
+      <div class="pricing-cards">
         <!-- 免费版 -->
         <div class="pricing-card">
-          <h3>免费版</h3>
-          <div class="pricing-price">¥0<span>/月</span></div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">适合个人开发者试用</p>
+          <div class="pricing-name">免费版</div>
+          <div class="pricing-price">¥0</div>
+          <div class="pricing-period">永久免费</div>
           <ul class="pricing-features">
-            <li>100 次/日 API调用</li>
-            <li>3 个API Token</li>
-            <li>基础工具免费使用</li>
-            <li>社区支持</li>
+            <li><span>✓</span> 每日 100 次调用</li>
+            <li><span>✓</span> 8 个基础工具</li>
+            <li><span>✓</span> 3 个 API Token</li>
+            <li><span>✓</span> 社区支持</li>
           </ul>
           <a href="/panel" class="btn btn-secondary" style="width: 100%;">免费开始</a>
         </div>
         
         <!-- 专业版 -->
-        <div class="pricing-card featured">
-          <h3>专业版</h3>
-          <div class="pricing-price">¥199<span>/月</span></div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">适合小型团队和项目</p>
+        <div class="pricing-card popular">
+          <div class="pricing-name">专业版</div>
+          <div class="pricing-price">¥29</div>
+          <div class="pricing-period">每月 / 随时取消</div>
           <ul class="pricing-features">
-            <li>10,000 次/日 API调用</li>
-            <li>20 个API Token</li>
-            <li>AI工具使用权</li>
-            <li>优先邮件支持</li>
-            <li>详细使用统计</li>
+            <li><span>✓</span> 每日 10,000 次调用</li>
+            <li><span>✓</span> 50+ 全部工具</li>
+            <li><span>✓</span> 20 个 API Token</li>
+            <li><span>✓</span> AI 工具</li>
+            <li><span>✓</span> 优先邮件支持</li>
           </ul>
           <a href="/panel" class="btn btn-primary" style="width: 100%;">立即升级</a>
         </div>
         
         <!-- 企业版 -->
         <div class="pricing-card">
-          <h3>企业版</h3>
-          <div class="pricing-price">¥699<span>/月</span></div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">适合大型企业使用</p>
+          <div class="pricing-name">企业版</div>
+          <div class="pricing-price">¥99</div>
+          <div class="pricing-period">每月 / SLA 保障</div>
           <ul class="pricing-features">
-            <li>100,000 次/日 API调用</li>
-            <li>100 个API Token</li>
-            <li>全部AI工具无限制</li>
-            <li>优先技术支持</li>
-            <li>自定义Webhook</li>
-            <li>SLA保障</li>
+            <li><span>✓</span> 无限 API 调用</li>
+            <li><span>✓</span> 100 个 API Token</li>
+            <li><span>✓</span> 专属客户经理</li>
+            <li><span>✓</span> 99.9% 可用性</li>
+            <li><span>✓</span> 7x24 电话支持</li>
           </ul>
-          <a href="/panel" class="btn btn-secondary" style="width: 100%;">联系销售</a>
+          <a href="/panel" class="btn btn-secondary" style="width: 100%;">联系咨询</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 文档入口 -->
-  <section id="docs" class="tool-section" style="background: var(--bg-secondary);">
+  <!-- 快速开始 -->
+  <section class="quickstart-section" style="padding: 80px 0;">
     <div class="container">
       <div class="tool-section-header">
-        <h2>完善的开发文档</h2>
-        <p>快速集成，简单API，轻松上手</p>
+        <h2>3 行代码，快速接入</h2>
+        <p>支持 JavaScript、Python、cURL 等多种方式</p>
       </div>
       
-      <div class="grid grid-3">
-        <a href="/docs" class="feature-card" style="text-decoration: none; color: inherit;">
-          <div class="feature-icon">📚</div>
-          <h2>快速开始</h2>
-          <p>5分钟快速上手，完整的示例代码</p>
-        </a>
-        
-        <a href="/docs#api-reference" class="feature-card" style="text-decoration: none; color: inherit;">
-          <div class="feature-icon">⚡</div>
-          <h2>API参考</h2>
-          <p>完整的REST API文档，实时测试</p>
-        </a>
-        
-        <a href="/docs#sdks" class="feature-card" style="text-decoration: none; color: inherit;">
-          <div class="feature-icon">🔌</div>
-          <h2>SDK下载</h2>
-          <p>JavaScript、Python、Go等多语言SDK</p>
-        </a>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><code>// JavaScript 示例
+const response = await fetch('https://api.mumei.dev/v1/json-format', {
+  method: 'POST',
+  headers: { 
+    'Authorization': 'Bearer YOUR_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ json: '{"key": "value"}' })
+});
+const result = await response.json();</code></pre>
       </div>
       
-      <div style="text-align: center; margin-top: 40px;">
-        <a href="/docs" class="btn btn-primary btn-lg">查看完整文档</a>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+        <pre><code># Python 示例
+import requests
+
+response = requests.post(
+    'https://api.mumei.dev/v1/json-format',
+    headers={
+        'Authorization': 'Bearer YOUR_TOKEN',
+        'Content-Type': 'application/json'
+    },
+    json={'json': '{"key": "value"}'}
+)
+result = response.json()</code></pre>
       </div>
     </div>
   </section>
@@ -294,6 +707,15 @@
     </div>
   </footer>
 
-  <script src="app.js"></script>
+  <script>
+    // 复制代码
+    function copyCode(btn) {
+      const code = btn.parentElement.querySelector('code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '已复制!';
+        setTimeout(() => btn.textContent = '复制', 2000);
+      });
+    }
+  </script>
 </body>
 </html>
