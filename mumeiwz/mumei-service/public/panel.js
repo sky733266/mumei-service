@@ -46,49 +46,76 @@ async function loadTranslations(lang) {
   }
 }
 
-// 更新UI文本
+// 更新UI文本（安全版，元素不存在时跳过）
 function updateUI() {
-  document.getElementById('userPanel').textContent = translations.userPanel || '用户面板';
-  loginTab.textContent = translations.login;
-  registerTab.textContent = translations.register;
-  document.getElementById('emailLabel').textContent = translations.email;
-  document.getElementById('passwordLabel').textContent = translations.password;
-  document.getElementById('loginBtn').textContent = translations.login;
-  document.getElementById('registerEmailLabel').textContent = translations.email;
-  document.getElementById('registerPasswordLabel').textContent = translations.password;
-  document.getElementById('confirmPasswordLabel').textContent = translations.confirmPassword;
-  document.getElementById('verifyCodeLabel').textContent = translations.verifyCode;
-  sendCodeBtn.textContent = translations.sendCode;
-  document.getElementById('registerSubmitBtn').textContent = translations.register;
-  
-  // 统计相关
-  document.getElementById('usageStats').textContent = translations.usageStats;
-  document.getElementById('dailyUsageLabel').textContent = translations.dailyUsage;
-  document.getElementById('monthlyUsageLabel').textContent = translations.monthlyUsage;
-  document.getElementById('totalCallsLabel').textContent = translations.totalCalls;
-  document.getElementById('successRateLabel').textContent = translations.successRate;
-  document.getElementById('avgResponseLabel').textContent = translations.avgResponse;
-  document.getElementById('activeTokensLabel').textContent = translations.maxTokens;
-  
-  // 套餐相关
-  document.getElementById('currentPlan').textContent = translations.currentPlan;
-  document.getElementById('upgrade').textContent = translations.upgrade;
-  document.getElementById('plansTitle').textContent = translations.plans;
-  
-  // Token相关
-  document.getElementById('myTokens').textContent = translations.myTokens;
-  document.getElementById('createToken').textContent = translations.createToken;
-  document.getElementById('createTokenTitle').textContent = translations.createToken;
-  document.getElementById('tokenNameLabel').textContent = translations.tokenName;
-  
-  // 日志相关
-  document.getElementById('apiLogs').textContent = translations.apiLogs;
-  document.getElementById('endpoint').textContent = translations.endpoint;
-  document.getElementById('status').textContent = translations.status;
-  document.getElementById('time').textContent = translations.time;
-  document.getElementById('duration').textContent = translations.duration;
-  
-  document.getElementById('logout').textContent = translations.logout;
+  // 辅助函数：安全设置文本
+  function t(id, key, fallback) {
+    const el = document.getElementById(id);
+    if (el && translations[key]) el.textContent = translations[key];
+    else if (el && fallback) el.textContent = fallback;
+  }
+
+  document.documentElement.lang = currentLang;
+
+  // 导航
+  t('userPanel', 'userPanel', '用户面板');
+  t('logout', 'logout', '退出登录');
+  if (loginTab) loginTab.textContent = translations.login || '登录';
+  if (registerTab) registerTab.textContent = translations.register || '注册';
+
+  // 登录表单
+  t('emailLabel', 'email', '邮箱');
+  t('passwordLabel', 'password', '密码');
+  t('loginBtn', 'login', '登录');
+  t('registerEmailLabel', 'email', '邮箱');
+  t('registerPasswordLabel', 'password', '密码');
+  t('confirmPasswordLabel', 'confirmPassword', '确认密码');
+  t('verifyCodeLabel', 'verifyCode', '验证码');
+  if (sendCodeBtn) sendCodeBtn.textContent = translations.sendCode || '发送验证码';
+  t('registerSubmitBtn', 'register', '注册');
+
+  // 统计
+  t('usageStats', 'usageStats', '使用统计');
+  t('dailyUsageLabel', 'dailyUsage', '今日调用');
+  t('monthlyUsageLabel', 'monthlyUsage', '本月调用');
+  t('totalCallsLabel', 'totalCalls', '总调用次数');
+  t('successRateLabel', 'successRate', '成功率');
+  t('avgResponseLabel', 'avgResponse', '平均响应');
+  t('activeTokensLabel', 'activeTokens', '活跃Token');
+
+  // 套餐
+  t('currentPlan', 'currentPlan', '当前套餐');
+  t('upgrade', 'upgrade', '升级套餐');
+  t('plansTitle', 'plans', '套餐列表');
+
+  // Token
+  t('myTokens', 'myTokens', '我的Token');
+  t('createToken', 'createToken', '创建Token');
+  t('createTokenTitle', 'createToken', '创建Token');
+  t('tokenNameLabel', 'tokenName', 'Token名称');
+
+  // 日志
+  t('apiLogs', 'apiLogs', 'API日志');
+  t('endpoint', 'endpoint', '接口');
+  t('status', 'status', '状态');
+  t('time', 'time', '时间');
+  t('duration', 'duration', '耗时');
+
+  // 订单
+  t('orderHistoryTitle', 'orderHistory', '订单历史');
+
+  // 邀请
+  t('referralTitle', 'referral', '邀请奖励');
+  t('copyLinkBtn', 'copyLink', '复制链接');
+
+  // 最近使用
+  t('recentUsageTitle', 'recentUsage', '最近使用');
+
+  // data-i18n 批量翻译
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[key]) el.textContent = translations[key];
+  });
 }
 
 // 设置事件监听

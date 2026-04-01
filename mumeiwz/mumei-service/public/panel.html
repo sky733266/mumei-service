@@ -155,8 +155,8 @@
       <!-- 最近使用 -->
       <section class="feature-card">
         <div class="section-header">
-          <h2>最近使用</h2>
-          <button class="btn-secondary" onclick="location.href='#logs'" style="font-size:12px;padding:4px 12px;">查看全部</button>
+          <h2 id="recentUsageTitle" data-i18n="recentUsage">最近使用</h2>
+          <button class="btn-secondary" onclick="location.href='#logs'" style="font-size:12px;padding:4px 12px;" data-i18n="viewAll">查看全部</button>
         </div>
         <div id="recentUsage" style="font-size:13px;color:#71717a;">加载中...</div>
       </section>
@@ -164,32 +164,32 @@
       <!-- 邀请奖励 -->
       <section class="feature-card">
         <div class="section-header">
-          <h2>🎁 邀请奖励</h2>
+          <h2 id="referralTitle" data-i18n="referral">🎁 邀请奖励</h2>
         </div>
         <div id="referralSection">
           <div style="margin-bottom:16px;">
-            <p style="font-size:13px;color:#71717a;margin-bottom:8px;">分享你的邀请链接，好友注册你获得 20 次免费调用</p>
+            <p style="font-size:13px;color:#71717a;margin-bottom:8px;" data-i18n="referralDesc">分享你的邀请链接，好友注册你获得 20 次免费调用</p>
             <div style="display:flex;gap:8px;">
               <input type="text" id="inviteLink" readonly
                 style="flex:1;padding:10px 14px;background:#12121a;border:1px solid #2a2a3a;border-radius:8px;color:#e4e4e7;font-size:13px;">
-              <button onclick="copyInviteLink()" class="btn-secondary" style="white-space:nowrap;">复制链接</button>
+              <button onclick="copyInviteLink()" id="copyLinkBtn" class="btn-secondary" style="white-space:nowrap;" data-i18n="copyLink">复制链接</button>
             </div>
           </div>
           <div id="referralStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
             <div style="text-align:center;padding:12px;background:#12121a;border-radius:8px;border:1px solid #2a2a3a;">
               <div style="font-size:1.5rem;font-weight:700;color:#6366f1;" id="refTotal">0</div>
-              <div style="font-size:12px;color:#71717a;">邀请人数</div>
+              <div style="font-size:12px;color:#71717a;" data-i18n="inviteCount">邀请人数</div>
             </div>
             <div style="text-align:center;padding:12px;background:#12121a;border-radius:8px;border:1px solid #2a2a3a;">
               <div style="font-size:1.5rem;font-weight:700;color:#22c55e;" id="refRegistered">0</div>
-              <div style="font-size:12px;color:#71717a;">已注册</div>
+              <div style="font-size:12px;color:#71717a;" data-i18n="registeredCount">已注册</div>
             </div>
             <div style="text-align:center;padding:12px;background:#12121a;border-radius:8px;border:1px solid #2a2a3a;">
               <div style="font-size:1.5rem;font-weight:700;color:#f59e0b;" id="refReward">0</div>
-              <div style="font-size:12px;color:#71717a;">奖励次数</div>
+              <div style="font-size:12px;color:#71717a;" data-i18n="rewardCount">奖励次数</div>
             </div>
           </div>
-          <div style="padding:12px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;font-size:12px;color:#a1a1aa;line-height:1.6;">
+          <div style="padding:12px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:8px;font-size:12px;color:#a1a1aa;line-height:1.6;" data-i18n="referralTip">
             💡 好友付费购买专业版，你额外获得 ¥5 返利
           </div>
         </div>
@@ -198,7 +198,7 @@
       <!-- 订单历史 -->
       <section class="feature-card">
         <div class="section-header">
-          <h2>订单历史</h2>
+          <h2 id="orderHistoryTitle" data-i18n="orderHistory">订单历史</h2>
         </div>
         <div id="orderList" style="font-size:14px;color:#71717a;">加载中...</div>
       </section>

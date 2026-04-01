@@ -61,25 +61,36 @@ async function loadTranslations(lang) {
 
 // 更新UI
 function updateUI() {
-  const elements = {
-    title: document.getElementById('title'),
-    subtitle: document.getElementById('subtitle'),
-    pdfConverter: document.getElementById('pdfConverter'),
-    uploadPDF: document.getElementById('uploadPDF'),
-    convert: document.getElementById('convert'),
-    result: document.getElementById('result'),
-    apiDocs: document.getElementById('apiDocs'),
-    contact: document.getElementById('contact')
+  document.documentElement.lang = currentLang;
+
+  const set = (id, key) => {
+    const el = document.getElementById(id);
+    if (el && translations[key]) el.textContent = translations[key];
   };
-  
-  if (elements.title) elements.title.textContent = translations.title;
-  if (elements.subtitle) elements.subtitle.textContent = translations.subtitle;
-  if (elements.pdfConverter) elements.pdfConverter.textContent = translations.pdfConverter;
-  if (elements.uploadPDF) elements.uploadPDF.textContent = translations.uploadPDF;
-  if (elements.convert) elements.convert.textContent = translations.convert;
-  if (elements.result) elements.result.textContent = translations.result;
-  if (elements.apiDocs) elements.apiDocs.textContent = translations.apiDocs;
-  if (elements.contact) elements.contact.textContent = translations.contact;
+
+  set('title', 'title');
+  set('subtitle', 'subtitle');
+  set('pdfConverter', 'pdfConverter');
+  set('uploadPDF', 'uploadPDF');
+  set('convert', 'convert');
+  set('result', 'result');
+  set('apiDocs', 'apiDocs');
+  set('contact', 'contact');
+
+  // 导航链接
+  document.querySelectorAll('nav a, .navbar-link').forEach(link => {
+    const href = link.getAttribute('href') || '';
+    if (href === '/tools' || href === '/#tools') link.textContent = translations.toolbox || '工具箱';
+    if (href === '/panel') link.textContent = translations.userPanel || '用户面板';
+    if (href === '/pricing' || href === '/#pricing') link.textContent = translations.pricing || '定价';
+    if (href === '/docs') link.textContent = translations.docs || '文档';
+  });
+
+  // data-i18n 批量翻译
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[key]) el.textContent = translations[key];
+  });
 }
 
 // 滚动动画

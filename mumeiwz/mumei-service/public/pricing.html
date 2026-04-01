@@ -582,6 +582,60 @@
     document.getElementById('paymentModal').addEventListener('click', (e) => {
       if (e.target.id === 'paymentModal') closeModal();
     });
+
+    // ============ 语言切换 ============
+    let currentLang = localStorage.getItem('language') || 'zh';
+    let translations = {};
+
+    async function loadTranslations(lang) {
+      try {
+        const res = await fetch(`/api/translations/${lang}`);
+        translations = await res.json();
+        applyTranslations();
+      } catch (e) { console.warn('翻译加载失败', e); }
+    }
+
+    function applyTranslations() {
+      document.documentElement.lang = currentLang;
+      // 导航
+      const navLinks = document.querySelectorAll('nav a, .nav-link');
+      navLinks.forEach(a => {
+        const href = a.getAttribute('href') || '';
+        if (href === '/tools') a.textContent = translations.toolbox || a.textContent;
+        if (href === '/panel') a.textContent = translations.userPanel || a.textContent;
+        if (href === '/pricing') a.textContent = translations.pricing || a.textContent;
+        if (href === '/docs') a.textContent = translations.docs || a.textContent;
+      });
+      // 标题
+      const h1 = document.querySelector('.pricing-hero h1, .hero h1, h1');
+      if (h1) h1.textContent = translations.pricingTitle || h1.textContent;
+      const sub = document.querySelector('.pricing-hero p, .hero p, .subtitle');
+      if (sub) sub.textContent = translations.pricingSubtitle || sub.textContent;
+      // 套餐名
+      document.querySelectorAll('[data-plan-name]').forEach(el => {
+        const plan = el.getAttribute('data-plan-name');
+        if (translations[plan]) el.textContent = translations[plan];
+      });
+      // 按钮
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[key]) el.textContent = translations[key];
+      });
+    }
+
+    // 初始化语言
+    loadTranslations(currentLang);
+
+    // 监听语言切换（如果有 select）
+    const langSelect = document.getElementById('languageSelect');
+    if (langSelect) {
+      langSelect.value = currentLang;
+      langSelect.addEventListener('change', e => {
+        currentLang = e.target.value;
+        localStorage.setItem('language', currentLang);
+        loadTranslations(currentLang);
+      });
+    }
   </script>
 </body>
 </html>

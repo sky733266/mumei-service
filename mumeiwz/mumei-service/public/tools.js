@@ -32,16 +32,40 @@ async function loadTranslations(lang) {
 
 // 更新页面文本
 function updatePageText() {
-  // 更新标题
+  document.documentElement.lang = currentLang;
+
+  // 标题
   const title = document.getElementById('tools');
   if (title) title.textContent = translations.toolbox || translations.tools || '工具箱';
-  
-  // 更新导航
-  const navLinks = document.querySelectorAll('.navbar-link');
+
+  // 导航链接
+  const navLinks = document.querySelectorAll('.navbar-link, nav a');
   navLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (href === '/tools') link.textContent = translations.toolbox || '工具箱';
+    const href = link.getAttribute('href') || '';
+    if (href === '/tools' || href === '/#tools') link.textContent = translations.toolbox || '工具箱';
     if (href === '/panel') link.textContent = translations.userPanel || '用户面板';
+    if (href === '/pricing' || href === '/#pricing') link.textContent = translations.pricing || '定价';
+    if (href === '/docs') link.textContent = translations.docs || '文档';
+  });
+
+  // 开始使用按钮
+  const startBtn = document.querySelector('a[href="/panel"].btn');
+  if (startBtn) startBtn.textContent = translations.getStarted || '开始使用';
+
+  // 工具分类标签
+  document.querySelectorAll('[data-category]').forEach(el => {
+    const cat = el.getAttribute('data-category');
+    const keyMap = {
+      'ai': 'aiTools', 'file': 'fileTools', 'data': 'dataTools',
+      'network': 'networkTools', 'security': 'securityTools', 'dev': 'devTools'
+    };
+    if (keyMap[cat] && translations[keyMap[cat]]) el.textContent = translations[keyMap[cat]];
+  });
+
+  // data-i18n 批量翻译
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[key]) el.textContent = translations[key];
   });
 }
 
