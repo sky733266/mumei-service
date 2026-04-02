@@ -8,8 +8,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles-beautiful.css">
+
+  <meta name="description" content="沐美服务 - 一人公司API服务平台，提供AI文本生成、图片处理、数据转换等37+实用工具">
+  <meta name="keywords" content="沐美服务,API平台,AI工具,在线工具,文件转换">
+  <meta name="author" content="Mumei Service">
 </head>
 <body>
+  <!-- 公告横幅 -->
+  <div id="announcementBanner" class="announcement-banner" style="display:none;">
+    <div class="announcement-content">
+      <span id="announcementText"></span>
+      <a id="announcementLink" href="/tools" class="announcement-link">立即体验 →</a>
+    </div>
+    <button class="announcement-close" onclick="closeAnnouncement()" aria-label="关闭">×</button>
+  </div>
+
   <!-- 导航栏 -->
   <nav class="navbar">
     <div class="navbar-content">

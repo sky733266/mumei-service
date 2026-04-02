@@ -1,3 +1,27 @@
+
+// ============ 免费试用系统 ============
+const FREE_TRIAL_LIMIT = 10;
+function getFreeTrials() {
+  const stored = localStorage.getItem('freeTrialCount');
+  if (stored === null) return FREE_TRIAL_LIMIT;
+  return parseInt(stored, 10) || 0;
+}
+function useFreeTrial() {
+  let n = getFreeTrials();
+  if (n > 0) localStorage.setItem('freeTrialCount', --n);
+  return n;
+}
+function showTrialCount() {
+  const el = document.getElementById('trialCount');
+  if (el) {
+    const n = getFreeTrials();
+    el.textContent = n > 0 ? n : 0;
+  }
+}
+function isFreeTrialAvailable() {
+  return getFreeTrials() > 0;
+}
+
 // 工具箱页面脚本
 
 let currentLang = localStorage.getItem('language') || 'zh';
@@ -16,6 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
       loadTranslations(currentLang);
     });
     loadTranslations(currentLang);
+  }
+  // 显示免费试用次数（未登录时）
+  if (!authToken) {
+    const badge = document.getElementById('trialBadge');
+    if (badge) { badge.style.display = 'inline'; showTrialCount(); }
   }
 });
 
@@ -574,6 +603,20 @@ function generateToolForm(config, toolId) {
 
 // 执行工具
 async function executeTool(toolId, config) {
+  // 未登录用户检查免费试用
+  if (!authToken && !isFreeTrialAvailable()) {
+    const resultDiv = document.getElementById('toolResult');
+    resultDiv.classList.remove('hidden');
+    resultDiv.innerHTML = `
+      <div class="tool-error" style="text-align:center;padding:32px;">
+        <p style="font-size:16px;margin-bottom:16px;">⚠️ 免费试用次数已用完</p>
+        <p style="color:#a1a1aa;margin-bottom:20px;font-size:14px;">注册后获得更多免费额度，或升级专业版享受无限调用</p>
+        <a href="/panel" class="btn-primary" style="display:inline-block;text-decoration:none;">立即注册</a>
+      </div>
+    `;
+    return;
+  }
+
   const form = document.getElementById('toolForm');
   const formData = new FormData(form);
   const data = {};
@@ -611,6 +654,8 @@ async function executeTool(toolId, config) {
     const response = await fetch(url, options);
     const result = await response.json();
     displayResult(result, config, url, options, data);
+    // 未登录时扣减免费试用次数
+    if (!authToken) { useFreeTrial(); showTrialCount(); }
   } catch (error) {
     resultDiv.innerHTML = `<div class="tool-error">执行失败: ${error.message}</div>`;
   }

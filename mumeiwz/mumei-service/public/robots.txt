@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /panel
+Disallow: /admin
+
+Sitemap: https://mumei.example.com/sitemap.xml

@@ -9,6 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles-beautiful.css">
   <link rel="stylesheet" href="tools.css">
+
+  <meta name="description" content="37+在线实用工具箱 - AI生成、文件转换、数据格式化、加密解密、网络查询等免费工具">
+  <meta name="keywords" content="在线工具箱,AI工具,JSON格式化,Base64,密码生成,二维码">
+  <meta name="author" content="Mumei Service">
 </head>
 <body>
   <!-- 导航栏 -->
@@ -28,6 +32,10 @@
       </div>
       
       <div class="navbar-actions">
+        <!-- 免费试用次数（未登录时显示） -->
+        <span id="trialBadge" class="trial-badge" style="display:none;font-size:12px;background:rgba(99,102,241,0.2);color:#a5b4fc;padding:4px 10px;border-radius:12px;margin-right:8px;">
+          剩余 <span id="trialCount">10</span> 次免费试用
+        </span>
         <div class="language-switcher">
           <select id="languageSelect">
             <option value="zh">中文</option>

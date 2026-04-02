@@ -1,3 +1,31 @@
+// ============ 公告横幅 ============
+async function loadAnnouncementBanner() {
+  try {
+    const res = await fetch("/api/announcement");
+    const data = await res.json();
+    if (!data.enabled) return;
+    const banner = document.getElementById("announcementBanner");
+    if (!banner) return;
+    if (localStorage.getItem("announcementClosed") === "true") return;
+    banner.style.background = data.bg || banner.style.background;
+    document.getElementById("announcementText").textContent = data.text;
+    const link = document.getElementById("announcementLink");
+    link.href = data.link || "/tools";
+    link.textContent = data.linkText || "立即体验 →";
+    banner.style.display = "flex";
+    const navbar = document.querySelector(".navbar");
+    if (navbar) navbar.style.top = "40px";
+  } catch (e) {}
+}
+
+function closeAnnouncement() {
+  const banner = document.getElementById("announcementBanner");
+  if (banner) banner.style.display = "none";
+  localStorage.setItem("announcementClosed", "true");
+  const navbar = document.querySelector(".navbar");
+  if (navbar) navbar.style.top = "0";
+}
+
 // 带图片背景的完整美化版首页
 // 使用 Unsplash 免费图片作为背景
 
@@ -30,12 +58,13 @@ let translations = {};
 // 等待DOM加载
 document.addEventListener('DOMContentLoaded', function() {
   preloadImages();
-  
+  loadAnnouncementBanner();
+
   const languageSelect = document.getElementById('languageSelect');
   if (languageSelect) {
     languageSelect.value = currentLang;
     loadTranslations(currentLang);
-    
+
     languageSelect.addEventListener('change', (e) => {
       currentLang = e.target.value;
       localStorage.setItem('language', currentLang);
@@ -43,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
       loadTranslations(currentLang);
     });
   }
-  
+
   // 添加滚动动画
   addScrollAnimations();
 });
@@ -60,38 +89,36 @@ async function loadTranslations(lang) {
 }
 
 // 更新UI
-function updateUI() {
-  document.documentElement.lang = currentLang;
+document.documentElement.lang = currentLang;
 
-  const set = (id, key) => {
-    const el = document.getElementById(id);
-    if (el && translations[key]) el.textContent = translations[key];
-  };
+const set = (id, key) => {
+  const el = document.getElementById(id);
+  if (el && translations[key]) el.textContent = translations[key];
+};
 
-  set('title', 'title');
-  set('subtitle', 'subtitle');
-  set('pdfConverter', 'pdfConverter');
-  set('uploadPDF', 'uploadPDF');
-  set('convert', 'convert');
-  set('result', 'result');
-  set('apiDocs', 'apiDocs');
-  set('contact', 'contact');
+set('title', 'title');
+set('subtitle', 'subtitle');
+set('pdfConverter', 'pdfConverter');
+set('uploadPDF', 'uploadPDF');
+set('convert', 'convert');
+set('result', 'result');
+set('apiDocs', 'apiDocs');
+set('contact', 'contact');
 
-  // 导航链接
-  document.querySelectorAll('nav a, .navbar-link').forEach(link => {
-    const href = link.getAttribute('href') || '';
-    if (href === '/tools' || href === '/#tools') link.textContent = translations.toolbox || '工具箱';
-    if (href === '/panel') link.textContent = translations.userPanel || '用户面板';
-    if (href === '/pricing' || href === '/#pricing') link.textContent = translations.pricing || '定价';
-    if (href === '/docs') link.textContent = translations.docs || '文档';
-  });
+// 导航链接
+document.querySelectorAll('nav a, .navbar-link').forEach(link => {
+  const href = link.getAttribute('href') || '';
+  if (href === '/tools' || href === '/#tools') link.textContent = translations.toolbox || '工具箱';
+  if (href === '/panel') link.textContent = translations.userPanel || '用户面板';
+  if (href === '/pricing' || href === '/#pricing') link.textContent = translations.pricing || '定价';
+  if (href === '/docs') link.textContent = translations.docs || '文档';
+});
 
-  // data-i18n 批量翻译
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (translations[key]) el.textContent = translations[key];
-  });
-}
+// data-i18n 批量翻译
+document.querySelectorAll('[data-i18n]').forEach(el => {
+  const key = el.getAttribute('data-i18n');
+  if (translations[key]) el.textContent = translations[key];
+});
 
 // 滚动动画
 function addScrollAnimations() {
@@ -102,7 +129,7 @@ function addScrollAnimations() {
       }
     });
   }, { threshold: 0.1 });
-  
+
   document.querySelectorAll('.feature-card, .pricing-card').forEach(el => {
     observer.observe(el);
   });
@@ -116,17 +143,9 @@ style.textContent = `
     transform: translateY(30px);
     transition: opacity 0.6s ease, transform 0.6s ease;
   }
-  
   .feature-card.animate-in, .pricing-card.animate-in {
     opacity: 1;
     transform: translateY(0);
   }
-  
-  .feature-card:nth-child(1) { transition-delay: 0.1s; }
-  .feature-card:nth-child(2) { transition-delay: 0.2s; }
-  .feature-card:nth-child(3) { transition-delay: 0.3s; }
-  .feature-card:nth-child(4) { transition-delay: 0.4s; }
-  .feature-card:nth-child(5) { transition-delay: 0.5s; }
-  .feature-card:nth-child(6) { transition-delay: 0.6s; }
 `;
 document.head.appendChild(style);

@@ -11,6 +11,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const schedule = require('node-schedule');
+const nodemailer = require('nodemailer');
 
 const { UserDB, TokenDB, VerificationDB, LogDB, PlanDB, SubscriptionDB, OrderDB, ReferralDB, initDatabase } = require('./db-sqljs');
 const { generateToken, authMiddleware } = require('./auth');
@@ -1559,6 +1560,68 @@ app.get('/api/translations/:lang', (req, res) => {
   res.json(translations[lang] || translations.zh);
 });
 
+// ============ 公告横幅 ============
+// 在 .env 中配置 ANNOUNCEMENT_TEXT 和 ANNOUNCEMENT_LINK
+const ANNOUNCEMENT = {
+  enabled: process.env.ANNOUNCEMENT_ENABLED === 'true',
+  text: process.env.ANNOUNCEMENT_TEXT || '🎉 新工具上线！AI 代码审查功能免费试用中',
+  link: process.env.ANNOUNCEMENT_LINK || '/tools',
+  linkText: process.env.ANNOUNCEMENT_LINK_TEXT || '立即体验 →',
+  bg: process.env.ANNOUNCEMENT_BG || 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+};
+
+app.get('/api/announcement', (req, res) => {
+  res.json({ enabled: ANNOUNCEMENT.enabled, ...ANNOUNCEMENT });
+});
+
+// ============ 反馈提交 ============
+const feedbackLimiter = rateLimit({ windowMs: 60 * 1000, max: 3 });
+const feedbackTransporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+});
+
+app.post('/api/feedback', feedbackLimiter, async (req, res) => {
+  try {
+    const { type, title, content, email, rating } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ error: '请填写标题和描述' });
+    }
+
+    const typeMap = { bug: 'Bug报告', feature: '功能建议', praise: '表扬鼓励', other: '其他' };
+    const now = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+    const stars = rating ? '⭐'.repeat(rating) : '无评分';
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM,
+      to: process.env.SMTP_USER,
+      subject: `[沐美反馈] ${typeMap[type] || type} - ${title}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+          <h2 style="color:#6366f1;">收到新反馈</h2>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold;">类型</td><td style="padding:8px;border:1px solid #eee;">${typeMap[type] || type}</td></tr>
+            <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold;">评分</td><td style="padding:8px;border:1px solid #eee;">${stars}</td></tr>
+            <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold;">标题</td><td style="padding:8px;border:1px solid #eee;">${title}</td></tr>
+            <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold;">详细描述</td><td style="padding:8px;border:1px solid #eee;">${content.replace(/\n/g, '<br>')}</td></tr>
+            <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold;">联系邮箱</td><td style="padding:8px;border:1px solid #eee;">${email || '未提供'}</td></tr>
+            <tr><td style="padding:8px;border:1px solid #eee;font-weight:bold;">时间</td><td style="padding:8px;border:1px solid #eee;">${now}</td></tr>
+          </table>
+        </div>`
+    };
+
+    await feedbackTransporter.sendMail(mailOptions);
+    console.log(`📧 反馈邮件已发送: [${type}] ${title}`);
+
+    res.json({ success: true, message: '感谢您的反馈！' });
+  } catch (e) {
+    console.error('反馈邮件发送失败:', e.message);
+    res.status(500).json({ error: '提交失败，请稍后重试' });
+  }
+});
+
 // PDF转文字
 app.post('/api/pdf-to-text', combinedAuth, upload.single('pdf'), async (req, res) => {
   try {
@@ -1632,6 +1695,24 @@ app.get('/qrcode', (req, res) => {
 
 app.get('/profile', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+});
+
+// ============ SEO ============
+app.get('/sitemap.xml', (req, res) => {
+  const base = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/,'') : 'https://mumei.example.com';
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>${base}/tools</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>${base}/pricing</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>${base}/docs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>${base}/feedback</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+</urlset>`);
+});
+
+app.get('/robots.txt', (req, res) => {
+  const base = process.env.BASE_URL ? process.env.BASE_URL.replace(/\/$/,'') : 'https://mumei.example.com';
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${base}/sitemap.xml`);
 });
 
 // API 认证路由

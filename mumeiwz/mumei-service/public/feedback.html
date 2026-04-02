@@ -387,6 +387,10 @@
       }
     }
   </style>
+
+  <meta name="description" content="意见反馈 - 您的反馈对我们很重要，帮助我们做得更好">
+  <meta name="keywords" content="意见反馈,联系我们,建议">
+  <meta name="author" content="Mumei Service">
 </head>
 <body>
   <!-- 页面加载动画 -->
@@ -663,7 +667,7 @@
     });
 
     // 提交反馈
-    function submitFeedback() {
+    async function submitFeedback() {
       const title = document.getElementById('feedbackTitle').value.trim();
       const content = document.getElementById('feedbackContent').value.trim();
       const email = document.getElementById('feedbackEmail').value.trim();
@@ -673,30 +677,35 @@
         return;
       }
 
-      // 模拟提交
-      const feedback = {
-        id: Date.now(),
-        type: selectedType,
-        title,
-        content,
-        email,
-        rating: selectedRating,
-        screenshot: screenshotPreview.src,
-        status: 'pending',
-        time: new Date().toLocaleString()
-      };
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: selectedType, title, content, email, rating: selectedRating })
+        });
+        const data = await res.json();
 
-      // 保存到本地存储
-      let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
-      feedbacks.unshift(feedback);
-      localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+        if (data.success) {
+          // 也存本地
+          let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+          feedbacks.unshift({ id: Date.now(), type: selectedType, title, content, email, rating: selectedRating, status: 'pending', time: new Date().toLocaleString() });
+          localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
 
-      // 显示成功状态
-      document.getElementById('feedbackForm').style.display = 'none';
-      document.getElementById('successState').classList.add('show');
-
-      // 刷新列表
-      renderFeedbackList();
+          document.getElementById('feedbackForm').style.display = 'none';
+          document.getElementById('successState').classList.add('show');
+          renderFeedbackList();
+        } else {
+          alert(data.error || '提交失败');
+        }
+      } catch (e) {
+        // 邮件失败时本地保存
+        let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+        feedbacks.unshift({ id: Date.now(), type: selectedType, title, content, email, rating: selectedRating, status: 'pending', time: new Date().toLocaleString() });
+        localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+        document.getElementById('feedbackForm').style.display = 'none';
+        document.getElementById('successState').classList.add('show');
+        renderFeedbackList();
+      }
     }
 
     // 重置表单

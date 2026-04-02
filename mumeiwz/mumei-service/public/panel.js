@@ -356,6 +356,7 @@ function showPanel(user) {
   loadOrders();
   loadRecentUsage();
   loadReferrals();
+  renderUsageChart();
 }
 
 // 加载统计数据
@@ -884,4 +885,52 @@ function copyInviteLink() {
   const linkEl = document.getElementById('inviteLink');
   if (!linkEl || !linkEl.value) return;
   navigator.clipboard.writeText(linkEl.value).then(() => showToast('✅ 邀请链接已复制'));
+}
+
+// ============ 使用趋势图表 ============
+async function renderUsageChart() {
+  const canvas = document.getElementById('usageChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  try {
+    const res = await fetch('/api/logs?page=1&limit=500', {
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const logs = data.logs || [];
+    const days = [];
+    const counts = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push((d.getMonth()+1) + '/' + d.getDate());
+      counts.push(logs.filter(l => (l.timestamp||'').startsWith(key)).length);
+    }
+    if (window.usageChartInstance) window.usageChartInstance.destroy();
+    window.usageChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: days,
+        datasets: [{
+          label: 'API Calls',
+          data: counts,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#6366f1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#71717a', font: { size: 11 } } },
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#71717a', font: { size: 11 }, stepSize: 1 } }
+        }
+      }
+    });
+  } catch (e) {}
 }

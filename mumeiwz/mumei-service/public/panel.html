@@ -6,6 +6,11 @@
   <title>用户面板 | 沐美服务</title>
   <link rel="stylesheet" href="styles-beautiful.css">
   <link rel="stylesheet" href="panel.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <meta name="description" content="沐美服务用户面板 - 管理API Token、查看使用统计、订单历史">
+  <meta name="keywords" content="用户面板,API管理,Token管理">
+  <meta name="author" content="Mumei Service">
 </head>
 <body>
   <!-- 语言切换器 -->
@@ -122,6 +127,11 @@
             <div class="stat-value" id="activeTokens">0</div>
             <div class="stat-label" id="activeTokensLabel">活跃Token</div>
           </div>
+        </div>
+        <!-- 使用趋势图 -->
+        <div style="margin-top:24px;padding:0 8px;">
+          <h3 style="font-size:13px;color:#a1a1aa;margin-bottom:12px;">最近7天调用趋势</h3>
+          <canvas id="usageChart" height="180"></canvas>
         </div>
       </section>
 
