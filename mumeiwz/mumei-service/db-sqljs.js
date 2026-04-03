@@ -240,6 +240,17 @@ const TokenDB = {
     return { id, name, token, createdAt: new Date().toISOString() };
   },
 
+  getAllTokens() {
+    const result = db.exec('SELECT * FROM tokens ORDER BY created_at DESC');
+    if (result.length === 0) return [];
+    const columns = result[0].columns;
+    return result[0].values.map(values => {
+      const t = {};
+      columns.forEach((col, i) => { t[col] = values[i]; });
+      return t;
+    });
+  },
+
   getTokenByToken(token) {
     const result = db.exec('SELECT * FROM tokens WHERE token = ? AND revoked = 0', [token]);
     if (result.length === 0) return null;
@@ -351,6 +362,17 @@ const LogDB = {
       [userId, endpoint, method, ip, status, duration]
     );
     saveDatabase();
+  },
+
+  getAllLogs() {
+    const result = db.exec('SELECT * FROM logs ORDER BY timestamp DESC LIMIT 10000');
+    if (result.length === 0) return [];
+    const columns = result[0].columns;
+    return result[0].values.map(values => {
+      const log = {};
+      columns.forEach((col, i) => { log[col] = values[i]; });
+      return log;
+    });
   },
 
   getUserLogs(userId, options = {}) {

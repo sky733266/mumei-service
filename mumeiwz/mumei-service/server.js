@@ -1630,7 +1630,6 @@ app.get('/api/docs', (req, res) => {
 app.get('/api/public/stats', (req, res) => {
   try {
     const users = UserDB.getAllUsers();
-    const tokens = TokenDB.getAllTokens();
     const logs = LogDB.getAllLogs();
     
     const today = new Date().toISOString().split('T')[0];
@@ -1658,7 +1657,7 @@ app.get('/api/public/stats', (req, res) => {
     
     const totalCalls = logs.length;
     const distributionLabels = Object.keys(toolCounts).slice(0, 5);
-    const distributionData = distributionLabels.map(k => Math.round(toolCounts[k] / totalCalls * 100) || 0);
+    const distributionData = distributionLabels.map(k => totalCalls > 0 ? Math.round(toolCounts[k] / totalCalls * 100) : 0);
     
     res.json({
       success: true,
