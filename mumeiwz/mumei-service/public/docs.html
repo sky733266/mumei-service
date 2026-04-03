@@ -473,11 +473,10 @@
       </ul>
       
       <div class="docs-nav-title">API端点</div>
-      <ul class="docs-nav-list">
+      <ul class="docs-nav-list" id="apiSidebarList">
         <li><a href="#auth-api">认证</a></li>
         <li><a href="#pdf-api">PDF转文字</a></li>
         <li><a href="#tools-api">工具API</a></li>
-        <li><a href="#user-api">用户管理</a></li>
       </ul>
       
       <div class="docs-nav-title">SDK</div>
@@ -713,6 +712,9 @@
           </tbody>
         </table>
       </section>
+
+      <!-- 动态 API 文档 -->
+      <div id="apiDocsContainer"></div>
     </main>
   </div>
 
@@ -769,7 +771,88 @@
       setTimeout(() => {
         document.getElementById('pageLoader').classList.add('hidden');
       }, 500);
+      loadApiDocs();
     });
+
+    // 动态加载 API 文档
+    async function loadApiDocs() {
+      try {
+        const res = await fetch('/api/docs');
+        const docs = await res.json();
+        renderApiDocs(docs);
+        updateSidebar(docs);
+      } catch (e) {
+        console.error('加载API文档失败:', e);
+      }
+    }
+
+    // 渲染 API 文档
+    function renderApiDocs(docs) {
+      const container = document.getElementById('apiDocsContainer');
+      if (!container) return;
+      
+      let html = '';
+      for (const [category, data] of Object.entries(docs)) {
+        html += `<section class="docs-section" id="${category}-api">
+          <h2>${data.title}</h2>`;
+        
+        for (const ep of data.endpoints) {
+          const methodClass = ep.method === 'GET' ? 'method-get' : 'method-post';
+          html += `<div class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="endpoint-method ${methodClass}">${ep.method}</span>
+              <code class="endpoint-path">${ep.path}</code>
+            </div>
+            <div class="endpoint-body">
+              <p class="endpoint-description">${ep.desc}</p>`;
+          
+          if (ep.params && ep.params.length > 0) {
+            html += `<h4>请求参数</h4>
+              <table class="params-table">
+                <thead><tr><th>参数</th><th>类型</th><th>必填</th></tr></thead>
+                <tbody>`;
+            for (const p of ep.params) {
+              const reqText = p.required ? '<span class="param-required">是</span>' : '<span class="param-optional">否</span>';
+              html += `<tr>
+                <td><span class="param-name">${p.name}</span></td>
+                <td><span class="param-type">${p.type}</span></td>
+                <td>${reqText}</td>
+              </tr>`;
+            }
+            html += `</tbody></table>`;
+          }
+          
+          // 示例代码
+          html += `<h4>示例请求</h4>
+            <div class="code-block">
+              <div class="code-header">
+                <button class="code-copy" onclick="copyCode(this)">复制</button>
+              </div>
+              <div class="code-content">
+                <pre><code>${ep.method === 'GET' 
+                  ? `curl -X GET "${ep.path}" -H "X-API-Token: your_token"` 
+                  : `curl -X POST "${ep.path}" -H "Content-Type: application/json" -H "X-API-Token: your_token" -d '${JSON.stringify(ep.params?.reduce((o,p) => { if(p.required) o[p.name] = p.type === 'number' ? 100 : 'example'; return o; }, {}) || {})}'`}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>`;
+        }
+        html += `</section>`;
+      }
+      container.innerHTML = html;
+    }
+
+    // 更新侧边栏
+    function updateSidebar(docs) {
+      const sidebarList = document.getElementById('apiSidebarList');
+      if (!sidebarList) return;
+      
+      let html = '';
+      for (const [category, data] of Object.entries(docs)) {
+        html += `<li><a href="#${category}-api">${data.title}</a></li>`;
+      }
+      sidebarList.innerHTML = html;
+    }
 
     // 返回顶部
     const backToTop = document.getElementById('backToTop');

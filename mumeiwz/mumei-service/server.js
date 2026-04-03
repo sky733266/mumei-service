@@ -1554,6 +1554,78 @@ app.post('/api/tools/dev/color-convert', async (req, res) => {
 
 // ... [保留原有的所有路由代码] ...
 
+// ============ API 文档 ============
+const API_DOCS = {
+  auth: {
+    title: '认证',
+    endpoints: [
+      { method: 'POST', path: '/api/auth/register', desc: '用户注册', params: [{ name: 'email', type: 'string', required: true }, { name: 'password', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/auth/login', desc: '用户登录', params: [{ name: 'email', type: 'string', required: true }, { name: 'password', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/auth/send-verification', desc: '发送验证码', params: [{ name: 'email', type: 'string', required: true }] },
+    ]
+  },
+  tools: {
+    title: 'AI 工具',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/ai/text-generate', desc: '文本生成', params: [{ name: 'prompt', type: 'string', required: true }, { name: 'max_tokens', type: 'number', required: false }] },
+      { method: 'POST', path: '/api/tools/ai/code-generate', desc: '代码生成', params: [{ name: 'prompt', type: 'string', required: true }, { name: 'language', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/ai/code-review', desc: '代码审查', params: [{ name: 'code', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/ai/summarize', desc: '内容摘要', params: [{ name: 'content', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/ai/image-generate', desc: '图片生成', params: [{ name: 'prompt', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/ai/tts', desc: '文字转语音', params: [{ name: 'text', type: 'string', required: true }, { name: 'voice', type: 'string', required: false }] },
+    ]
+  },
+  file: {
+    title: '文件处理',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/file/convert', desc: '文件格式转换', params: [{ name: 'file', type: 'file', required: true }, { name: 'targetFormat', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/file/image-process', desc: '图片处理', params: [{ name: 'file', type: 'file', required: true }, { name: 'operation', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/file/markdown-render', desc: 'Markdown渲染', params: [{ name: 'content', type: 'string', required: true }] },
+    ]
+  },
+  data: {
+    title: '数据处理',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/data/json-format', desc: 'JSON格式化', params: [{ name: 'data', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/json-to-csv', desc: 'JSON转CSV', params: [{ name: 'data', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/csv-to-json', desc: 'CSV转JSON', params: [{ name: 'data', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/base64-encode', desc: 'Base64编码', params: [{ name: 'data', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/base64-decode', desc: 'Base64解码', params: [{ name: 'data', type: 'string', required: true }] },
+    ]
+  },
+  network: {
+    title: '网络工具',
+    endpoints: [
+      { method: 'GET', path: '/api/tools/network/dns', desc: 'DNS查询', params: [{ name: 'domain', type: 'string', required: true }] },
+      { method: 'GET', path: '/api/tools/network/ip-lookup', desc: 'IP查询', params: [{ name: 'ip', type: 'string', required: true }] },
+      { method: 'GET', path: '/api/tools/network/whois', desc: 'Whois查询', params: [{ name: 'domain', type: 'string', required: true }] },
+    ]
+  },
+  security: {
+    title: '安全工具',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/security/password-generate', desc: '密码生成', params: [{ name: 'length', type: 'number', required: false }, { name: 'options', type: 'object', required: false }] },
+      { method: 'POST', path: '/api/tools/security/password-check', desc: '密码强度检查', params: [{ name: 'password', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/security/hash', desc: '哈希计算', params: [{ name: 'data', type: 'string', required: true }, { name: 'algorithm', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/security/uuid-generate', desc: 'UUID生成', params: [] },
+    ]
+  },
+  dev: {
+    title: '开发工具',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/dev/code-format', desc: '代码格式化', params: [{ name: 'code', type: 'string', required: true }, { name: 'language', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/dev/code-minify', desc: '代码压缩', params: [{ name: 'code', type: 'string', required: true }, { name: 'language', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/dev/cron-parse', desc: 'Cron解析', params: [{ name: 'expression', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/dev/timestamp-convert', desc: '时间戳转换', params: [{ name: 'timestamp', type: 'number', required: true }] },
+      { method: 'POST', path: '/api/tools/dev/color-convert', desc: '颜色格式转换', params: [{ name: 'color', type: 'string', required: true }] },
+    ]
+  }
+};
+
+app.get('/api/docs', (req, res) => {
+  res.json(API_DOCS);
+});
+
 // 获取翻译
 app.get('/api/translations/:lang', (req, res) => {
   const lang = req.params.lang;
