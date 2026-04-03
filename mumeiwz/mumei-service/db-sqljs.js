@@ -139,7 +139,7 @@ function saveDatabase() {
 const UserDB = {
   async createUser(email, password) {
     const id = uuidv4();
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 8);
     
     try {
       db.run(
