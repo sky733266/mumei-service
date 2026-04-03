@@ -133,6 +133,11 @@
           <h3 style="font-size:13px;color:#a1a1aa;margin-bottom:12px;">最近7天调用趋势</h3>
           <canvas id="usageChart" height="180"></canvas>
         </div>
+        <!-- 活动日历 -->
+        <div style="margin-top:24px;padding:0 8px;">
+          <h3 style="font-size:13px;color:#a1a1aa;margin-bottom:12px;">活动日历</h3>
+          <div id="activityCalendar" style="display:flex;flex-wrap:wrap;gap:3px;"></div>
+        </div>
       </section>
 
       <!-- 当前套餐 -->
@@ -233,6 +238,7 @@
             <option value="/api/pdf-to-text">PDF转文字</option>
             <option value="/api/cli/execute">CLI执行</option>
           </select>
+          <button class="btn btn-secondary btn-sm" onclick="exportLogs()" style="margin-left:8px;">📥 导出CSV</button>
         </div>
         <div class="logs-table-wrapper">
           <table class="logs-table">

@@ -318,6 +318,37 @@ async function handleRegister(req, res, next) {
 }
 
 // 登录
+// ============ 登录失败追踪 ============
+const loginFailures = new Map(); // { key: { count, until } }
+const LOGIN_MAX_FAILURES = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15分钟
+
+function getLoginKey(req, email) {
+  return `${req.ip}-${email}`;
+}
+
+function checkLoginBlocked(req, email) {
+  const key = getLoginKey(req, email);
+  const record = loginFailures.get(key);
+  if (!record) return null;
+  if (Date.now() < record.until) return record;
+  loginFailures.delete(key);
+  return null;
+}
+
+function recordLoginFailure(req, email) {
+  const key = getLoginKey(req, email);
+  const record = loginFailures.get(key) || { count: 0, until: 0 };
+  record.count++;
+  record.until = Date.now() + LOGIN_LOCKOUT_MS;
+  loginFailures.set(key, record);
+}
+
+function clearLoginFailure(req, email) {
+  const key = getLoginKey(req, email);
+  loginFailures.delete(key);
+}
+
 async function handleLogin(req, res, next) {
   const { UserDB } = require('./db-sqljs');
   const { generateToken } = require('./auth');
@@ -328,15 +359,33 @@ async function handleLogin(req, res, next) {
       return res.status(400).json({ error: '请输入邮箱和密码' });
     }
 
+    // 检查是否被锁定
+    const blocked = checkLoginBlocked(req, email);
+    if (blocked) {
+      const remaining = Math.ceil((blocked.until - Date.now()) / 60000);
+      return res.status(429).json({ 
+        error: `登录失败次数过多，账户已锁定，请在 ${remaining} 分钟后重试` 
+      });
+    }
+
     const user = await UserDB.validateUser(email, password);
-    const token = generateToken(user);
+    clearLoginFailure(req, email); // 成功登录清除失败记录
     
     res.json({ 
       success: true, 
-      token,
+      token: generateToken(user),
       user: { id: user.id, email: user.email, verified: user.verified, plan: user.plan }
     });
   } catch (error) {
+    // 记录失败
+    recordLoginFailure(req, email);
+    const blocked = checkLoginBlocked(req, email);
+    const remaining = blocked ? Math.ceil((blocked.until - Date.now()) / 60000) : 0;
+    if (blocked) {
+      return res.status(429).json({ 
+        error: `登录失败次数过多，账户已锁定，请在 ${remaining} 分钟后重试` 
+      });
+    }
     res.status(401).json({ error: error.message });
   }
 }

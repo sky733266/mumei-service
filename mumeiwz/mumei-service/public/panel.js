@@ -532,11 +532,20 @@ function renderTokenList(tokens) {
     const isActive = !token.revoked;
     const createdAt = token.created_at || token.createdAt || '';
     const lastUsed = token.last_used ? new Date(token.last_used).toLocaleDateString('zh-CN') : '从未使用';
+    
+    // 检查是否超过30天未使用
+    let unusedWarning = '';
+    if (isActive && token.last_used) {
+      const daysSince = (Date.now() - new Date(token.last_used).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSince > 30) {
+        unusedWarning = `<span style="background:#fbbf24;color:#000;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:8px;">⚠️ ${Math.floor(daysSince)}天未使用</span>`;
+      }
+    }
 
     return `
       <div class="token-item ${isActive ? '' : 'inactive'}">
         <div class="token-info">
-          <div class="token-name">${token.name || 'API Token'}</div>
+          <div class="token-name">${token.name || 'API Token'}${unusedWarning}</div>
           <div class="token-meta">
             创建于 ${createdAt ? new Date(createdAt).toLocaleDateString('zh-CN') : '-'} |
             最后使用: ${lastUsed} |
@@ -934,3 +943,54 @@ async function renderUsageChart() {
     });
   } catch (e) {}
 }
+
+// 导出日志为CSV
+function exportLogs() {
+  window.open('/api/logs/export', '_blank');
+}
+
+// ============ 活动日历 ============
+function renderActivityCalendar(logs) {
+  const container = document.getElementById('activityCalendar');
+  if (!container) return;
+  
+  // 统计每天调用次数
+  const dayCounts = {};
+  logs.forEach(l => {
+    if (l.timestamp) {
+      const day = l.timestamp.slice(0, 10);
+      dayCounts[day] = (dayCounts[day] || 0) + 1;
+    }
+  });
+  
+  // 生成最近8周的格子
+  const today = new Date();
+  let html = '';
+  for (let w = 7; w >= 0; w--) {
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - w * 7 - (6 - d));
+      const key = date.toISOString().slice(0, 10);
+      const count = dayCounts[key] || 0;
+      const level = count === 0 ? 0 : count < 5 ? 1 : count < 20 ? 2 : count < 50 ? 3 : 4;
+      const colors = ['#1a1a2e', '#312e81', '#4338ca', '#6366f1', '#818cf8'];
+      html += `<div style="width:10px;height:10px;background:${colors[level]};border-radius:2px;" title="${key}: ${count}次"></div>`;
+    }
+  }
+  container.innerHTML = html;
+}
+
+// 在 renderUsageChart 结尾调用
+const origRender = window.renderUsageChart;
+window.renderUsageChart = async function() {
+  await origRender?.();
+  try {
+    const res = await fetch('/api/logs?page=1&limit=1000', {
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      renderActivityCalendar(data.logs || []);
+    }
+  } catch(e) {}
+};

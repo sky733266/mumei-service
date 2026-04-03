@@ -1703,6 +1703,48 @@ const feedbackTransporter = nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 });
 
+// ============ 使用量预警 ============
+const usageWarningSent = new Set();
+
+async function sendUsageWarning(user, used, limit) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject: '【沐美服务】API 调用量即将用尽',
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <h2 style="color:#6366f1;">⚠️ 调用量预警</h2>
+        <p>您好，您的 API 调用量已使用 <strong style="color:#ef4444;">${used}/${limit}</strong> 次。</p>
+        <p>建议升级套餐或减少调用频率，避免服务中断。</p>
+        <p style="margin-top:20px;">
+          <a href="${process.env.BASE_URL || 'http://localhost:3000'}/panel" style="background:#6366f1;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">查看详情</a>
+        </p>
+      </div>`
+  };
+  try { await feedbackTransporter.sendMail(mailOptions); } catch(e) {}
+}
+
+// 每小时检查一次
+schedule.scheduleJob('0 * * * *', async () => {
+  if (process.env.ENABLE_USAGE_WARNING !== 'true') return;
+  try {
+    const users = UserDB.getAllUsers();
+    for (const user of users) {
+      if (!user.email) continue;
+      const key = `${user.id}-${new Date().toISOString().slice(0,7)}`;
+      if (usageWarningSent.has(key)) continue;
+      const todayCount = LogDB.getTodayCallCount ? LogDB.getTodayCallCount(user.id) : 0;
+      const limits = { free: 100, pro: 5000, enterprise: 999999 };
+      const limit = limits[user.plan] || 100;
+      if (todayCount >= limit * 0.8) {
+        await sendUsageWarning(user, todayCount, limit);
+        usageWarningSent.add(key);
+      }
+    }
+  } catch (e) { console.error('使用量预警检查失败:', e.message); }
+});
+
+
 app.post('/api/feedback', feedbackLimiter, async (req, res) => {
   try {
     const { type, title, content, email, rating } = req.body;
@@ -2272,6 +2314,25 @@ app.get('/api/logs', authMiddleware, (req, res) => {
       page,
       totalPages: Math.ceil(filtered.length / limit)
     });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 导出日志为 CSV
+app.get('/api/logs/export', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const { logs } = LogDB.getUserLogs(userId, { limit: 10000 });
+    
+    const csv = ['时间,接口,方法,状态码,耗时(ms),IP'];
+    logs.forEach(l => {
+      csv.push(`${l.timestamp},${l.endpoint},${l.method},${l.status},${l.duration},${l.ip}`);
+    });
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="api-logs-${new Date().toISOString().slice(0,10)}.csv"`);
+    res.send('\uFEFF' + csv.join('\n')); // BOM for Excel
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
