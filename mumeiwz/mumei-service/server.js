@@ -992,9 +992,19 @@ function quotaMiddleware(req, res, next) {
 
 // 获取工具列表和定价
 app.get('/api/tools', (req, res) => {
+  // 将 toolPricing 对象转换为数组格式
+  const toolsList = Object.entries(toolPricing).map(([id, info]) => ({
+    id,
+    name: id.split('/').pop(),
+    category: id.split('/')[0],
+    price: info.price,
+    unit: info.unit,
+    freeQuota: info.freeQuota
+  }));
+  
   res.json({
     success: true,
-    tools: toolPricing,
+    tools: toolsList,
     categories: {
       ai: ['ai/text-generate', 'ai/image-generate', 'ai/tts', 'ai/stt', 'ai/translate'],
       file: ['file/convert', 'file/image-process', 'file/video-process', 'file/compress', 'file/markdown-render'],
