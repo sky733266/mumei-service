@@ -537,9 +537,94 @@
       setTimeout(() => {
         document.getElementById('pageLoader').classList.add('hidden');
       }, 500);
+      loadRealData();
     });
 
-    // 模拟数据
+    // 加载真实数据
+    async function loadRealData() {
+      try {
+        const res = await fetch('/api/public/stats');
+        const data = await res.json();
+        if (data.success) {
+          // 更新统计数字
+          document.getElementById('totalUsers').textContent = data.stats.totalUsers;
+          document.getElementById('totalCalls').textContent = data.stats.totalCalls;
+          document.getElementById('todayCalls').textContent = data.stats.todayCalls;
+          
+          // 使用真实数据初始化图表
+          initChartsWithData(data.stats);
+        } else {
+          initCharts(); // 失败时使用模拟数据
+        }
+      } catch (e) {
+        console.warn('加载真实数据失败，使用模拟数据:', e);
+        initCharts();
+      }
+    }
+
+    // 使用真实数据初始化图表
+    function initChartsWithData(stats) {
+      const toolLabels = { ai: 'AI工具', file: '文件处理', data: '数据处理', network: '网络', security: '安全', dev: '开发' };
+      const realData = {
+        trend: stats.trend || { labels: [], data: [] },
+        distribution: {
+          labels: (stats.distribution?.labels || []).map(l => toolLabels[l] || l),
+          data: stats.distribution?.data || []
+        }
+      };
+      
+      // 趋势图
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: realData.trend.labels,
+          datasets: [{
+            label: 'API调用次数',
+            data: realData.trend.data,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#6366f1',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#718096' } },
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#718096' } }
+          }
+        }
+      });
+      
+      // 分布图
+      const distCtx = document.getElementById('distributionChart').getContext('2d');
+      new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+          labels: realData.distribution.labels,
+          datasets: [{
+            data: realData.distribution.data,
+            backgroundColor: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { color: '#a0aec0' } } }
+        }
+      });
+    }
+
+    // 模拟数据（备用）
     const mockData = {
       trend: {
         labels: ['1日', '2日', '3日', '4日', '5日', '6日', '7日'],

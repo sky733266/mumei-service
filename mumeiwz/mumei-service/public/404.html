@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面未找到 | 沐美服务</title>
+  <link rel="stylesheet" href="styles-beautiful.css">
+  <style>
+    .error-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .error-code {
+      font-size: 120px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    .error-title {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .error-desc {
+      color: var(--text-muted);
+      font-size: 16px;
+      margin-bottom: 32px;
+    }
+    .error-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <div>
+      <div class="error-code">404</div>
+      <h1 class="error-title">页面未找到</h1>
+      <p class="error-desc">您访问的页面不存在或已被移除</p>
+      <div class="error-actions">
+        <a href="/" class="btn btn-primary">返回首页</a>
+        <a href="/tools" class="btn btn-secondary">浏览工具</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1626,6 +1626,55 @@ app.get('/api/docs', (req, res) => {
   res.json(API_DOCS);
 });
 
+// ============ 公开统计（Dashboard） ============
+app.get('/api/public/stats', (req, res) => {
+  try {
+    const users = UserDB.getAllUsers();
+    const tokens = TokenDB.getAllTokens();
+    const logs = LogDB.getAllLogs();
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayCalls = logs.filter(l => l.timestamp && l.timestamp.startsWith(today)).length;
+    
+    // 计算最近7天趋势
+    const trend = [];
+    const trendLabels = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      trendLabels.push((d.getMonth()+1) + '/' + d.getDate());
+      trend.push(logs.filter(l => l.timestamp && l.timestamp.startsWith(key)).length);
+    }
+    
+    // 工具使用分布（按路径分组）
+    const toolCounts = {};
+    logs.forEach(l => {
+      if (l.path) {
+        const tool = l.path.replace('/api/tools/', '').split('/')[0];
+        toolCounts[tool] = (toolCounts[tool] || 0) + 1;
+      }
+    });
+    
+    const totalCalls = logs.length;
+    const distributionLabels = Object.keys(toolCounts).slice(0, 5);
+    const distributionData = distributionLabels.map(k => Math.round(toolCounts[k] / totalCalls * 100) || 0);
+    
+    res.json({
+      success: true,
+      stats: {
+        totalUsers: users.length,
+        totalCalls,
+        todayCalls,
+        trend: { labels: trendLabels, data: trend },
+        distribution: { labels: distributionLabels, data: distributionData }
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // 获取翻译
 app.get('/api/translations/:lang', (req, res) => {
   const lang = req.params.lang;
@@ -2588,5 +2637,16 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ 未处理的 Promise 拒绝:', reason);
+});
+
+// 404 处理
+app.use((req, res, next) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
+// 500 错误处理
+app.use((err, req, res, next) => {
+  console.error('服务器错误:', err);
+  res.status(500).sendFile(path.join(__dirname, 'public', '500.html'));
 });
 

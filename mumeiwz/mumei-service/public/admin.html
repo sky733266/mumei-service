@@ -740,7 +740,7 @@
     });
     
     function getAuthHeaders() {
-      return { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+      return { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` };
     }
     
     function showError(msg) {
