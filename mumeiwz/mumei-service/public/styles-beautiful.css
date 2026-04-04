@@ -3,6 +3,258 @@
    版本: 3.0 - 带图片背景
    ============================================ */
 
+/* 动画渐变文字 */
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animated-gradient-text {
+  background: linear-gradient(
+    270deg,
+    #6366f1,   /* 紫 */
+    #ec4899,   /* 粉 */
+    #f59e0b,   /* 金 */
+    #10b981,   /* 青 */
+    #6366f1    /* 回紫 */
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 8s ease infinite;
+  font-weight: 800;
+}
+
+.animated-gradient-text-alt {
+  background: linear-gradient(
+    135deg,
+    #667eea 0%,
+    #764ba2 25%,
+    #f093fb 50%,
+    #4facfe 75%,
+    #667eea 100%
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 6s ease infinite;
+  font-weight: 700;
+}
+
+/* 3D悬浮卡片 */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotateX(0deg); }
+  50% { transform: translateY(-8px) rotateX(2deg); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.feature-card {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.feature-card:hover {
+  transform: translateY(-12px) rotateX(5deg) rotateY(-5deg) scale(1.02);
+  box-shadow:
+    0 25px 50px -12px rgba(99, 102, 241, 0.35),
+    0 0 0 1px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.15) rotateZ(-5deg);
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.5));
+}
+
+.feature-card:hover h2,
+.feature-card:hover h3 {
+  transform: translateZ(20px);
+}
+
+/* 卡片内元素3D效果 */
+.feature-card > * {
+  transition: transform 0.3s ease;
+}
+
+/* 图标3D效果 */
+.feature-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: inline-block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+/* 卡片光效 */
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(99, 102, 241, 0.1) 60deg,
+    transparent 120deg
+  );
+  transform: rotate(0deg);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.feature-card:hover::after {
+  opacity: 1;
+  animation: rotate-glow 4s linear infinite;
+}
+
+@keyframes rotate-glow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 定价卡片3D效果 */
+.pricing-card {
+  perspective: 1000px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pricing-card:hover {
+  transform: translateY(-15px) scale(1.03);
+}
+
+.pricing-card.featured {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-glow);
+}
+
+.pricing-card.featured:hover {
+  transform: scale(1.08) translateY(-10px);
+}
+
+/* 统计数字动画 */
+.hero-stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 工具卡片悬浮效果 */
+.tool-card {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.tool-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* 按钮光效 */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+/* 发光边框动画 */
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #6366f1, #ec4899, #f59e0b, #10b981, #6366f1);
+  background-size: 400% 400%;
+  border-radius: inherit;
+  z-index: -1;
+  animation: gradient-shift 4s ease infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-border:hover::before {
+  opacity: 1;
+}
+
+/* 毛玻璃效果增强 */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+}
+
+/* 悬浮时边缘发光 */
+.edge-glow {
+  position: relative;
+}
+
+.edge-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.edge-glow:hover::before {
+  opacity: 1;
+}
+
 /* CSS变量 - 设计系统 */
 :root {
   /* 主色调 - 紫蓝渐变 */
@@ -642,4 +894,229 @@ footer {
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+
+/* ========== 新增视觉效果 ========== */
+
+/* 鼠标跟随光效 */
+.cursor-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+}
+
+/* 卡片入场动画 */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slide-up 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 打字机效果 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typewriter::after {
+  content: '|';
+  animation: blink 1s infinite;
+}
+
+/* 脉冲动画 */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.pulse-effect {
+  position: relative;
+}
+
+.pulse-effect::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  animation: pulse-ring 2s ease-out infinite;
+  z-index: -1;
+}
+
+/* 渐变边框 */
+.gradient-border {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 2px;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, #6366f1, #ec4899, #f59e0b, #10b981, #6366f1);
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* 玻璃态输入框 */
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--text);
+  font-size: 15px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.glass-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.glass-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* 导航栏滚动效果 */
+.navbar-scrolled {
+  background: rgba(15, 15, 26, 0.95) !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* 加载动画 */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 25%,
+    var(--bg-glass) 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* 按钮点击效果 */
+.btn-click {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-click:active {
+  transform: scale(0.96);
+}
+
+/* 滚动进度条 */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #ec4899);
+  z-index: 9999;
+  transition: width 0.1s ease;
+}
+
+/* 骨架屏 */
+.skeleton {
+  background: linear-gradient(90deg, 
+    var(--bg-card) 0%, 
+    var(--bg-glass) 50%, 
+    var(--bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* 拖尾效果 */
+.trail-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transition: all 0.5s ease;
+}
+
+/* 彩虹边框动画 */
+@keyframes rainbow-border {
+  0% { border-color: #ff0000; }
+  17% { border-color: #ff8800; }
+  33% { border-color: #ffff00; }
+  50% { border-color: #00ff00; }
+  67% { border-color: #0088ff; }
+  83% { border-color: #8800ff; }
+  100% { border-color: #ff0000; }
+}
+
+.rainbow-border {
+  border: 2px solid transparent;
+  animation: rainbow-border 3s linear infinite;
+}
+
+/* 浮雕效果 */
+.emboss {
+  text-shadow: 
+    1px 1px 1px rgba(0,0,0,0.5),
+    -1px -1px 1px rgba(255,255,255,0.1);
+}
+
+/* 内发光效果 */
+.inner-glow {
+  box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* 噪点纹理 */
+.noise-texture {
+  position: relative;
+}
+
+.noise-texture::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
 }
