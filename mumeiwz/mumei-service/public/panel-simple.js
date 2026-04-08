@@ -344,3 +344,147 @@ function logout() {
   if (authSection) authSection.classList.remove('hidden');
   if (panelContent) panelContent.classList.add('hidden');
 }
+
+// ============ Webhook 管理 ============
+
+let editingWebhookId = null;
+
+async function loadWebhooks() {
+  const section = document.getElementById('webhookSection');
+  if (!section) return;
+  try {
+    const res = await fetch('/api/webhooks', authHeader());
+    if (!res.ok) { section.style.display = 'none'; return; }
+    const data = await res.json();
+    if (data.webhooks && data.webhooks.length > 0) {
+      section.style.display = 'block';
+      renderWebhookList(data.webhooks);
+    } else {
+      // 专业版用户才显示空白区
+      const user = await (await fetch('/api/auth/me', authHeader())).json();
+      if (user.user && user.user.plan !== 'free') {
+        section.style.display = 'block';
+        document.getElementById('webhookList').innerHTML =
+          '<p style="color:#71717a;font-size:14px;">暂无 Webhook，添加一个接收 API 调用通知</p>';
+      } else {
+        section.style.display = 'none';
+      }
+    }
+  } catch (e) {
+    section.style.display = 'none';
+  }
+}
+
+function renderWebhookList(webhooks) {
+  const container = document.getElementById('webhookList');
+  container.innerHTML = webhooks.map(w => `
+    <div style="background:#27272a;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;color:#a1a1aa;word-break:break-all;">${w.url}</div>
+        ${w.description ? `<div style="font-size:12px;color:#52525b;margin-top:4px;">${w.description}</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+          ${(w.events || []).map(e => `<span style="background:#3f3f46;font-size:11px;color:#a1a1aa;padding:2px 8px;border-radius:4px;">${e}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:12px;">
+        <button onclick="testWebhook('${w.id}')" style="background:none;border:none;color:#60a5fa;cursor:pointer;font-size:12px;" title="测试">测试</button>
+        <button onclick="deleteWebhook('${w.id}')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:12px;" title="删除">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openWebhookModal(webhook = null) {
+  editingWebhookId = webhook ? webhook.id : null;
+  document.getElementById('webhookModalTitle').textContent = webhook ? '编辑 Webhook' : '添加 Webhook';
+  document.getElementById('webhookUrl').value = webhook ? webhook.url : '';
+  document.getElementById('webhookDesc').value = webhook ? webhook.description || '' : '';
+  document.getElementById('webhookError').style.display = 'none';
+  document.getElementById('webhookTestResult').style.display = 'none';
+  if (webhook) {
+    document.querySelectorAll('#webhookEvents input').forEach(cb => {
+      cb.checked = (webhook.events || []).includes(cb.value);
+    });
+  }
+  document.getElementById('webhookModal').classList.remove('hidden');
+}
+
+async function saveWebhook() {
+  const url = document.getElementById('webhookUrl').value.trim();
+  const description = document.getElementById('webhookDesc').value.trim();
+  const events = Array.from(document.querySelectorAll('#webhookEvents input:checked')).map(cb => cb.value);
+  const errorEl = document.getElementById('webhookError');
+
+  if (!url || !url.startsWith('http')) {
+    errorEl.textContent = '请输入有效的 URL（必须以 http:// 或 https:// 开头）';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const method = editingWebhookId ? 'PUT' : 'POST';
+    const endpoint = editingWebhookId ? `/api/webhooks/${editingWebhookId}` : '/api/webhooks';
+    const res = await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...authHeader().headers },
+      body: JSON.stringify({ url, description, events })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (data.upgrade) {
+        errorEl.textContent = 'Webhook 功能仅限专业版用户使用';
+      } else {
+        errorEl.textContent = data.error || '保存失败';
+      }
+      errorEl.style.display = 'block';
+      return;
+    }
+    document.getElementById('webhookModal').classList.add('hidden');
+    loadWebhooks();
+  } catch (e) {
+    errorEl.textContent = '网络错误，请重试';
+    errorEl.style.display = 'block';
+  }
+}
+
+async function testWebhook(id) {
+  const resultEl = document.getElementById('webhookTestResult');
+  resultEl.textContent = '正在发送测试...';
+  resultEl.style.display = 'block';
+  resultEl.style.color = '#a1a1aa';
+  try {
+    const res = await fetch(`/api/webhooks/${id}/test`, authHeader());
+    const data = await res.json();
+    if (data.success && data.result && data.result.success) {
+      resultEl.textContent = '✅ 测试成功！目标服务器返回 ' + data.result.status;
+      resultEl.style.color = '#4ade80';
+    } else {
+      resultEl.textContent = '❌ 测试失败：' + (data.result ? data.result.error : data.error || '未知错误');
+      resultEl.style.color = '#f87171';
+    }
+  } catch (e) {
+    resultEl.textContent = '❌ 网络错误';
+    resultEl.style.color = '#f87171';
+  }
+}
+
+async function deleteWebhook(id) {
+  if (!confirm('确定删除这个 Webhook？')) return;
+  try {
+    await fetch(`/api/webhooks/${id}`, { method: 'DELETE', ...authHeader() });
+    loadWebhooks();
+  } catch (e) {}
+}
+
+// 模态框关闭
+document.getElementById('closeWebhookModal')?.addEventListener('click', () => {
+  document.getElementById('webhookModal').classList.add('hidden');
+});
+document.getElementById('saveWebhookBtn')?.addEventListener('click', saveWebhook);
+
+// 初始化时加载 Webhooks
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(loadWebhooks, 500));
+} else {
+  setTimeout(loadWebhooks, 500);
+}

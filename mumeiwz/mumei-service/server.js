@@ -92,6 +92,19 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const webhookTrigger = new WebhookTrigger();
 
+// Webhook 触发辅助函数（静默失败，不阻塞主流程）
+function triggerApiWebhook(userId, endpoint, result, duration) {
+  if (!userId) return;
+  webhookTrigger.trigger(userId, WebhookEvents.API_CALL_COMPLETED, {
+    endpoint,
+    success: true,
+    duration,
+    timestamp: new Date().toISOString(),
+    // 不包含敏感数据，仅传递必要信息
+    resultPreview: typeof result === 'string' ? result.substring(0, 200) : JSON.stringify(result).substring(0, 200)
+  }).catch(() => {}); // 静默
+}
+
 // 中间件
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // 限制请求体大小
@@ -1060,9 +1073,12 @@ app.get('/api/tools', (req, res) => {
 
 // 文本生成
 app.post('/api/tools/ai/text-generate', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { prompt, model = 'gpt-3.5-turbo', maxTokens = 1000, temperature = 0.7, systemPrompt = '' } = req.body;
     const result = await TextGenerationService.generate({ prompt, model, maxTokens, temperature, systemPrompt });
+    triggerApiWebhook(userId, '/api/tools/ai/text-generate', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1071,9 +1087,12 @@ app.post('/api/tools/ai/text-generate', combinedAuth, quotaMiddleware, async (re
 
 // 代码生成
 app.post('/api/tools/ai/code-generate', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { prompt, language = 'javascript', model = 'gpt-3.5-turbo' } = req.body;
     const result = await TextGenerationService.generateCode({ prompt, language, model });
+    triggerApiWebhook(userId, '/api/tools/ai/code-generate', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1082,9 +1101,12 @@ app.post('/api/tools/ai/code-generate', combinedAuth, quotaMiddleware, async (re
 
 // 代码审查
 app.post('/api/tools/ai/code-review', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { code, language = 'javascript', model = 'gpt-3.5-turbo' } = req.body;
     const result = await TextGenerationService.reviewCode({ code, language, model });
+    triggerApiWebhook(userId, '/api/tools/ai/code-review', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1093,9 +1115,12 @@ app.post('/api/tools/ai/code-review', combinedAuth, quotaMiddleware, async (req,
 
 // 文本摘要
 app.post('/api/tools/ai/summarize', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { text, maxLength = 200, model = 'gpt-3.5-turbo' } = req.body;
     const result = await TextGenerationService.summarize({ text, maxLength, model });
+    triggerApiWebhook(userId, '/api/tools/ai/summarize', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1104,9 +1129,12 @@ app.post('/api/tools/ai/summarize', combinedAuth, quotaMiddleware, async (req, r
 
 // 图像生成
 app.post('/api/tools/ai/image-generate', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { prompt, model = 'dall-e-3', size = '1024x1024', n = 1 } = req.body;
     const result = await ImageGenerationService.generate({ prompt, model, size, n });
+    triggerApiWebhook(userId, '/api/tools/ai/image-generate', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1115,9 +1143,12 @@ app.post('/api/tools/ai/image-generate', combinedAuth, quotaMiddleware, async (r
 
 // 语音合成
 app.post('/api/tools/ai/tts', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { text, model = 'tts-1', voice = 'alloy', speed = 1.0 } = req.body;
     const result = await TTSService.synthesize({ text, model, voice, speed });
+    triggerApiWebhook(userId, '/api/tools/ai/tts', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1126,13 +1157,16 @@ app.post('/api/tools/ai/tts', combinedAuth, quotaMiddleware, async (req, res) =>
 
 // 语音识别
 app.post('/api/tools/ai/stt', combinedAuth, quotaMiddleware, upload.single('audio'), async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     if (!req.file) {
       return res.status(400).json({ error: '请上传音频文件' });
     }
     const { model = 'whisper-1', language = 'zh' } = req.body;
     const result = await STTService.transcribe({ audio: req.file.path, model, language });
     fs.unlinkSync(req.file.path);
+    triggerApiWebhook(userId, '/api/tools/ai/stt', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1141,9 +1175,12 @@ app.post('/api/tools/ai/stt', combinedAuth, quotaMiddleware, upload.single('audi
 
 // 翻译
 app.post('/api/tools/ai/translate', combinedAuth, quotaMiddleware, async (req, res) => {
+  const start = Date.now();
   try {
+    const userId = req.user?.id || req.user?.userId || req.user?.sub;
     const { text, sourceLang = 'auto', targetLang = 'en' } = req.body;
     const result = await TranslationService.translate({ text, sourceLang, targetLang });
+    triggerApiWebhook(userId, '/api/tools/ai/translate', result, Date.now() - start);
     res.json({ success: true, ...result });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -2194,6 +2231,110 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
       success: true,
       user: { id: user.id, email: user.email, plan: user.plan, createdAt: user.created_at }
     });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ Webhook 管理 API ============
+
+// 获取用户的 Webhooks
+app.get('/api/webhooks', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const webhooks = WebhookDB.getUserWebhooks(userId);
+    res.json({ success: true, webhooks });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 创建 Webhook（专业版专属）
+app.post('/api/webhooks', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const user = UserDB.getUserById(userId);
+
+    if (user.plan === 'free') {
+      return res.status(403).json({
+        error: 'Webhook 功能仅限专业版用户使用',
+        upgrade: true
+      });
+    }
+
+    const { url, events, description } = req.body;
+    if (!url || !url.startsWith('http')) {
+      return res.status(400).json({ error: '请提供有效的 URL' });
+    }
+
+    // 限制每个用户最多 5 个 Webhook
+    const existing = WebhookDB.getUserWebhooks(userId);
+    if (existing.length >= 5) {
+      return res.status(403).json({ error: '最多创建 5 个 Webhook' });
+    }
+
+    const webhook = WebhookDB.createWebhook(userId, { url, events, description });
+    res.json({ success: true, webhook });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 更新 Webhook
+app.put('/api/webhooks/:id', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const { url, events, description, active } = req.body;
+    const webhook = WebhookDB.updateWebhook(req.params.id, userId, { url, events, description, active });
+    if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
+    res.json({ success: true, webhook });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 删除 Webhook
+app.delete('/api/webhooks/:id', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const deleted = WebhookDB.deleteWebhook(req.params.id, userId);
+    if (!deleted) return res.status(404).json({ error: 'Webhook 不存在' });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 测试 Webhook
+app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const webhook = WebhookDB.getWebhook(req.params.id, userId);
+    if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
+
+    const { WebhookManager } = require('./webhook');
+    const manager = new WebhookManager();
+    const result = await manager.sendWebhook(webhook, 'webhook.test', {
+      message: '这是一条来自沐美服务的 Webhook 测试消息',
+      service: 'mumei-service',
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({ success: true, result });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 获取投递记录
+app.get('/api/webhooks/:id/deliveries', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const webhook = WebhookDB.getWebhook(req.params.id, userId);
+    if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
+
+    const deliveries = WebhookDB.getDeliveries(req.params.id, 20);
+    res.json({ success: true, deliveries });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

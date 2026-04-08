@@ -153,6 +153,7 @@ const WebhookEvents = {
   PAYMENT_FAILED: 'payment.failed',
   
   // API调用相关
+  API_CALL_COMPLETED: 'api.call_completed',
   API_ERROR: 'api.error',
   API_RATE_LIMITED: 'api.rate_limited'
 };

@@ -218,6 +218,17 @@
         <div id="orderList" style="font-size:14px;color:#71717a;">加载中...</div>
       </section>
 
+      <!-- Webhook管理 -->
+      <section class="feature-card" id="webhookSection" style="display:none;">
+        <div class="section-header">
+          <h2>🔗 Webhook</h2>
+          <button class="btn-primary" id="addWebhookBtn" onclick="openWebhookModal()" style="font-size:12px;">
+            <span>添加 Webhook</span>
+          </button>
+        </div>
+        <div id="webhookList" style="font-size:14px;color:#71717a;">加载中...</div>
+      </section>
+
       <!-- Token管理 -->
       <section class="feature-card">
         <div class="section-header">
@@ -313,6 +324,43 @@
       <h2 id="plansTitle">选择套餐</h2>
       <div id="plansList" class="plans-list"></div>
       <button id="closePlansModal" class="btn-secondary" style="margin-top: 24px; width: 100%;">关闭</button>
+    </div>
+  </div>
+
+  <!-- Webhook弹窗 -->
+  <div id="webhookModal" class="modal hidden">
+    <div class="modal-content large">
+      <h2 id="webhookModalTitle">添加 Webhook</h2>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+        <div>
+          <label style="font-size:13px;color:#71717a;display:block;margin-bottom:4px;">回调地址 URL *</label>
+          <input type="url" id="webhookUrl" placeholder="https://your-server.com/webhook" style="width:100%;padding:10px;border:1px solid #3f3f46;border-radius:8px;background:#27272a;color:#fafafa;font-size:14px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:13px;color:#71717a;display:block;margin-bottom:4px;">描述（可选）</label>
+          <input type="text" id="webhookDesc" placeholder="用于接收API调用结果通知" style="width:100%;padding:10px;border:1px solid #3f3f46;border-radius:8px;background:#27272a;color:#fafafa;font-size:14px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:13px;color:#71717a;display:block;margin-bottom:4px;">触发事件</label>
+          <div id="webhookEvents" style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" value="api.call_completed" checked> API调用完成
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" value="user.plan_changed"> 套餐变更
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" value="quota.exhausted"> 配额耗尽
+            </label>
+          </div>
+        </div>
+        <p id="webhookError" style="color:#f87171;font-size:13px;display:none;"></p>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button id="saveWebhookBtn" class="btn-primary" style="flex:1;">保存</button>
+        <button id="closeWebhookModal" class="btn-secondary" style="flex:1;">取消</button>
+      </div>
+      <div id="webhookTestResult" style="margin-top:12px;font-size:13px;display:none;"></div>
     </div>
   </div>
 
