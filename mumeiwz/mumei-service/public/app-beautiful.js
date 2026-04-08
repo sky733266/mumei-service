@@ -172,3 +172,79 @@ function updateThemeIcon(theme) {
 
 // 初始化主题
 initTheme();
+
+// ============ 页面加载进度条 ============
+function initPageLoader() {
+  const loader = document.getElementById('pageLoader');
+  if (!loader) return;
+  
+  // 开始加载
+  loader.classList.add('loading');
+  
+  // 页面加载完成后
+  window.addEventListener('load', () => {
+    loader.classList.remove('loading');
+    loader.classList.add('loaded');
+    
+    // 隐藏进度条
+    setTimeout(() => {
+      loader.style.display = 'none';
+    }, 600);
+  });
+  
+  // 如果加载超时，强制完成
+  setTimeout(() => {
+    if (loader.classList.contains('loading')) {
+      loader.classList.remove('loading');
+      loader.classList.add('loaded');
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 600);
+    }
+  }, 5000);
+}
+
+// 初始化加载进度条
+initPageLoader();
+
+// ============ 移动端汉堡菜单 ============
+function toggleMobileMenu() {
+  const nav = document.querySelector('.navbar-nav');
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  const overlay = document.querySelector('.mobile-nav-overlay');
+  
+  if (nav) nav.classList.toggle('active');
+  if (toggle) toggle.classList.toggle('active');
+  if (overlay) overlay.classList.toggle('active');
+  
+  // 防止背景滚动
+  document.body.style.overflow = nav?.classList.contains('active') ? 'hidden' : '';
+}
+
+// 点击导航链接后关闭菜单
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.navbar-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const nav = document.querySelector('.navbar-nav');
+      const toggle = document.querySelector('.mobile-menu-toggle');
+      const overlay = document.querySelector('.mobile-nav-overlay');
+      if (nav) nav.classList.remove('active');
+      if (toggle) toggle.classList.remove('active');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  });
+  
+  // ESC 键关闭菜单
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const nav = document.querySelector('.navbar-nav');
+      const toggle = document.querySelector('.mobile-menu-toggle');
+      const overlay = document.querySelector('.mobile-nav-overlay');
+      if (nav) nav.classList.remove('active');
+      if (toggle) toggle.classList.remove('active');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+});
