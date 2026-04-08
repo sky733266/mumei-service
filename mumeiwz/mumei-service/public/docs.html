@@ -11,6 +11,7 @@
   <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles-beautiful.css">
+  <script src="app-beautiful.js"></script>
   <style>
     .docs-container {
       max-width: 1400px;
@@ -834,7 +835,7 @@
               <div class="code-content">
                 <pre><code>${ep.method === 'GET' 
                   ? `curl -X GET "${ep.path}" -H "X-API-Token: your_token"` 
-                  : `curl -X POST "${ep.path}" -H "Content-Type: application/json" -H "X-API-Token: your_token" -d '${JSON.stringify(ep.params?.reduce((o,p) => { if(p.required) o[p.name] = p.type === 'number' ? 100 : 'example'; return o; }, {}) || {})}'`}</code></pre>
+                  : `curl -X POST "${ep.path}" -H "Content-Type: application/json" -H "X-API-Token: your_token" -d '${JSON.stringify(ep.params?.reduce((o,p) => { if(p.required) o[p.name] = p.type === 'number' ? 100 : 'example'; return o; }, {}) || {})'}`}</code></pre>
               </div>
             </div>
           </div>
