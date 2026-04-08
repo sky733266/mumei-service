@@ -222,23 +222,36 @@
       <section class="feature-card">
         <div class="section-header">
           <h2 id="myTokens">我的Token</h2>
-          <button id="createTokenBtn" class="btn-primary">
-            <span id="createToken">创建Token</span>
-          </button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-secondary" id="batchSelectBtn" onclick="toggleBatchMode()" style="font-size:12px;">
+              <span id="batchSelectText">批量选择</span>
+            </button>
+            <button class="btn-danger" id="batchDeleteBtn" onclick="batchDeleteTokens()" style="font-size:12px;display:none;" disabled>
+              <span id="batchDeleteText">删除选中 (0)</span>
+            </button>
+            <button id="createTokenBtn" class="btn-primary">
+              <span id="createToken">创建Token</span>
+            </button>
+          </div>
         </div>
         <div id="tokenList" class="token-list"></div>
       </section>
 
       <!-- API日志 -->
       <section class="feature-card">
-        <h2 id="apiLogs">API日志</h2>
+        <div class="section-header">
+          <h2 id="apiLogs">API日志</h2>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-secondary" onclick="exportLogsExcel()" style="font-size:12px;">📊 导出Excel</button>
+            <button class="btn-secondary" onclick="exportLogs()" style="font-size:12px;">📄 导出CSV</button>
+          </div>
+        </div>
         <div class="logs-filter">
           <select id="logFilter">
             <option value="">全部接口</option>
             <option value="/api/pdf-to-text">PDF转文字</option>
             <option value="/api/cli/execute">CLI执行</option>
           </select>
-          <button class="btn btn-secondary btn-sm" onclick="exportLogs()" style="margin-left:8px;">📥 导出CSV</button>
         </div>
         <div class="logs-table-wrapper">
           <table class="logs-table">

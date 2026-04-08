@@ -96,6 +96,46 @@ const webhookTrigger = new WebhookTrigger();
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // 限制请求体大小
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 安全头中间件
+app.use((req, res, next) => {
+  // 内容安全策略 (CSP)
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://js.stripe.com https://www.paypal.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data: https: blob:; " +
+    "connect-src 'self' https://api.stripe.com https://www.paypal.com; " +
+    "frame-src 'self' https://js.stripe.com https://www.paypal.com; " +
+    "object-src 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self';"
+  );
+  
+  // 防止点击劫持
+  res.setHeader('X-Frame-Options', 'DENY');
+  
+  // XSS 保护
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  
+  // 引用策略
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // HSTS (仅在 HTTPS 环境下启用)
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  
+  // 权限策略
+  res.setHeader('Permissions-Policy', 
+    'geolocation=(), microphone=(), camera=(), payment=(self), usb=(), magnetometer=(), gyroscope=()'
+  );
+  
+  next();
+});
+
 app.use(express.static('public'));
 
 // 请求 ID 追踪

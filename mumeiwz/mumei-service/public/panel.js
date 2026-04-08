@@ -949,6 +949,79 @@ function exportLogs() {
   window.open('/api/logs/export', '_blank');
 }
 
+// 导出日志为Excel
+async function exportLogsExcel() {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    alert('请先登录');
+    return;
+  }
+  
+  try {
+    // 获取所有日志数据
+    const res = await fetch('/api/logs?page=1&limit=10000', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    
+    if (!res.ok) {
+      throw new Error('获取日志失败');
+    }
+    
+    const data = await res.json();
+    const logs = data.logs || [];
+    
+    if (logs.length === 0) {
+      alert('暂无日志数据');
+      return;
+    }
+    
+    // 构建 Excel XML 内容
+    const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>';
+    const workbookStart = '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
+    const worksheetStart = '<Worksheet ss:Name="API日志"><Table>';
+    
+    // 表头
+    const headerRow = `<Row>
+      <Cell><Data ss:Type="String">时间</Data></Cell>
+      <Cell><Data ss:Type="String">接口</Data></Cell>
+      <Cell><Data ss:Type="String">状态</Data></Cell>
+      <Cell><Data ss:Type="String">IP地址</Data></Cell>
+      <Cell><Data ss:Type="String">响应时间</Data></Cell>
+      <Cell><Data ss:Type="String">Token</Data></Cell>
+    </Row>`;
+    
+    // 数据行
+    const dataRows = logs.map(log => `<Row>
+      <Cell><Data ss:Type="String">${(log.timestamp || '').replace('T', ' ').slice(0, 19)}</Data></Cell>
+      <Cell><Data ss:Type="String">${log.endpoint || ''}</Data></Cell>
+      <Cell><Data ss:Type="String">${log.status || ''}</Data></Cell>
+      <Cell><Data ss:Type="String">${log.ip || ''}</Data></Cell>
+      <Cell><Data ss:Type="Number">${log.response_time || 0}</Data></Cell>
+      <Cell><Data ss:Type="String">${(log.token || '').slice(0, 20)}...</Data></Cell>
+    </Row>`).join('');
+    
+    const worksheetEnd = '</Table></Worksheet>';
+    const workbookEnd = '</Workbook>';
+    
+    const fullXml = xmlHeader + workbookStart + worksheetStart + headerRow + dataRows + worksheetEnd + workbookEnd;
+    
+    // 创建下载
+    const blob = new Blob([fullXml], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `API日志_${new Date().toISOString().slice(0, 10)}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+  } catch (err) {
+    console.error('导出Excel失败:', err);
+    alert('导出失败: ' + err.message);
+  }
+}
+
 // ============ 活动日历 ============
 function renderActivityCalendar(logs) {
   const container = document.getElementById('activityCalendar');
@@ -993,4 +1066,133 @@ window.renderUsageChart = async function() {
       renderActivityCalendar(data.logs || []);
     }
   } catch(e) {}
+};
+
+// ============ 批量操作功能 ============
+let batchMode = false;
+let selectedTokens = new Set();
+
+function toggleBatchMode() {
+  batchMode = !batchMode;
+  selectedTokens.clear();
+  updateBatchUI();
+  renderTokens(window.currentTokens || []);
+}
+
+function updateBatchUI() {
+  const selectBtn = document.getElementById('batchSelectBtn');
+  const deleteBtn = document.getElementById('batchDeleteBtn');
+  const selectText = document.getElementById('batchSelectText');
+  const deleteText = document.getElementById('batchDeleteText');
+  
+  if (batchMode) {
+    selectBtn?.classList.add('active');
+    deleteBtn?.style.setProperty('display', 'inline-flex');
+    selectText && (selectText.textContent = '取消');
+  } else {
+    selectBtn?.classList.remove('active');
+    deleteBtn?.style.setProperty('display', 'none');
+    selectText && (selectText.textContent = '批量选择');
+  }
+  
+  if (deleteText) {
+    deleteText.textContent = `删除选中 (${selectedTokens.size})`;
+  }
+  if (deleteBtn) {
+    deleteBtn.disabled = selectedTokens.size === 0;
+    deleteBtn.style.opacity = selectedTokens.size === 0 ? '0.5' : '1';
+  }
+}
+
+function toggleTokenSelection(tokenId) {
+  if (selectedTokens.has(tokenId)) {
+    selectedTokens.delete(tokenId);
+  } else {
+    selectedTokens.add(tokenId);
+  }
+  updateBatchUI();
+  renderTokens(window.currentTokens || []);
+}
+
+async function batchDeleteTokens() {
+  if (selectedTokens.size === 0) return;
+  
+  if (!confirm(`确定要删除选中的 ${selectedTokens.size} 个 Token 吗？此操作不可恢复。`)) {
+    return;
+  }
+  
+  const token = localStorage.getItem('authToken');
+  let successCount = 0;
+  let failCount = 0;
+  
+  for (const tokenId of selectedTokens) {
+    try {
+      const res = await fetch(`/api/tokens/${tokenId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    } catch (e) {
+      failCount++;
+    }
+  }
+  
+  alert(`删除完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+  
+  // 重置批量模式
+  batchMode = false;
+  selectedTokens.clear();
+  updateBatchUI();
+  
+  // 刷新列表
+  await loadTokens();
+}
+
+// 修改 renderTokens 函数支持批量选择
+const originalRenderTokens = window.renderTokens;
+window.renderTokens = function(tokens) {
+  window.currentTokens = tokens;
+  const container = document.getElementById('tokenList');
+  if (!container) return;
+  
+  if (tokens.length === 0) {
+    container.innerHTML = '<p style="color:#71717a;text-align:center;padding:20px;">暂无Token</p>';
+    return;
+  }
+  
+  container.innerHTML = tokens.map(t => {
+    const isSelected = selectedTokens.has(t.id);
+    const checkbox = batchMode ? `
+      <div style="margin-right:12px;" onclick="event.stopPropagation();toggleTokenSelection('${t.id}')">
+        <div style="width:20px;height:20px;border:2px solid ${isSelected ? '#6366f1' : '#4b5563'};border-radius:4px;background:${isSelected ? '#6366f1' : 'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
+          ${isSelected ? '<span style="color:#fff;font-size:12px;">✓</span>' : ''}
+        </div>
+      </div>
+    ` : '';
+    
+    return `
+    <div class="token-item" style="display:flex;align-items:center;padding:16px;background:#12121a;border:1px solid ${isSelected ? '#6366f1' : '#2a2a3a'};border-radius:12px;margin-bottom:12px;transition:all 0.2s;${isSelected ? 'background:rgba(99,102,241,0.1);' : ''}">
+      ${checkbox}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <code style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#e4e4e7;background:#1a1a2e;padding:4px 8px;border-radius:4px;">${t.token?.slice(0, 12)}...</code>
+          <span class="token-tag ${t.status === 'active' ? 'token-active' : 'token-revoked'}">${t.status === 'active' ? '● 正常' : '○ 已撤销'}</span>
+        </div>
+        <div style="font-size:12px;color:#71717a;">
+          创建于 ${new Date(t.created_at).toLocaleDateString('zh-CN')}
+          ${t.last_used ? ' · 最后使用 ' + new Date(t.last_used).toLocaleDateString('zh-CN') : ''}
+          ${t.usage_count !== undefined ? ' · 调用 ' + t.usage_count + ' 次' : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-left:12px;">
+        <button onclick="copyToken('${t.token}')" class="btn-secondary" style="padding:6px 12px;font-size:12px;" ${batchMode ? 'disabled style="opacity:0.5;"' : ''}>复制</button>
+        <button onclick="revokeToken('${t.id}')" class="btn-danger" style="padding:6px 12px;font-size:12px;" ${batchMode ? 'disabled style="opacity:0.5;"' : ''}>撤销</button>
+      </div>
+    </div>
+    `;
+  }).join('');
 };
