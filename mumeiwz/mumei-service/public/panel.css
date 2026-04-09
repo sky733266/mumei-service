@@ -3,10 +3,18 @@
    ============================================ */
 
 /* 内容容器 */
-main.container {
+.container, main.container {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 20px;
+}
+
+/* 强制表单居中 */
+main .auth-section {
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Hero区域 */
@@ -31,6 +39,7 @@ main.container {
 
 /* 认证区域 */
 .auth-section {
+  width: 100%;
   max-width: 480px;
   margin: 0 auto var(--space-10);
 }
