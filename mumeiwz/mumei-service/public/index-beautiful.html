@@ -102,16 +102,16 @@
       
       <div class="hero-stats">
         <div class="hero-stat">
-          <div class="hero-stat-value">50+</div>
+          <div class="hero-stat-value" id="statTools">50+</div>
           <div class="hero-stat-label">开发工具</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-value">6</div>
-          <div class="hero-stat-label">语言支持</div>
+          <div class="hero-stat-value" id="statUsers">--</div>
+          <div class="hero-stat-label">注册用户</div>
         </div>
         <div class="hero-stat">
-          <div class="hero-stat-value">99.9%</div>
-          <div class="hero-stat-label">服务可用性</div>
+          <div class="hero-stat-value" id="statCalls">--</div>
+          <div class="hero-stat-label">API调用</div>
         </div>
         <div class="hero-stat">
           <div class="hero-stat-value">24/7</div>
@@ -240,5 +240,30 @@
   </footer>
 
   <script src="app.js"></script>
+  <script>
+    // 加载首页统计数据
+    (function loadHomeStats() {
+      fetch('/api/public/stats')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.stats) {
+            const s = data.stats;
+            const toolsEl = document.getElementById('statTools');
+            const usersEl = document.getElementById('statUsers');
+            const callsEl = document.getElementById('statCalls');
+            if (toolsEl) toolsEl.textContent = s.tools + '+';
+            if (usersEl) usersEl.textContent = formatNumber(s.users);
+            if (callsEl) callsEl.textContent = formatNumber(s.calls);
+          }
+        })
+        .catch(() => { /* 静默失败，保持默认值 */ });
+
+      function formatNumber(n) {
+        if (n >= 10000) return (n / 10000).toFixed(1) + '万';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+        return n;
+      }
+    })();
+  </script>
 </body>
 </html>
