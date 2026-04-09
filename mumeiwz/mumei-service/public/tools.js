@@ -177,6 +177,23 @@ const toolForms = {
     method: 'POST'
   },
   
+  'ai/stt': {
+    title: '语音识别',
+    fields: [
+      { name: 'file', label: '音频文件', type: 'file', accept: 'audio/*', required: true },
+      { name: 'language', label: '音频语言', type: 'select', options: [
+        { value: 'auto', label: '自动检测' },
+        { value: 'zh', label: '中文' },
+        { value: 'en', label: '英语' },
+        { value: 'ja', label: '日语' },
+        { value: 'ko', label: '韩语' }
+      ]}
+    ],
+    endpoint: '/api/tools/ai/stt',
+    method: 'POST',
+    resultType: 'text'
+  },
+
   // 数据处理工具表单
   'data/json-format': {
     title: 'JSON格式化',
