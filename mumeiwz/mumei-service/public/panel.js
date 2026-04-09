@@ -825,20 +825,46 @@ async function loadRecentUsage() {
       return;
     }
 
-    // 工具名映射
+    // 工具名映射（完整版，覆盖全部30+工具端点）
     const toolNameMap = {
+      // AI工具
+      '/api/tools/ai/text-generate': '🤖 AI文本生成',
+      '/api/tools/ai/image-generate': '🎨 AI图像生成',
+      '/api/tools/ai/tts': '🔊 语音合成',
+      '/api/tools/ai/stt': '🎤 语音识别',
+      '/api/tools/ai/translate': '🌐 AI翻译',
+      // 数据处理
       '/api/tools/data/json-format': '📋 JSON格式化',
+      '/api/tools/data/csv-convert': '📊 CSV转换',
+      '/api/tools/data/sql-format': '🗄️ SQL格式化',
+      '/api/tools/data/regex-test': '🎯 正则测试',
       '/api/tools/data/base64-encode': '🔢 Base64编码',
       '/api/tools/data/base64-decode': '🔢 Base64解码',
+      '/api/tools/data/jwt-decode': '🔐 JWT解析',
+      // 网络工具
+      '/api/tools/network/dns': '🌐 DNS查询',
+      '/api/tools/network/ip-lookup': '🌍 IP查询',
+      '/api/tools/network/whois': '📡 Whois查询',
+      '/api/tools/network/ssl-check': '🔒 SSL检查',
+      '/api/tools/network/speed-test': '⚡ 速度测试',
+      '/api/tools/network/http-request': '📡 HTTP请求',
+      // 安全工具
       '/api/tools/security/password-generate': '🔑 密码生成',
+      '/api/tools/security/password-check': '✅ 密码检查',
       '/api/tools/security/hash': '#️⃣ 哈希计算',
+      '/api/tools/security/hmac': '🔐 HMAC计算',
       '/api/tools/security/url-encode': '🔗 URL编码',
+      '/api/tools/security/html-escape': '🛡️ HTML转义',
+      '/api/tools/security/mask-data': '👤 数据脱敏',
       '/api/tools/security/uuid-generate': '🆔 UUID生成',
+      '/api/tools/security/encrypt': '🔐 加密解密',
+      // 开发工具
       '/api/tools/dev/code-format': '✨ 代码格式化',
+      '/api/tools/dev/code-minify': '📦 代码压缩',
+      '/api/tools/dev/code-diff': '📝 代码对比',
       '/api/tools/dev/cron-parse': '⏰ Cron解析',
       '/api/tools/dev/timestamp-convert': '🕐 时间戳转换',
-      '/api/tools/ai/text-generate': '🤖 AI文本生成',
-      '/api/tools/ai/translate': '🌐 AI翻译'
+      '/api/tools/dev/color-convert': '🎨 颜色转换'
     };
 
     container.innerHTML = `
