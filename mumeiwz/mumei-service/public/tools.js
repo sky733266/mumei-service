@@ -818,3 +818,128 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
+// ============ 搜索 + 收藏功能 ============
+(function() {
+  const FAV_KEY = 'mumei_favorites';
+
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch { return []; }
+  }
+
+  function saveFavorites(favs) { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
+
+  function isFav(id) { return getFavorites().includes(id); }
+
+  function initFavorites() {
+    const cards = document.querySelectorAll('.tool-card');
+    cards.forEach(function(card) {
+      const id = card.dataset.tool;
+      if (!id) return;
+      const star = document.createElement('button');
+      star.className = 'fav-star';
+      star.dataset.tool = id;
+      star.innerHTML = isFav(id) ? '&#9733;' : '&#9734;';
+      star.title = isFav(id) ? '取消收藏' : '收藏工具';
+      star.style.cssText = 'position:absolute;top:12px;right:12px;background:none;border:none;font-size:18px;cursor:pointer;color:' + (isFav(id) ? '#f59e0b' : '#71717a') + ';transition:color 0.2s,transform 0.15s;z-index:2;line-height:1;';
+      star.addEventListener('mouseenter', function() { star.style.transform = 'scale(1.2)'; });
+      star.addEventListener('mouseleave', function() { star.style.transform = 'scale(1)'; });
+      star.addEventListener('click', function(e) { e.stopPropagation(); toggleFav(id, star); });
+      card.style.position = 'relative';
+      card.appendChild(star);
+    });
+  }
+
+  var showFavoritesOnly = false;
+
+  function toggleFav(id, star) {
+    var favs = getFavorites();
+    if (favs.indexOf(id) > -1) {
+      favs = favs.filter(function(f) { return f !== id; });
+    } else {
+      favs.push(id);
+    }
+    saveFavorites(favs);
+    star.innerHTML = favs.indexOf(id) > -1 ? '&#9733;' : '&#9734;';
+    star.style.color = favs.indexOf(id) > -1 ? '#f59e0b' : '#71717a';
+    if (showFavoritesOnly && favs.indexOf(id) === -1) {
+      var el = document.querySelector('.tool-card[data-tool="' + id + '"]');
+      if (el) el.style.display = 'none';
+    }
+    updateNoResults();
+  }
+
+  window.toggleFavoriteView = function() {
+    showFavoritesOnly = !showFavoritesOnly;
+    var btn = document.getElementById('toggleFavorites');
+    var label = document.getElementById('favLabel');
+    if (showFavoritesOnly) {
+      btn.style.borderColor = '#f59e0b';
+      btn.style.color = '#f59e0b';
+      btn.style.background = 'rgba(245,158,11,0.1)';
+      label.textContent = '已收藏';
+      document.querySelectorAll('.tool-card').forEach(function(c) {
+        c.style.display = isFav(c.dataset.tool) ? '' : 'none';
+      });
+    } else {
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.style.background = '';
+      label.textContent = '收藏';
+      applyFilters();
+    }
+    updateNoResults();
+  };
+
+  function updateNoResults() {
+    var noResults = document.getElementById('noResults');
+    if (!noResults) return;
+    var visible = [].filter.call(document.querySelectorAll('.tool-card'), function(c) { return c.style.display !== 'none'; });
+    noResults.style.display = visible.length === 0 ? 'block' : 'none';
+  }
+
+  function applyFilters() {
+    var searchInput = document.getElementById('toolSearch');
+    var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    var activeTab = document.querySelector('.tool-tab.active');
+    var cat = activeTab ? activeTab.dataset.category : 'all';
+    var cards = document.querySelectorAll('.tool-card');
+    cards.forEach(function(card) {
+      var cardCat = card.dataset.category || '';
+      var text = (card.textContent || '').toLowerCase();
+      var matchesCat = cat === 'all' || cardCat === cat;
+      var matchesQ = !q || text.indexOf(q) > -1;
+      var matchesFav = !showFavoritesOnly || isFav(card.dataset.tool);
+      card.style.display = matchesCat && matchesQ && matchesFav ? '' : 'none';
+    });
+    updateNoResults();
+  }
+
+  var searchTimer;
+  document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('toolSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilters, 200);
+      });
+      // 聚焦时加边框高亮
+      searchInput.addEventListener('focus', function() {
+        searchInput.style.borderColor = 'var(--primary)';
+      });
+      searchInput.addEventListener('blur', function() {
+        searchInput.style.borderColor = '';
+      });
+    }
+
+    document.querySelectorAll('.tool-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tool-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        applyFilters();
+      });
+    });
+
+    initFavorites();
+    applyFilters();
+  });
+})();
