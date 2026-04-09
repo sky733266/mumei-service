@@ -2,9 +2,16 @@
    用户面板样式 - 现代化设计
    ============================================ */
 
+/* 内容容器 */
+main.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
 /* Hero区域 */
 .hero.small {
-  padding: 140px 20px 60px;
+  padding: 120px 20px 40px;
   min-height: auto;
 }
 
