@@ -36,6 +36,14 @@ async function initDatabase() {
 
   // 创建表
   createTables();
+
+  // 迁移：为已有数据库添加新字段（如果不存在）
+  try {
+    db.run("ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''");
+  } catch(e) { /* 字段已存在 */ }
+  try {
+    db.run("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''");
+  } catch(e) { /* 字段已存在 */ }
 }
 
 // 创建表
@@ -45,6 +53,8 @@ function createTables() {
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      display_name TEXT DEFAULT '',
+      bio TEXT DEFAULT '',
       verified INTEGER DEFAULT 0,
       plan TEXT DEFAULT 'free',
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -222,6 +232,23 @@ const UserDB = {
     const hashed = await bcrypt.hash(newPassword, 10);
     db.run('UPDATE users SET password = ? WHERE id = ?', [hashed, userId]);
     saveDatabase();
+  },
+
+  updateProfile(userId, fields) {
+    const allowed = ['display_name', 'bio'];
+    const updates = [];
+    const values = [];
+    for (const [key, value] of Object.entries(fields)) {
+      if (allowed.includes(key)) {
+        updates.push(`${key} = ?`);
+        values.push(value);
+      }
+    }
+    if (updates.length === 0) return this.getUserById(userId);
+    values.push(userId);
+    db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
+    saveDatabase();
+    return this.getUserById(userId);
   }
 };
 

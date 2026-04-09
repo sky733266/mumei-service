@@ -2229,8 +2229,58 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
     if (!user) return res.status(404).json({ error: '用户不存在' });
     res.json({
       success: true,
-      user: { id: user.id, email: user.email, plan: user.plan, createdAt: user.created_at }
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.display_name || '',
+        bio: user.bio || '',
+        plan: user.plan,
+        createdAt: user.created_at
+      }
     });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 更新个人资料
+app.put('/api/auth/profile', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const { displayName, bio } = req.body;
+    const user = UserDB.updateProfile(userId, {
+      display_name: (displayName || '').slice(0, 50),
+      bio: (bio || '').slice(0, 200)
+    });
+    res.json({ success: true, user: { displayName: user.display_name, bio: user.bio } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 修改密码
+app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: '请填写完整信息' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: '新密码至少6位' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: '两次密码不一致' });
+    }
+
+    const user = UserDB.getUserById(userId);
+    const bcrypt = require('bcryptjs');
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) return res.status(401).json({ error: '当前密码错误' });
+
+    await UserDB.updatePassword(userId, newPassword);
+    res.json({ success: true, message: '密码修改成功' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
