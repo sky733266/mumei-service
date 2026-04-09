@@ -670,6 +670,13 @@ async function executeTool(toolId, config) {
 
     const response = await fetch(url, options);
     const result = await response.json();
+
+    // 配额超限检测
+    if (response.status === 429 || result.error?.includes('配额') || result.error?.includes('quota') || result.error?.includes('limit')) {
+      showUpgradeModal(result.error || '您的 API 调用配额已用完');
+      return;
+    }
+
     displayResult(result, config, url, options, data);
     // 未登录时扣减免费试用次数
     if (!authToken) { useFreeTrial(); showTrialCount(); }
@@ -793,6 +800,35 @@ function copyResult() {
 // 关闭弹窗
 function closeToolModal() {
   document.getElementById('toolModal').classList.add('hidden');
+}
+
+// 显示升级引导弹窗
+function showUpgradeModal(message) {
+  // 移除已存在的弹窗
+  const existing = document.getElementById('upgradeModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'upgradeModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;max-width:420px;width:100%;padding:32px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;">🚀</div>
+      <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:12px;">配额已用完</h3>
+      <p style="color:var(--text-muted);margin-bottom:24px;font-size:0.9rem;line-height:1.6;">${message || '您的免费额度已用完，升级专业版享受无限调用'}</p>
+      <div style="display:flex;gap:12px;flex-direction:column;">
+        <a href="/pricing" style="padding:12px 24px;background:var(--primary);color:white;border-radius:12px;text-decoration:none;font-weight:600;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">查看定价方案</a>
+        <button onclick="document.getElementById('upgradeModal').remove()" style="padding:12px 24px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--text-muted);cursor:pointer;font-weight:500;">稍后再说</button>
+      </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);display:flex;justify-content:center;gap:24px;font-size:0.75rem;color:var(--text-muted);">
+        <span>✓ 无限调用</span>
+        <span>✓ 优先支持</span>
+        <span>✓ 更多功能</span>
+      </div>
+    </div>
+  `;
+  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
 }
 
 // HTML转义
