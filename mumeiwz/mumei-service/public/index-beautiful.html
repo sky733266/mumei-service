@@ -264,6 +264,44 @@
         return n;
       }
     })();
+
+    // 加载公告横幅
+    (function loadAnnouncement() {
+      fetch('/api/public/announcement?lang=zh')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.announcement) {
+            const banner = document.getElementById('announcementBanner');
+            const text = document.getElementById('announcementText');
+            if (banner && text) {
+              text.textContent = data.announcement.title + '：' + data.announcement.content;
+              banner.style.display = 'flex';
+              // 存储已关闭状态
+              if (localStorage.getItem('announcementClosed_' + data.announcement.id)) {
+                banner.style.display = 'none';
+              }
+            }
+          }
+        })
+        .catch(() => { /* 静默失败 */ });
+    })();
+
+    // 关闭公告
+    function closeAnnouncement() {
+      const banner = document.getElementById('announcementBanner');
+      if (banner) {
+        banner.style.display = 'none';
+        // 提取ID并存储
+        const text = document.getElementById('announcementText');
+        if (text) {
+          const match = text.textContent.match(/^([^：]+)：/);
+          if (match) {
+            // 简单处理：存储关闭时间戳
+            localStorage.setItem('announcementClosed', Date.now().toString());
+          }
+        }
+      }
+    }
   </script>
 </body>
 </html>

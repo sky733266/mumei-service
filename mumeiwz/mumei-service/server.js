@@ -2363,6 +2363,17 @@ app.get('/api/public/stats', (req, res) => {
   }
 });
 
+// 获取当前公告（公开）
+app.get('/api/public/announcement', (req, res) => {
+  const lang = req.query.lang || 'zh';
+  try {
+    const announcement = AnnouncementDB.getActive(lang);
+    res.json({ success: true, announcement });
+  } catch (e) {
+    res.json({ success: true, announcement: null });
+  }
+});
+
 // API 文档数据（公开）
 app.get('/api/docs', (req, res) => {
   res.json({

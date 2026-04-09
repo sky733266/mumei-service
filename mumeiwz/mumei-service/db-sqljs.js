@@ -124,6 +124,17 @@ function createTables() {
       active INTEGER DEFAULT 1,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS announcements (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      lang TEXT DEFAULT 'zh',
+      active INTEGER DEFAULT 1,
+      start_date TEXT,
+      end_date TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`
   ];
 
@@ -667,6 +678,70 @@ const ReferralDB = {
   }
 };
 
+// ============ 公告数据库 ============
+const AnnouncementDB = {
+  // 创建公告
+  create(data) {
+    const id = uuidv4();
+    try {
+      db.run(
+        'INSERT INTO announcements (id, title, content, lang, active, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [id, data.title, data.content, data.lang || 'zh', data.active !== undefined ? data.active : 1, data.start_date || null, data.end_date || null]
+      );
+      saveDatabase();
+      return { success: true, id };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  // 获取当前生效公告
+  getActive(lang = 'zh') {
+    const now = new Date().toISOString();
+    const result = db.exec(
+      `SELECT * FROM announcements WHERE active = 1 AND lang = ? AND (start_date IS NULL OR start_date <= ?) AND (end_date IS NULL OR end_date >= ?) ORDER BY created_at DESC LIMIT 1`,
+      [lang, now, now]
+    );
+    if (!result.length || !result[0].values.length) return null;
+    const cols = result[0].columns;
+    return Object.fromEntries(cols.map((c, i) => [c, result[0].values[0][i]]));
+  },
+
+  // 获取所有公告（管理员）
+  getAll(lang = 'zh', limit = 20) {
+    const result = db.exec(
+      'SELECT * FROM announcements WHERE lang = ? ORDER BY created_at DESC LIMIT ?',
+      [lang, limit]
+    );
+    if (!result.length) return [];
+    const cols = result[0].columns;
+    return result[0].values.map(vals => Object.fromEntries(cols.map((c, i) => [c, vals[i]])));
+  },
+
+  // 更新公告
+  update(id, data) {
+    const fields = [];
+    const values = [];
+    if (data.title !== undefined) { fields.push('title = ?'); values.push(data.title); }
+    if (data.content !== undefined) { fields.push('content = ?'); values.push(data.content); }
+    if (data.active !== undefined) { fields.push('active = ?'); values.push(data.active); }
+    if (data.start_date !== undefined) { fields.push('start_date = ?'); values.push(data.start_date); }
+    if (data.end_date !== undefined) { fields.push('end_date = ?'); values.push(data.end_date); }
+    if (fields.length === 0) return { success: false, error: 'No fields to update' };
+    values.push(id);
+    db.run(`UPDATE announcements SET ${fields.join(', ')} WHERE id = ?`, values);
+    saveDatabase();
+    return { success: true };
+  },
+
+  // 删除公告
+  delete(id) {
+    db.run('DELETE FROM announcements WHERE id = ?', [id]);
+    saveDatabase();
+    return { success: true };
+  }
+};
+
 // 备份数据库
 function backupDatabase() {
   const backupPath = path.join(DATA_DIR, `backup_${Date.now()}.db`);
@@ -685,5 +760,6 @@ module.exports = {
   SubscriptionDB,
   OrderDB,
   ReferralDB,
+  AnnouncementDB,
   backupDatabase
 };

@@ -340,4 +340,44 @@ router.get('/tools/usage', adminMiddleware, (req, res) => {
   }
 });
 
+// 公告管理（管理员）
+router.get('/announcements', adminMiddleware, (req, res) => {
+  try {
+    const { lang = 'zh', limit = 20 } = req.query;
+    const announcements = AnnouncementDB.getAll(lang, parseInt(limit));
+    res.json({ success: true, announcements });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/announcements', adminMiddleware, (req, res) => {
+  try {
+    const { title, content, lang = 'zh', active = 1, start_date, end_date } = req.body;
+    if (!title || !content) return res.status(400).json({ error: '标题和内容不能为空' });
+    const result = AnnouncementDB.create({ title, content, lang, active, start_date, end_date });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/announcements/:id', adminMiddleware, (req, res) => {
+  try {
+    const result = AnnouncementDB.update(req.params.id, req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/announcements/:id', adminMiddleware, (req, res) => {
+  try {
+    const result = AnnouncementDB.delete(req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
