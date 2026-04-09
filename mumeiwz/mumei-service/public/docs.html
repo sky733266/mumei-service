@@ -557,11 +557,34 @@
         
         <div class="sandbox-form">
           <div class="form-group">
+            <label>API Token（可选，测试私有接口）</label>
+            <input type="text" id="sandboxToken" placeholder="请输入您的 API Token" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);">
+          </div>
+
+          <div class="form-group">
             <label>选择API</label>
             <select id="sandboxEndpoint" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text);">
-              <option value="/api/sandbox/pdf-to-text">PDF转文字</option>
-              <option value="/api/sandbox/json-format">JSON格式化</option>
-              <option value="/api/sandbox/base64">Base64编解码</option>
+              <option value="/api/tools/ai/text-generate">AI文本生成</option>
+              <option value="/api/tools/ai/image-generate">AI图像生成</option>
+              <option value="/api/tools/ai/tts">语音合成</option>
+              <option value="/api/tools/ai/stt">语音识别</option>
+              <option value="/api/tools/data/json-format">JSON格式化</option>
+              <option value="/api/tools/data/csv-convert">CSV转换</option>
+              <option value="/api/tools/data/sql-format">SQL格式化</option>
+              <option value="/api/tools/data/regex-test">正则测试</option>
+              <option value="/api/tools/data/jwt-decode">JWT解析</option>
+              <option value="/api/tools/network/dns">DNS查询</option>
+              <option value="/api/tools/network/ip-lookup">IP查询</option>
+              <option value="/api/tools/network/whois">Whois查询</option>
+              <option value="/api/tools/network/ssl-check">SSL检测</option>
+              <option value="/api/tools/network/http-request">HTTP请求</option>
+              <option value="/api/tools/security/password-check">密码强度检测</option>
+              <option value="/api/tools/security/hmac">HMAC计算</option>
+              <option value="/api/tools/security/html-escape">HTML转义</option>
+              <option value="/api/tools/security/mask-data">数据脱敏</option>
+              <option value="/api/tools/dev/code-minify">代码压缩</option>
+              <option value="/api/tools/dev/code-diff">代码对比</option>
+              <option value="/api/tools/dev/color-convert">颜色转换</option>
             </select>
           </div>
           
@@ -885,16 +908,37 @@
     // 沙盒测试
     async function testSandbox() {
       const endpoint = document.getElementById('sandboxEndpoint').value;
+      const token = document.getElementById('sandboxToken').value;
       const body = document.getElementById('sandboxBody').value;
       const resultDiv = document.getElementById('sandboxResult');
       const statusSpan = document.getElementById('sandboxStatus');
       const responsePre = document.getElementById('sandboxResponse');
       
+      if (!endpoint) {
+        statusSpan.textContent = 'Error';
+        statusSpan.className = 'response-status status-error';
+        responsePre.textContent = '请选择要测试的 API';
+        resultDiv.classList.add('show');
+        return;
+      }
+      
+      // 检查是否有 token，如果没有则尝试使用免费试用
+      const isFreeTool = !token && (endpoint.includes('/api/tools/ai/') || endpoint.includes('/api/tools/data/') || endpoint.includes('/api/tools/network/') || endpoint.includes('/api/tools/security/') || endpoint.includes('/api/tools/dev/'));
+      const isAuthenticated = !!token;
+      
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['X-API-Token'] = token;
+        }
+        
+        // 确定请求方法
+        const method = (body && body.trim()) ? 'POST' : 'GET';
+        
         const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: body || '{}'
+          method: method,
+          headers: headers,
+          body: body && body.trim() ? body : undefined
         });
         
         const data = await response.json();

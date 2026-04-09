@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'mumei.db');
@@ -742,6 +743,96 @@ const AnnouncementDB = {
   }
 };
 
+// ============ Webhook 数据库 ============
+const WebhookDB = {
+  // 创建 webhook
+  create(data) {
+    const id = uuidv4();
+    const secret = data.secret || crypto.randomBytes(16).toString('hex');
+    try {
+      db.run(
+        'INSERT INTO webhooks (id, user_id, url, secret, events, active) VALUES (?, ?, ?, ?, ?, ?)',
+        [id, data.user_id, data.url, secret, JSON.stringify(data.events || []), data.active !== undefined ? data.active : 1]
+      );
+      saveDatabase();
+      return { success: true, id, secret };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  // 获取用户的 webhooks
+  getByUser(userId) {
+    const result = db.exec('SELECT * FROM webhooks WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+    if (!result.length) return [];
+    const cols = result[0].columns;
+    return result[0].values.map(vals => {
+      const row = Object.fromEntries(cols.map((c, i) => [c, vals[i]]));
+      row.events = row.events ? JSON.parse(row.events) : [];
+      return row;
+    });
+  },
+
+  // 获取单个 webhook
+  getById(id, userId) {
+    const result = db.exec('SELECT * FROM webhooks WHERE id = ? AND user_id = ?', [id, userId]);
+    if (!result.length || !result[0].values.length) return null;
+    const cols = result[0].columns;
+    const row = Object.fromEntries(cols.map((c, i) => [c, result[0].values[0][i]]));
+    row.events = row.events ? JSON.parse(row.events) : [];
+    return row;
+  },
+
+  // 更新 webhook
+  update(id, userId, data) {
+    const fields = [];
+    const values = [];
+    if (data.url !== undefined) { fields.push('url = ?'); values.push(data.url); }
+    if (data.events !== undefined) { fields.push('events = ?'); values.push(JSON.stringify(data.events)); }
+    if (data.active !== undefined) { fields.push('active = ?'); values.push(data.active); }
+    if (data.secret !== undefined) { fields.push('secret = ?'); values.push(data.secret); }
+    if (fields.length === 0) return { success: false, error: 'No fields to update' };
+    values.push(id, userId);
+    db.run(`UPDATE webhooks SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`, values);
+    saveDatabase();
+    return { success: true };
+  },
+
+  // 删除 webhook
+  delete(id, userId) {
+    db.run('DELETE FROM webhooks WHERE id = ? AND user_id = ?', [id, userId]);
+    saveDatabase();
+    return { success: true };
+  },
+
+  // 触发 webhook（通用方法，工具调用后调用）
+  async trigger(event, data) {
+    // 查询所有订阅该事件的 active webhooks
+    const result = db.exec('SELECT * FROM webhooks WHERE active = 1');
+    if (!result.length) return;
+    const cols = result[0].columns;
+    const allWebhooks = result[0].values.map(vals => {
+      const row = Object.fromEntries(cols.map((c, i) => [c, vals[i]]));
+      row.events = row.events ? JSON.parse(row.events) : [];
+      return row;
+    });
+    const matched = allWebhooks.filter(w => w.events.includes(event) || w.events.includes('*'));
+    // 并发发送
+    await Promise.all(matched.map(async w => {
+      try {
+        const payload = { event, data, timestamp: new Date().toISOString() };
+        const sig = crypto.createHmac('sha256', w.secret).update(JSON.stringify(payload)).digest('hex');
+        await fetch(w.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Webhook-Signature': sig },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(5000)
+        });
+      } catch (e) { console.log(`Webhook ${w.id} 触发失败:`, e.message); }
+    }));
+  }
+};
+
 // 备份数据库
 function backupDatabase() {
   const backupPath = path.join(DATA_DIR, `backup_${Date.now()}.db`);
@@ -761,5 +852,6 @@ module.exports = {
   OrderDB,
   ReferralDB,
   AnnouncementDB,
+  WebhookDB,
   backupDatabase
 };

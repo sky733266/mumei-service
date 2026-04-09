@@ -2292,7 +2292,7 @@ app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
 app.get('/api/webhooks', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const webhooks = WebhookDB.getUserWebhooks(userId);
+    const webhooks = WebhookDB.getByUser(userId);
     res.json({ success: true, webhooks });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -2318,13 +2318,14 @@ app.post('/api/webhooks', authMiddleware, async (req, res) => {
     }
 
     // 限制每个用户最多 5 个 Webhook
-    const existing = WebhookDB.getUserWebhooks(userId);
+    const existing = WebhookDB.getByUser(userId);
     if (existing.length >= 5) {
       return res.status(403).json({ error: '最多创建 5 个 Webhook' });
     }
 
-    const webhook = WebhookDB.createWebhook(userId, { url, events, description });
-    res.json({ success: true, webhook });
+    const result = WebhookDB.create({ user_id: userId, url, events: events || [], active: true });
+    if (!result.success) return res.status(500).json({ error: result.error });
+    res.json({ success: true, webhook: { id: result.id, url, events, active: true, secret: result.secret } });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -2335,8 +2336,9 @@ app.put('/api/webhooks/:id', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
     const { url, events, description, active } = req.body;
-    const webhook = WebhookDB.updateWebhook(req.params.id, userId, { url, events, description, active });
+    const webhook = WebhookDB.getById(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
+    const result = WebhookDB.update(req.params.id, userId, { url, events, active });
     res.json({ success: true, webhook });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -2483,8 +2485,7 @@ app.get('/api/docs', (req, res) => {
 app.delete('/api/webhooks/:id', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const deleted = WebhookDB.deleteWebhook(req.params.id, userId);
-    if (!deleted) return res.status(404).json({ error: 'Webhook 不存在' });
+    const result = WebhookDB.delete(req.params.id, userId);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -2495,29 +2496,36 @@ app.delete('/api/webhooks/:id', authMiddleware, (req, res) => {
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const webhook = WebhookDB.getWebhook(req.params.id, userId);
+    const webhook = WebhookDB.getById(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
 
-    const { WebhookManager } = require('./webhook');
-    const manager = new WebhookManager();
-    const result = await manager.sendWebhook(webhook, 'webhook.test', {
-      message: '这是一条来自沐美服务的 Webhook 测试消息',
-      service: 'mumei-service',
-      timestamp: new Date().toISOString()
-    });
+    // 直接发送测试请求
+    const payload = { event: 'webhook.test', data: { message: '测试消息', timestamp: new Date().toISOString() }, timestamp: new Date().toISOString() };
+    const sig = crypto.createHmac('sha256', webhook.secret).update(JSON.stringify(payload)).digest('hex');
+    const fetchRes = await fetch(webhook.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Webhook-Signature': sig },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(10000)
+    }).catch(e => ({ ok: false, status: 0, error: e.message }));
 
-    res.json({ success: true, result });
+    res.json({ success: fetchRes.ok, status: fetchRes.status || 0, error: fetchRes.error });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// 获取投递记录
+// 获取投递记录（简化版：返回空数组）
 app.get('/api/webhooks/:id/deliveries', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const webhook = WebhookDB.getWebhook(req.params.id, userId);
+    const webhook = WebhookDB.getById(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
+    res.json({ success: true, deliveries: [] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
     const deliveries = WebhookDB.getDeliveries(req.params.id, 20);
     res.json({ success: true, deliveries });
@@ -3011,10 +3019,14 @@ async function startServer() {
           // 到期提醒邮件
           if (daysLeft === 7 || daysLeft === 3 || daysLeft === 1) {
             try {
-              const { sendVerificationEmail } = require('./email');
-              // 复用邮件模块发提醒（简化处理）
-              console.log(`📧 发送到期提醒给 ${user.email}，剩余 ${daysLeft} 天`);
-            } catch (e) {}
+              const { sendSubscriptionReminder } = require('./email');
+              const userName = user.display_name || user.email.split('@')[0];
+              const planName = sub.plan_id === 'pro' ? '专业版' : sub.plan_id === 'enterprise' ? '企业版' : '订阅';
+              await sendSubscriptionReminder(user.email, userName, planName, daysLeft);
+              console.log(`📧 已发送到期提醒给 ${user.email}，剩余 ${daysLeft} 天`);
+            } catch (e) {
+              console.error('发送到期提醒失败:', e.message);
+            }
           }
 
           // 已到期 → 降级

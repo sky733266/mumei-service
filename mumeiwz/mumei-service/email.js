@@ -232,6 +232,67 @@ function getMockCode(email) {
   return null;
 }
 
+// 发送订阅到期提醒邮件
+async function sendSubscriptionReminder(email, userName, planName, daysLeft, lang = 'zh') {
+  const transporter = createTransporter();
+
+  const subjects = {
+    zh: `沐美服务 - 您的${planName}将在${daysLeft}天后到期`,
+    en: `Mumei Service - Your ${planName} will expire in ${daysLeft} days`,
+    ko: `무메이 서비스 - ${planName}이(가) ${daysLeft}일 후 만료됩니다`,
+    fr: `Service Mumei - Votre ${planName} expirera dans ${daysLeft} jours`,
+    es: `Servicio Mumei - Su ${planName} vencerá en ${daysLeft} días`,
+    ja: `ムメイサービス - ${planName}は${daysLeft}日後に期限切れになります`
+  };
+
+  const content = {
+    zh: { title: '订阅到期提醒', message: `尊敬的 ${userName}，您的 ${planName} 将在 ${daysLeft} 天后到期。请及时续费以继续享受高级功能。`, cta: '立即续费' },
+    en: { title: 'Subscription Expiry Reminder', message: `Dear ${userName}, your ${planName} will expire in ${daysLeft} days. Please renew to continue enjoying premium features.`, cta: 'Renew Now' },
+    ko: { title: '구독 만료 알림', message: `존경하는 ${userName}님,您的 ${planName}은(는) ${daysLeft}일 후 만료됩니다. 프리미엄 기능을 계속 이용하려면续订해 주세요.`, cta: '지금续訂' },
+    fr: { title: 'Expiration de l\'abonnement', message: `Cher/Chère ${userName}, votre ${planName} expirera dans ${daysLeft} jours. Veuillez renouvelez pour continuer à profiter des fonctionnalités premium.`, cta: 'Renouveler' },
+    es: { title: 'Recordatorio de vencimiento', message: `Estimado/a ${userName}, su ${planName} vencerá en ${daysLeft} días. Renueve para seguir disfrutando de las funciones premium.`, cta: 'Renovar ahora' },
+    ja: { title: 'サブスクリプション有効期限のリマインダー', message: `${userName}様，您的 ${planName}は${daysLeft}日後に期限切れになります。プレミアム機能を 계속 이용하려면更新してください。`, cta: '今すぐ更新' }
+  };
+
+  const c = content[lang] || content.zh;
+
+  const html = `
+    <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',sans-serif;color:#333;">
+      <div style="background:linear-gradient(135deg,#667eea,#764ba2);padding:30px;text-align:center;">
+        <h1 style="color:#fff;margin:0;font-size:24px;">${c.title}</h1>
+      </div>
+      <div style="padding:30px;background:#f9f9f9;">
+        <p style="font-size:16px;line-height:1.6;">${c.message}</p>
+        <div style="text-align:center;margin:30px 0;">
+          <a href="${process.env.BASE_URL || 'http://localhost:3000'}/pricing" style="display:inline-block;padding:14px 32px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">${c.cta}</a>
+        </div>
+        <p style="color:#888;font-size:13px;text-align:center;">如有问题，请联系 support@mumei.service</p>
+      </div>
+    </div>
+  `;
+
+  if (mockMode) {
+    console.log(`\n========== 模拟订阅提醒邮件 ==========`);
+    console.log(`收件人: ${email}`);
+    console.log(`套餐: ${planName}, 剩余: ${daysLeft}天`);
+    console.log(`==================================\n`);
+    return { success: true, mock: true };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"沐美服务" <${process.env.SMTP_USER || 'noreply@mumei.service'}>`,
+      to: email,
+      subject: subjects[lang] || subjects.zh,
+      html
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (e) {
+    console.error('发送订阅提醒失败:', e.message);
+    return { success: false, error: e.message };
+  }
+}
+
 // 获取Ethereal测试账户（开发环境使用）
 async function getEtherealAccount() {
   const testAccount = await nodemailer.createTestAccount();
@@ -241,4 +302,4 @@ async function getEtherealAccount() {
   return testAccount;
 }
 
-module.exports = { sendVerificationEmail, getMockCode, getEtherealAccount };
+module.exports = { sendVerificationEmail, sendSubscriptionReminder, getMockCode, getEtherealAccount };
