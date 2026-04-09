@@ -302,4 +302,42 @@ router.get('/logs', adminMiddleware, (req, res) => {
   }
 });
 
+// 工具使用排行（管理员）
+router.get('/tools/usage', adminMiddleware, (req, res) => {
+  try {
+    // 尝试获取所有日志，如果 LogDB 没有这个方法则返回空
+    let allLogs = [];
+    if (LogDB.getAllLogs && typeof LogDB.getAllLogs === 'function') {
+      allLogs = LogDB.getAllLogs();
+    } else if (LogDB.getUserLogs) {
+      // 遍历所有用户获取日志（性能较差，仅作后备）
+      const users = UserDB.getAllUsers ? UserDB.getAllUsers() : [];
+      users.forEach(user => {
+        const { logs: userLogs } = LogDB.getUserLogs(user.id, { limit: 10000 });
+        if (userLogs) allLogs = allLogs.concat(userLogs);
+      });
+    }
+    
+    // 统计每个端点的调用次数
+    const toolCounts = {};
+    allLogs.forEach(log => {
+      const endpoint = log.endpoint || log.path || '';
+      if (endpoint && endpoint.includes('/api/tools/')) {
+        const short = endpoint.replace(/^\/api\/tools\//, '');
+        toolCounts[short] = (toolCounts[short] || 0) + 1;
+      }
+    });
+    
+    // 排序并返回 Top 10
+    const ranking = Object.entries(toolCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([tool, calls]) => ({ tool, calls }));
+    
+    res.json({ success: true, ranking });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

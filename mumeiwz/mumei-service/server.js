@@ -2363,6 +2363,111 @@ app.get('/api/public/stats', (req, res) => {
   }
 });
 
+// API 文档数据（公开）
+app.get('/api/docs', (req, res) => {
+  res.json({
+    auth: {
+      title: '🔐 认证授权',
+      endpoints: [
+        { method: 'POST', path: '/api/auth/register', desc: '用户注册', params: [
+          { name: 'email', type: 'string', required: true },
+          { name: 'password', type: 'string', required: true },
+          { name: 'referralCode', type: 'string', required: false }
+        ]},
+        { method: 'POST', path: '/api/auth/login', desc: '用户登录', params: [
+          { name: 'email', type: 'string', required: true },
+          { name: 'password', type: 'string', required: true }
+        ]},
+        { method: 'GET', path: '/api/auth/me', desc: '获取当前用户信息', params: [] },
+        { method: 'POST', path: '/api/auth/refresh', desc: '刷新Token', params: [
+          { name: 'refreshToken', type: 'string', required: true }
+        ]}
+      ]
+    },
+    tools: {
+      title: '🛠️ 工具API',
+      endpoints: [
+        { method: 'POST', path: '/api/tools/ai/text-generate', desc: 'AI文本生成', params: [
+          { name: 'prompt', type: 'string', required: true },
+          { name: 'model', type: 'string', required: false },
+          { name: 'maxTokens', type: 'number', required: false }
+        ]},
+        { method: 'POST', path: '/api/tools/ai/image-generate', desc: 'AI图像生成', params: [
+          { name: 'prompt', type: 'string', required: true },
+          { name: 'size', type: 'string', required: false }
+        ]},
+        { method: 'POST', path: '/api/tools/ai/tts', desc: '语音合成', params: [
+          { name: 'text', type: 'string', required: true },
+          { name: 'voice', type: 'string', required: false }
+        ]},
+        { method: 'POST', path: '/api/tools/ai/stt', desc: '语音识别', params: [
+          { name: 'audioUrl', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/tools/data/json-format', desc: 'JSON格式化', params: [
+          { name: 'content', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/tools/data/regex-test', desc: '正则测试', params: [
+          { name: 'pattern', type: 'string', required: true },
+          { name: 'testString', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/tools/network/dns', desc: 'DNS查询', params: [
+          { name: 'domain', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/tools/network/ip-lookup', desc: 'IP查询', params: [
+          { name: 'ip', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/tools/security/password-check', desc: '密码强度检测', params: [
+          { name: 'password', type: 'string', required: true }
+        ]}
+      ]
+    },
+    user: {
+      title: '👤 用户管理',
+      endpoints: [
+        { method: 'PUT', path: '/api/auth/profile', desc: '更新个人资料', params: [
+          { name: 'displayName', type: 'string', required: false },
+          { name: 'bio', type: 'string', required: false }
+        ]},
+        { method: 'POST', path: '/api/auth/change-password', desc: '修改密码', params: [
+          { name: 'currentPassword', type: 'string', required: true },
+          { name: 'newPassword', type: 'string', required: true },
+          { name: 'confirmPassword', type: 'string', required: true }
+        ]},
+        { method: 'GET', path: '/api/user/tokens', desc: '获取API Token列表', params: [] },
+        { method: 'POST', path: '/api/user/tokens', desc: '创建API Token', params: [
+          { name: 'name', type: 'string', required: true }
+        ]},
+        { method: 'DELETE', path: '/api/user/tokens/:id', desc: '删除API Token', params: [] }
+      ]
+    },
+    payment: {
+      title: '💳 支付订阅',
+      endpoints: [
+        { method: 'GET', path: '/api/plans', desc: '获取套餐列表', params: [] },
+        { method: 'GET', path: '/api/plans/current', desc: '获取当前套餐', params: [] },
+        { method: 'POST', path: '/api/subscription/create', desc: '创建订阅', params: [
+          { name: 'planId', type: 'string', required: true },
+          { name: 'paymentMethod', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/payment/paypal/create-order', desc: '创建PayPal订单', params: [
+          { name: 'planId', type: 'string', required: true }
+        ]},
+        { method: 'POST', path: '/api/payment/paypal/capture', desc: '确认PayPal支付', params: [
+          { name: 'orderId', type: 'string', required: true }
+        ]}
+      ]
+    },
+    logs: {
+      title: '📊 使用统计',
+      endpoints: [
+        { method: 'GET', path: '/api/stats', desc: '获取使用统计', params: [] },
+        { method: 'GET', path: '/api/logs', desc: '获取调用日志', params: [] },
+        { method: 'GET', path: '/api/logs/export', desc: '导出日志CSV', params: [] }
+      ]
+    }
+  });
+});
+
 // 删除 Webhook
 app.delete('/api/webhooks/:id', authMiddleware, (req, res) => {
   try {
