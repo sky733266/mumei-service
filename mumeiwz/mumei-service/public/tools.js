@@ -269,6 +269,71 @@ const toolForms = {
     method: 'POST'
   },
   
+  'data/text-stats': {
+    title: '字数统计',
+    fields: [
+      { name: 'text', label: '文本内容', type: 'textarea', placeholder: '请输入要统计的文字...', rows: 8, required: true }
+    ],
+    endpoint: '/api/tools/data/text-stats',
+    method: 'POST'
+  },
+  
+  'data/case-convert': {
+    title: '大小写转换',
+    fields: [
+      { name: 'text', label: '文本内容', type: 'textarea', placeholder: '请输入要转换的文字...', rows: 6, required: true },
+      { name: 'mode', label: '转换模式', type: 'select', options: [
+        { value: 'upper', label: '全部大写 UPPERCASE' },
+        { value: 'lower', label: '全部小写 lowercase' },
+        { value: 'title', label: '首字母大写 Title Case' },
+        { value: 'sentence', label: '句首大写 Sentence case' },
+        { value: 'toggle', label: '大小写互换 tOGGLE cASE' }
+      ]}
+    ],
+    endpoint: '/api/tools/data/case-convert',
+    method: 'POST'
+  },
+  
+  'data/lorem-ipsum': {
+    title: 'Lorem Ipsum 生成',
+    fields: [
+      { name: 'sentences', label: '数量', type: 'number', value: 5, placeholder: '生成数量' },
+      { name: 'type', label: '类型', type: 'select', options: [
+        { value: 'sentence', label: '句子' },
+        { value: 'word', label: '单词' },
+        { value: 'paragraph', label: '段落' }
+      ]}
+    ],
+    endpoint: '/api/tools/data/lorem-ipsum',
+    method: 'POST'
+  },
+  
+  'data/number-to-chinese': {
+    title: '数字转中文',
+    fields: [
+      { name: 'number', label: '数字', type: 'text', placeholder: '请输入数字，如 1234.56', required: true },
+      { name: 'type', label: '类型', type: 'select', options: [
+        { value: 'money', label: '金额大写（财务用）' },
+        { value: 'number', label: '纯数字中文' }
+      ]}
+    ],
+    endpoint: '/api/tools/data/number-to-chinese',
+    method: 'POST'
+  },
+  
+  'data/date-calculator': {
+    title: '日期计算器',
+    fields: [
+      { name: 'startDate', label: '开始日期', type: 'date', required: true },
+      { name: 'endDate', label: '结束日期', type: 'date', required: true },
+      { name: 'mode', label: '模式', type: 'select', options: [
+        { value: 'diff', label: '计算日期间隔' }
+      ]}
+    ],
+    endpoint: '/api/tools/data/date-calculator',
+    method: 'POST'
+  },
+  
   // 网络工具表单
   'network/dns': {
     title: 'DNS查询',
@@ -419,6 +484,38 @@ const toolForms = {
       { name: 'noDashes', label: '无横线', type: 'checkbox' }
     ],
     endpoint: '/api/tools/security/uuid-generate',
+    method: 'POST'
+  },
+  
+  'security/barcode': {
+    title: '条形码生成',
+    fields: [
+      { name: 'text', label: '内容', type: 'text', placeholder: '请输入条形码内容', required: true },
+      { name: 'format', label: '格式', type: 'select', options: [
+        { value: 'CODE128', label: 'CODE128 (常用)' },
+        { value: 'EAN13', label: 'EAN-13' },
+        { value: 'EAN8', label: 'EAN-8' },
+        { value: 'UPC', label: 'UPC-A' }
+      ]}
+    ],
+    endpoint: '/api/tools/security/barcode-generate',
+    method: 'POST'
+  },
+  
+  'security/meta-generator': {
+    title: 'SEO Meta标签',
+    fields: [
+      { name: 'title', label: '页面标题', type: 'text', placeholder: '网页标题', required: true },
+      { name: 'description', label: '页面描述', type: 'textarea', placeholder: '网页描述（150字以内）', rows: 3 },
+      { name: 'url', label: '页面URL', type: 'text', placeholder: 'https://example.com/page' },
+      { name: 'image', label: '图片URL', type: 'text', placeholder: 'https://example.com/image.jpg' },
+      { name: 'siteName', label: '网站名称', type: 'text', placeholder: '网站名称' },
+      { name: 'twitterCard', label: 'Twitter卡片', type: 'select', options: [
+        { value: 'summary', label: 'Summary' },
+        { value: 'summary_large_image', label: 'Summary Large Image' }
+      ]}
+    ],
+    endpoint: '/api/tools/security/meta-generator',
     method: 'POST'
   },
   

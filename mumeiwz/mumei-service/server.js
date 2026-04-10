@@ -1359,6 +1359,187 @@ app.post('/api/tools/data/jwt-generate', async (req, res) => {
   }
 });
 
+// 字数统计
+app.post('/api/tools/data/text-stats', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.json({ success: true, stats: { chars: 0, words: 0, lines: 0, bytes: 0 } });
+    
+    const chars = text.length;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const lines = text.split('\n').length;
+    const bytes = Buffer.byteLength(text, 'utf8');
+    
+    res.json({ success: true, stats: { chars, words, lines, bytes } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 大小写转换
+app.post('/api/tools/data/case-convert', async (req, res) => {
+  try {
+    const { text, mode = 'upper' } = req.body;
+    if (!text) return res.json({ success: true, result: '' });
+    
+    let result = text;
+    switch (mode) {
+      case 'upper': result = text.toUpperCase(); break;
+      case 'lower': result = text.toLowerCase(); break;
+      case 'title': result = text.replace(/\b\w/g, c => c.toUpperCase()); break;
+      case 'sentence': result = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase(); break;
+      case 'toggle': result = text.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(''); break;
+    }
+    
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Lorem Ipsum 生成
+app.post('/api/tools/data/lorem-ipsum', async (req, res) => {
+  try {
+    const { sentences = 5, type = 'sentence' } = req.body;
+    const words = ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua', 'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi', 'aliquip', 'ex', 'ea', 'commodo', 'consequat', 'duis', 'aute', 'irure', 'in', 'reprehenderit', 'voluptate', 'velit', 'esse', 'cillum', 'fugiat', 'nulla', 'pariatur', 'excepteur', 'sint', 'occaecat', 'cupidatat', 'non', 'proident', 'sunt', 'culpa', 'qui', 'officia', 'deserunt', 'mollit', 'anim', 'id', 'est', 'laborum'];
+    
+    let result = '';
+    const count = Math.min(Math.max(parseInt(sentences) || 5, 1), 100);
+    
+    if (type === 'word') {
+      for (let i = 0; i < count; i++) {
+        result += words[Math.floor(Math.random() * words.length)] + (i < count - 1 ? ' ' : '');
+      }
+    } else if (type === 'paragraph') {
+      for (let p = 0; p < count; p++) {
+        let para = '';
+        for (let s = 0; s < 5; s++) {
+          let sentence = '';
+          const wordCount = Math.floor(Math.random() * 10) + 5;
+          for (let w = 0; w < wordCount; w++) {
+            sentence += words[Math.floor(Math.random() * words.length)] + (w < wordCount - 1 ? ' ' : '');
+          }
+          para += sentence.charAt(0).toUpperCase() + sentence.slice(1) + '. ';
+        }
+        result += para + '\n\n';
+      }
+    } else {
+      for (let s = 0; s < count; s++) {
+        let sentence = '';
+        const wordCount = Math.floor(Math.random() * 10) + 5;
+        for (let w = 0; w < wordCount; w++) {
+          sentence += words[Math.floor(Math.random() * words.length)] + (w < wordCount - 1 ? ' ' : '');
+        }
+        result += sentence.charAt(0).toUpperCase() + sentence.slice(1) + '. ';
+      }
+    }
+    
+    res.json({ success: true, result: result.trim() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 数字转中文大写
+app.post('/api/tools/data/number-to-chinese', async (req, res) => {
+  try {
+    const { number, type = 'money' } = req.body;
+    if (!number && number !== 0) return res.json({ success: true, result: '' });
+    
+    const num = parseFloat(number);
+    if (isNaN(num)) return res.status(400).json({ error: '请输入有效数字' });
+    
+    const toChinese = (n) => {
+      const unit = ['', '十', '百', '千', '万', '十', '百', '千', '亿'];
+      const numStr = Math.floor(n).toString();
+      let result = '';
+      for (let i = 0; i < numStr.length; i++) {
+        const d = parseInt(numStr[numStr.length - 1 - i]);
+        if (d !== 0) result = unit[i] + (d === 1 && i === 1 ? '' : '一二三四五六七八九'[d - 1]) + result;
+        else if (i === 4 || i === 8) result = unit[i] + result;
+      }
+      return result || '零';
+    };
+    
+    const toMoney = (n) => {
+      const big = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
+      const unit = ['元', '拾', '佰', '仟', '万', '拾', '佰', '仟', '亿', '拾', '佰', '仟', '万'];
+      const decimal = ['角', '分'];
+      let intPart = Math.floor(n);
+      let decPart = Math.round((n - intPart) * 100);
+      
+      let result = '';
+      const intStr = intPart.toString();
+      for (let i = 0; i < intStr.length; i++) {
+        const d = parseInt(intStr[intStr.length - 1 - i]);
+        if (d !== 0) result = unit[i] + big[d] + result;
+      }
+      result += '元';
+      
+      if (decPart > 0) {
+        const d1 = Math.floor(decPart / 10);
+        const d2 = decPart % 10;
+        if (d1 > 0) result += big[d1] + decimal[0];
+        if (d2 > 0) result += big[d2] + decimal[1];
+      } else {
+        result += '整';
+      }
+      
+      return result;
+    };
+    
+    const result = type === 'money' ? toMoney(num) : toChinese(num);
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 日期计算器
+app.post('/api/tools/data/date-calculator', async (req, res) => {
+  try {
+    const { startDate, endDate, mode = 'diff' } = req.body;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ error: '请输入有效日期' });
+    }
+    
+    const diff = Math.abs(end - start);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor(diff / (1000 * 60));
+    const seconds = Math.floor(diff / 1000);
+    
+    // 计算工作日（排除周末）
+    let workDays = 0;
+    let current = new Date(Math.min(start, end));
+    const endDate2 = new Date(Math.max(start, end));
+    while (current <= endDate2) {
+      const day = current.getDay();
+      if (day !== 0 && day !== 6) workDays++;
+      current.setDate(current.getDate() + 1);
+    }
+    
+    res.json({
+      success: true,
+      result: {
+        days,
+        hours,
+        minutes,
+        seconds,
+        workDays,
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== 网络工具API ====================
 
 // DNS查询
@@ -1554,6 +1735,96 @@ app.post('/api/tools/security/decrypt', async (req, res) => {
     const { encrypted, key, algorithm = 'aes-256-gcm' } = req.body;
     const result = SecurityService.decrypt(encrypted, key, algorithm);
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 条形码生成
+app.post('/api/tools/security/barcode-generate', async (req, res) => {
+  try {
+    const { text, format = 'CODE128', width = 200, height = 80 } = req.body;
+    if (!text) return res.status(400).json({ error: '请输入内容' });
+    
+    // 简单的条形码生成（使用code128算法）
+    const generateBarcode = (text) => {
+      const codes = {
+        '0': '11011001100', '1': '11001101100', '2': '11001100110',
+        '3': '10010011000', '4': '10001001100', '5': '10001000110',
+        '6': '10011001000', '7': '10011000100', '8': '10001100100',
+        '9': '11001001000', 'A': '11001000100', 'B': '11000100100',
+        'C': '11000010100', '-': '10110011100', '.': '10111001100',
+        ' ': '10111000110', '$': '10100101100', '/': '10100100110',
+        '+': '10011010100', '%': '10010000110'
+      };
+      
+      let pattern = '110100100110'; // Start code
+      for (const char of text.toUpperCase()) {
+        const code = codes[char] || '100101101100';
+        pattern += code;
+      }
+      pattern += '110001110101'; // End code
+      
+      // 生成SVG
+      const bars = pattern.match(/1+/g)?.map(m => m.length) || [];
+      const barWidth = width / pattern.length;
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+      let x = 0;
+      for (const bit of pattern) {
+        if (bit === '1') {
+          svg += `<rect x="${x}" y="0" width="${barWidth}" height="${height}" fill="black"/>`;
+        }
+        x += barWidth;
+      }
+      svg += `<text x="${width/2}" y="${height - 10}" text-anchor="middle" font-family="monospace" font-size="12">${text}</text></svg>`;
+      return svg;
+    };
+    
+    const svg = generateBarcode(text);
+    const base64 = Buffer.from(svg).toString('base64');
+    
+    res.json({ success: true, svg, dataUrl: `data:image/svg+xml;base64,${base64}` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// SEO Meta标签生成
+app.post('/api/tools/security/meta-generator', async (req, res) => {
+  try {
+    const { title, description, url, image, siteName, twitterCard = 'summary_large_image' } = req.body;
+    
+    let html = '';
+    
+    // 基本Meta标签
+    if (title) html += `<meta name="title" content="${title}">\n`;
+    if (description) html += `<meta name="description" content="${description}">\n`;
+    
+    // Open Graph
+    if (title) html += `<meta property="og:title" content="${title}">\n`;
+    if (description) html += `<meta property="og:description" content="${description}">\n`;
+    if (url) html += `<meta property="og:url" content="${url}">\n`;
+    if (image) html += `<meta property="og:image" content="${image}">\n`;
+    if (siteName) html += `<meta property="og:site_name" content="${siteName}">\n`;
+    
+    // Twitter Card
+    html += `<meta name="twitter:card" content="${twitterCard}">\n`;
+    if (title) html += `<meta name="twitter:title" content="${title}">\n`;
+    if (description) html += `<meta name="twitter:description" content="${description}">\n`;
+    if (image) html += `<meta name="twitter:image" content="${image}">\n`;
+    
+    // JSON-LD (Schema.org)
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": siteName || title,
+      "url": url,
+      "description": description,
+      "image": image
+    };
+    html += `\n<!-- JSON-LD -->\n<script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n</script>`;
+    
+    res.json({ success: true, html, jsonLd });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
