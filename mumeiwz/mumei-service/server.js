@@ -1740,8 +1740,8 @@ app.post('/api/tools/security/decrypt', async (req, res) => {
   }
 });
 
-// 条形码生成
-app.post('/api/tools/security/barcode-generate', async (req, res) => {
+// 条形码生成（专业版）
+app.post('/api/tools/security/barcode-generate', combinedAuth, quotaMiddleware, async (req, res) => {
   try {
     const { text, format = 'CODE128', width = 200, height = 80 } = req.body;
     if (!text) return res.status(400).json({ error: '请输入内容' });
@@ -1789,8 +1789,8 @@ app.post('/api/tools/security/barcode-generate', async (req, res) => {
   }
 });
 
-// SEO Meta标签生成
-app.post('/api/tools/security/meta-generator', async (req, res) => {
+// SEO Meta标签生成（专业版）
+app.post('/api/tools/security/meta-generator', combinedAuth, quotaMiddleware, async (req, res) => {
   try {
     const { title, description, url, image, siteName, twitterCard = 'summary_large_image' } = req.body;
     

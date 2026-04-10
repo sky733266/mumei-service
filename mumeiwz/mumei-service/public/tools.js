@@ -489,6 +489,7 @@ const toolForms = {
   
   'security/barcode': {
     title: '条形码生成',
+    requiredPlan: 'pro',
     fields: [
       { name: 'text', label: '内容', type: 'text', placeholder: '请输入条形码内容', required: true },
       { name: 'format', label: '格式', type: 'select', options: [
@@ -504,6 +505,7 @@ const toolForms = {
   
   'security/meta-generator': {
     title: 'SEO Meta标签',
+    requiredPlan: 'pro',
     fields: [
       { name: 'title', label: '页面标题', type: 'text', placeholder: '网页标题', required: true },
       { name: 'description', label: '页面描述', type: 'textarea', placeholder: '网页描述（150字以内）', rows: 3 },
