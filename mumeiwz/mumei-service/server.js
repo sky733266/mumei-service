@@ -2352,7 +2352,7 @@ schedule.scheduleJob('0 * * * *', async () => {
       const key = `${user.id}-${new Date().toISOString().slice(0,7)}`;
       if (usageWarningSent.has(key)) continue;
       const todayCount = LogDB.getTodayCallCount ? LogDB.getTodayCallCount(user.id) : 0;
-      const limits = { free: 100, pro: 5000, enterprise: 999999 };
+      const limits = { free: 100, starter: 500, pro: 5000, enterprise: 999999 };
       const limit = limits[user.plan] || 100;
       if (todayCount >= limit * 0.8) {
         await sendUsageWarning(user, todayCount, limit);
@@ -3165,8 +3165,9 @@ app.get('/api/plans/current', authMiddleware, (req, res) => {
 
     const planConfig = {
       free:       { id: 'free',       name: '免费版',   price: 0,  features: { dailyRequests: 100,    monthlyRequests: 1000,    maxTokens: 3,   pdfSize: 5   } },
+      starter:    { id: 'starter',    name: '入门版',   price: 9,  features: { dailyRequests: 500,    monthlyRequests: 5000,    maxTokens: 5,   pdfSize: 10  } },
       pro:        { id: 'pro',        name: '专业版',   price: 29, features: { dailyRequests: 10000,  monthlyRequests: 100000,  maxTokens: 20,  pdfSize: 50  } },
-      enterprise: { id: 'enterprise', name: '企业版',   price: 99, features: { dailyRequests: 100000, monthlyRequests: 1000000, maxTokens: 100, pdfSize: 200 } }
+      enterprise: { id: 'enterprise', name: '企业版',   price: 49, features: { dailyRequests: 100000, monthlyRequests: 1000000, maxTokens: 100, pdfSize: 200 } }
     };
 
     const plan = planConfig[planId] || planConfig.free;
@@ -3186,7 +3187,7 @@ app.post('/api/plans/subscribe', authMiddleware, async (req, res) => {
     const { planId } = req.body;
     const userId = req.user.id || req.user.userId || req.user.sub;
 
-    const validPlans = ['free', 'pro', 'enterprise'];
+    const validPlans = ['free', 'starter', 'pro', 'enterprise'];
     if (!validPlans.includes(planId)) {
       return res.status(400).json({ error: '无效套餐' });
     }

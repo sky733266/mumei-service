@@ -365,12 +365,28 @@
         <div class="plan-period">永久免费</div>
         <ul class="plan-features">
           <li><span>✓</span> 每日 100 次调用</li>
-          <li><span>✓</span> 8 个基础工具</li>
+          <li><span>✓</span> 基础工具可用</li>
           <li><span>✓</span> 3 个 API Token</li>
           <li><span>✓</span> 社区支持</li>
         </ul>
         <button class="select-btn secondary" onclick="location.href='/panel'">
           免费开始
+        </button>
+      </div>
+
+      <!-- 入门版 -->
+      <div class="plan-card">
+        <div class="plan-name">入门版</div>
+        <div class="plan-price">¥9 <span>/月</span></div>
+        <div class="plan-period">每月 · 随时取消</div>
+        <ul class="plan-features">
+          <li><span>✓</span> 每日 500 次调用</li>
+          <li><span>✓</span> 20+ 常用工具</li>
+          <li><span>✓</span> 5 个 API Token</li>
+          <li><span>✓</span> 邮件支持</li>
+        </ul>
+        <button class="select-btn secondary" onclick="selectPlan('starter')">
+          选择入门版
         </button>
       </div>
       
@@ -382,9 +398,9 @@
         <div class="plan-period">每月 · 随时取消</div>
         <ul class="plan-features">
           <li><span>✓</span> 每日 10,000 次调用</li>
-          <li><span>✓</span> 50+ 全部工具</li>
+          <li><span>✓</span> 46+ 全部工具</li>
           <li><span>✓</span> 20 个 API Token</li>
-          <li><span>✓</span> AI 工具</li>
+          <li><span>✓</span> AI 工具可用</li>
           <li><span>✓</span> 优先邮件支持</li>
         </ul>
         <button class="select-btn primary" onclick="selectPlan('pro')">
@@ -395,17 +411,17 @@
       <!-- 企业版 -->
       <div class="plan-card">
         <div class="plan-name">企业版</div>
-        <div class="plan-price">¥99 <span>/月</span></div>
+        <div class="plan-price">¥49 <span>/月</span></div>
         <div class="plan-period">每月 · SLA 保障</div>
         <ul class="plan-features">
-          <li><span>✓</span> 无限 API 调用</li>
+          <li><span>✓</span> 每日 100,000 次调用</li>
           <li><span>✓</span> 100 个 API Token</li>
           <li><span>✓</span> 专属客户经理</li>
           <li><span>✓</span> 99.9% 可用性</li>
-          <li><span>✓</span> 7x24 电话支持</li>
+          <li><span>✓</span> 优先技术支持</li>
         </ul>
         <button class="select-btn secondary" onclick="selectPlan('enterprise')">
-          联系咨询
+          选择企业版
         </button>
       </div>
     </div>
@@ -511,7 +527,7 @@
       }
       
       selectedPlan = planId;
-      const prices = { pro: 29, enterprise: 99 };
+      const prices = { starter: 9, pro: 29, enterprise: 49 };
       document.getElementById('payAmount').textContent = prices[planId] || 0;
       selectedPayment = null;
       document.getElementById('payBtn').disabled = true;
