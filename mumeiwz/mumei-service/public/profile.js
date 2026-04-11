@@ -105,11 +105,14 @@
 
   // ============ 导出数据 ============
   window.exportData = async function() {
+    var btn = document.querySelector('button[onclick="exportData()"]');
+    if (btn) { btn.disabled = true; btn.textContent = '导出中...'; }
     showToast('正在导出数据...');
     try {
-      var res = await fetch('/api/logs/export', {
+      var res = await fetch('/api/auth/export', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
+      if (!res.ok) throw new Error('导出失败');
       var blob = await res.blob();
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
@@ -117,19 +120,84 @@
       URL.revokeObjectURL(url);
       showToast('数据已导出 ✓');
     } catch(e) {
-      showToast('导出失败', 'error');
+      showToast('导出失败: ' + e.message, 'error');
     }
+    if (btn) { btn.disabled = false; btn.textContent = '导出数据'; }
   };
 
   // ============ 删除账户 ============
   window.deleteAccount = async function() {
-    if (!confirm('确定要删除账户吗？此操作不可恢复！')) return;
-    var reason = prompt('请输入删除原因（选填）：');
-    showToast('请联系管理员删除账户', 'error');
+    if (!confirm('⚠️ 确定要删除账户吗？\n\n此操作将永久删除：\n- 您的所有账户数据\n- API Keys 和使用记录\n- 所有设置和偏好\n\n此操作不可恢复！')) return;
+    if (!confirm('最后确认：删除后所有数据将无法恢复，确定吗？')) return;
+    showToast('正在删除账户...');
+    try {
+      var res = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      var data = await res.json();
+      if (data.success) {
+        showToast('账户已删除');
+        localStorage.removeItem('authToken');
+        setTimeout(function() { window.location.href = '/'; }, 1500);
+      } else {
+        showToast(data.error || '删除失败', 'error');
+      }
+    } catch(e) {
+      showToast('删除失败，请稍后重试', 'error');
+    }
   };
 
-  // ============ 切换开关 ============
-  window.toggleSwitch = function(el) { el.classList.toggle('active'); };
+  // ============ 切换开关 + 保存通知设置 ============
+  var notificationSettings = {};
+  window.toggleSwitch = function(el) {
+    el.classList.toggle('active');
+    var key = el.parentElement.querySelector('h4').textContent;
+    var map = { '邮件通知': 'emailNotify', '使用报告': 'weeklyReport', '安全提醒': 'securityAlert', '产品更新': 'productUpdates' };
+    notificationSettings[map[key]] = el.classList.contains('active');
+    // 自动保存设置
+    saveNotificationSettings();
+  };
+
+  async function saveNotificationSettings() {
+    try {
+      var res = await fetch('/api/auth/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(notificationSettings)
+      });
+      var data = await res.json();
+      if (data.success) showToast('设置已保存');
+    } catch (e) {
+      console.error('保存通知设置失败', e);
+    }
+  }
+
+  async function loadNotificationSettings() {
+    try {
+      var res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      var data = await res.json();
+      if (!data.success) return;
+      var s = data.user.settings || {};
+      notificationSettings = s;
+      var map = { emailNotify: '邮件通知', weeklyReport: '使用报告', securityAlert: '安全提醒', productUpdates: '产品更新' };
+      var toggles = document.querySelectorAll('.toggle-switch');
+      toggles.forEach(function(t) {
+        var h = t.parentElement.querySelector('h4');
+        if (!h) return;
+        var key = h.textContent;
+        var field = map[key];
+        if (field !== undefined) {
+          if (s[field] === false) t.classList.remove('active');
+          else t.classList.add('active');
+        }
+      });
+    } catch (e) {
+      console.error('加载通知设置失败', e);
+    }
+  }
 
   // ============ Toast 提示 ============
   function showToast(msg, type) {
@@ -162,6 +230,7 @@
 
   // ============ 初始化 ============
   loadUserInfo();
+  loadNotificationSettings();
   initNav();
 })();
 </script>

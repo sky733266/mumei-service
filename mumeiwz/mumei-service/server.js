@@ -981,8 +981,70 @@ const toolPricing = {
   'dev/code-diff': { price: 0, unit: 'free', freeQuota: Infinity },
   'dev/cron-parse': { price: 0, unit: 'free', freeQuota: Infinity },
   'dev/timestamp': { price: 0, unit: 'free', freeQuota: Infinity },
-  'dev/color-convert': { price: 0, unit: 'free', freeQuota: Infinity }
+  'dev/color-convert': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/markdown-preview': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/qr-decode': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/cron-generate': { price: 0, unit: 'free', freeQuota: Infinity },
+  'data/random-number': { price: 0, unit: 'free', freeQuota: Infinity },
+  'data/calculator': { price: 0, unit: 'free', freeQuota: Infinity },
+  'data/json-path': { price: 0, unit: 'free', freeQuota: Infinity },
+  'data/yaml-convert': { price: 0, unit: 'free', freeQuota: Infinity },
+  'network/url-parser': { price: 0, unit: 'free', freeQuota: Infinity },
+  'security/hash-calc': { price: 0, unit: 'free', freeQuota: Infinity }
 };
+
+// ============ 辅助函数 ============
+function cronToHuman(expr) {
+  const parts = expr.split(' ');
+  const [sec, min, hour, day, month, week] = parts;
+  if (hour === '*' && min === '0') return '每小时整点执行';
+  if (day === '*' && month === '*' && week === '*') {
+    if (hour !== '*' && min !== '*') return `每天 ${hour}:${min.padStart(2,'0')} 执行`;
+    if (hour === '*' && min === '*') return '每分钟执行';
+  }
+  if (week !== '*') return `每周 ${['日','一','二','三','四','五','六'][parseInt(week)]} 执行`;
+  return expr;
+}
+
+function jsonPathQuery(obj, path) {
+  const segs = path.replace(/^\$\.?/, '').split(/\.|\[|\]/).filter(Boolean);
+  let cur = obj;
+  for (const seg of segs) {
+    if (cur === undefined) return undefined;
+    if (/^\d+$/.test(seg)) cur = cur[parseInt(seg)];
+    else cur = cur[seg];
+  }
+  return cur;
+}
+
+const CRC32_TABLE = (function() {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c;
+  }
+  return t;
+})();
+
+function crc32str(str) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < str.length; i++) {
+    crc = CRC32_TABLE[(crc ^ str.charCodeAt(i)) & 0xFF] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function evaluate(expr) {
+  // 安全数学表达式求值
+  try {
+    const sanitized = expr.replace(/\s+/g, '')
+      .replace(/sqrt\((\d+\.?\d*)\)/g, 'Math.sqrt($1)')
+      .replace(/pow\((\d+\.?\d*),(\d+\.?\d*)\)/g, 'Math.pow($1,$2)')
+      .replace(/\^/g, '**');
+    return new Function('return (' + sanitized + ')')();
+  } catch (e) { return 'Error'; }
+}
 
 // 认证中间件组合
 function validateApiToken(req, res, next) {
@@ -1061,10 +1123,10 @@ app.get('/api/tools', (req, res) => {
     categories: {
       ai: ['ai/text-generate', 'ai/image-generate', 'ai/tts', 'ai/stt', 'ai/translate'],
       file: ['file/convert', 'file/image-process', 'file/video-process', 'file/compress', 'file/markdown-render'],
-      data: ['data/json-format', 'data/csv-convert', 'data/sql-format', 'data/regex-test', 'data/base64', 'data/jwt'],
-      network: ['network/dns', 'network/ip-lookup', 'network/whois', 'network/ssl-check', 'network/speed-test', 'network/http-request'],
-      security: ['security/password-generate', 'security/password-check', 'security/hash', 'security/hmac', 'security/url-encode', 'security/html-escape', 'security/mask-data', 'security/uuid', 'security/encrypt'],
-      dev: ['dev/code-format', 'dev/code-minify', 'dev/code-diff', 'dev/cron-parse', 'dev/timestamp', 'dev/color-convert']
+      data: ['data/json-format', 'data/csv-convert', 'data/sql-format', 'data/regex-test', 'data/base64', 'data/jwt', 'data/text-stats', 'data/case-convert', 'data/lorem-ipsum', 'data/number-to-chinese', 'data/date-calculator', 'data/random-number', 'data/calculator', 'data/json-path', 'data/yaml-convert'],
+      network: ['network/dns', 'network/ip-lookup', 'network/whois', 'network/ssl-check', 'network/speed-test', 'network/http-request', 'network/url-parser'],
+      security: ['security/password-generate', 'security/password-check', 'security/hash', 'security/hmac', 'security/url-encode', 'security/html-escape', 'security/mask-data', 'security/uuid', 'security/encrypt', 'security/barcode', 'security/meta-generator', 'security/hash-calc'],
+      dev: ['dev/code-format', 'dev/code-minify', 'dev/code-diff', 'dev/cron-parse', 'dev/timestamp', 'dev/color-convert', 'dev/markdown-preview', 'dev/qr-decode', 'dev/cron-generate']
     }
   });
 });
@@ -1908,6 +1970,188 @@ app.post('/api/tools/dev/color-convert', async (req, res) => {
   }
 });
 
+// Markdown 实时预览
+app.post('/api/tools/dev/markdown-preview', async (req, res) => {
+  try {
+    const { markdown, options } = req.body;
+    // 使用 marked 解析 Markdown
+    const marked = require('marked');
+    const html = marked.parse(markdown || '', {
+      breaks: options?.breaks ?? true,
+      gfm: options?.gfm ?? true
+    });
+    res.json({ success: true, html });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 二维码解码（客户端实现，服务端返回HTML页面）
+app.get('/api/tools/dev/qr-decode', async (req, res) => {
+  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>二维码解码</title>
+  <style>body{font-family:system-ui;max-width:600px;margin:40px auto;padding:20px;background:#1a1a2e;color:#eee}
+  .container{background:#16213e;padding:30px;border-radius:12px}
+  input[type=file]{width:100%;padding:12px;margin:16px 0;background:#0f3460;border:1px solid #444;border-radius:8px;color:#fff}
+  .result{background:#0f3460;padding:16px;border-radius:8px;margin-top:16px;word-break:break-all}
+  button{background:#e94560;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:16px}
+  video,canvas{display:none}</style></head><body>
+  <div class="container"><h2>📱 二维码解码</h2>
+  <input type="file" id="fileInput" accept="image/*">
+  <button onclick="decodeQR()">解码图片</button>
+  <div class="result" id="result" style="display:none"></div>
+  </div>
+  <canvas id="canvas"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/jsQR@1.4.0/dist/jsQR.min.js"></script>
+  <script>
+  async function decodeQR() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) { alert('请先选择图片'); return; }
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.getElementById('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      const el = document.getElementById('result');
+      el.style.display = 'block';
+      if (code) {
+        el.innerHTML = '<b>✅ 解码成功：</b><br>' + code.data;
+      } else {
+        el.innerHTML = '<b>❌ 未检测到二维码，请确保图片清晰且包含二维码</b>';
+      }
+    };
+    img.src = URL.createObjectURL(file);
+  }
+  </script></body></html>`);
+});
+
+// Cron 生成器
+app.post('/api/tools/dev/cron-generate', async (req, res) => {
+  try {
+    const { second, minute, hour, day, month, week, command } = req.body;
+    const cron = require('cron-parser');
+    const expression = `${second || '0'} ${minute || '*'} ${hour || '*'} ${day || '*'} ${month || '*'} ${week || '*'}`;
+    const interval = cron.parseExpression(expression);
+    const next5 = [];
+    for (let i = 0; i < 5; i++) {
+      next5.push(interval.next().toISOString());
+    }
+    const desc = cronToHuman(expression);
+    res.json({ success: true, expression, description: desc, nextRuns: next5 });
+  } catch (e) {
+    res.status(400).json({ error: 'Cron表达式格式错误: ' + e.message });
+  }
+});
+
+// 随机数生成
+app.post('/api/tools/data/random-number', async (req, res) => {
+  try {
+    const { min = 1, max = 100, count = 1, type = 'integer', decimal = 2 } = req.body;
+    const results = [];
+    for (let i = 0; i < Math.min(count, 100); i++) {
+      if (type === 'integer') {
+        results.push(Math.floor(Math.random() * (max - min + 1)) + min);
+      } else {
+        results.push(parseFloat((Math.random() * (max - min) + min).toFixed(decimal)));
+      }
+    }
+    res.json({ success: true, results, count: results.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 在线计算器（表达式求值）
+app.post('/api/tools/data/calculator', async (req, res) => {
+  try {
+    const { expression } = req.body;
+    if (!expression) return res.status(400).json({ error: '请输入表达式' });
+    // 安全求值（只允许数字和运算符）
+    const safe = expression.replace(/[^0-9+\-*/().%sqrtpowexp\s]/gi, '');
+    if (safe !== expression.replace(/\s+/g, '')) {
+      return res.status(400).json({ error: '表达式包含非法字符' });
+    }
+    const result = safe.includes('sqrt') || safe.includes('pow')
+      ? evaluate(safe)
+      : new Function('return (' + safe + ')')();
+    res.json({ success: true, expression, result: typeof result === 'number' && !isNaN(result) ? result : '无效表达式' });
+  } catch (e) {
+    res.status(400).json({ error: '表达式错误: ' + e.message });
+  }
+});
+
+// JSON路径查询
+app.post('/api/tools/data/json-path', async (req, res) => {
+  try {
+    const { json, path } = req.body;
+    if (!json || !path) return res.status(400).json({ error: '请提供JSON和查询路径' });
+    const obj = typeof json === 'string' ? JSON.parse(json) : json;
+    // 简单 JSONPath 实现（支持 $.key 或 $.arr[0] 或 $.obj.key）
+    const result = jsonPathQuery(obj, path);
+    res.json({ success: true, path, result });
+  } catch (e) {
+    res.status(400).json({ error: 'JSON路径查询错误: ' + e.message });
+  }
+});
+
+// YAML 转换
+app.post('/api/tools/data/yaml-convert', async (req, res) => {
+  try {
+    const { data, direction } = req.body;
+    if (!data) return res.status(400).json({ error: '请输入数据' });
+    const yaml = require('js-yaml');
+    if (direction === 'yaml-to-json') {
+      const obj = yaml.load(data);
+      res.json({ success: true, result: JSON.stringify(obj, null, 2) });
+    } else {
+      const obj = JSON.parse(data);
+      res.json({ success: true, result: yaml.dump(obj) });
+    }
+  } catch (e) {
+    res.status(400).json({ error: '转换错误: ' + e.message });
+  }
+});
+
+// URL 批量解析
+app.post('/api/tools/network/url-parser', async (req, res) => {
+  try {
+    const { urls } = req.body;
+    if (!urls || !Array.isArray(urls)) return res.status(400).json({ error: '请提供URL数组' });
+    const results = urls.slice(0, 50).map(url => {
+      try {
+        const parsed = new URL(url);
+        const params = {};
+        parsed.searchParams.forEach((v, k) => { params[k] = v; });
+        return { url, protocol: parsed.protocol, host: parsed.host, pathname: parsed.pathname, params };
+      } catch (e) {
+        return { url, error: 'URL格式错误' };
+      }
+    });
+    res.json({ success: true, results });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 哈希计算器
+app.post('/api/tools/security/hash-calc', async (req, res) => {
+  try {
+    const { text, algorithm } = req.body;
+    if (!text) return res.status(400).json({ error: '请输入文本' });
+    const crypto = require('crypto');
+    const alg = algorithm || 'md5';
+    const hash = crypto.createHash(alg).update(text).digest('hex');
+    const sha256 = crypto.createHash('sha256').update(text).digest('hex');
+    const sha512 = crypto.createHash('sha512').update(text).digest('hex');
+    const crc32 = crc32str(text);
+    res.json({ success: true, text, algorithms: { md5: hash, sha256, sha512, crc32 } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ==================== 原有API路由（认证、Token、支付等）====================
 
 // ... [保留原有的所有路由代码] ...
@@ -2557,6 +2801,71 @@ app.post('/api/auth/change-password', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ 用户设置 API ============
+app.put('/api/auth/settings', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const { emailNotify, weeklyReport, securityAlert, productUpdates } = req.body;
+    const settings = { emailNotify, weeklyReport, securityAlert, productUpdates };
+    UserDB.updateSettings(userId, settings);
+    res.json({ success: true, settings });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ 导出用户数据 ============
+app.get('/api/auth/export', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const user = UserDB.getUserById(userId);
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    const logs = LogDB ? LogDB.getAllLogs().filter(l => l.userId === userId) : [];
+    const tokens = TokenDB ? TokenDB.getAllTokens().filter(t => t.userId === userId) : [];
+
+    let csv = '类型,内容,时间\n';
+    logs.forEach(l => {
+      csv += `"${l.type}","${(l.content || '').replace(/"/g, '""')}","${l.timestamp || l.createdAt}"\n`;
+    });
+    tokens.forEach(t => {
+      csv += `"token","${t.name || t.key}","${t.createdAt}"\n`;
+    });
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="mumei-user-${userId}.csv"`);
+    res.send('\ufeff' + csv);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ 删除账户 ============
+app.delete('/api/auth/account', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const user = UserDB.getUserById(userId);
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    // 删除用户的所有 tokens
+    if (TokenDB) {
+      const tokens = TokenDB.getAllTokens().filter(t => t.userId === userId);
+      tokens.forEach(t => TokenDB.deleteToken(t.id));
+    }
+    // 删除用户的 logs
+    if (LogDB) {
+      const logs = LogDB.getAllLogs().filter(l => l.userId === userId);
+      logs.forEach(l => LogDB.deleteLog(l.id));
+    }
+    // 删除用户
+    UserDB.deleteUser(userId);
+
+    res.json({ success: true, message: '账户已删除' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ Webhook 管理 API ============
 
 // 获取用户的 Webhooks
@@ -2793,13 +3102,6 @@ app.get('/api/webhooks/:id/deliveries', authMiddleware, (req, res) => {
     const webhook = WebhookDB.getById(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
     res.json({ success: true, deliveries: [] });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-    const deliveries = WebhookDB.getDeliveries(req.params.id, 20);
-    res.json({ success: true, deliveries });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

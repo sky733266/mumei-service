@@ -597,6 +597,120 @@ const toolForms = {
     ],
     endpoint: '/api/tools/dev/color-convert',
     method: 'POST'
+  },
+
+  // Markdown 实时预览
+  'dev/markdown-preview': {
+    title: 'Markdown 实时预览',
+    fields: [
+      { name: 'markdown', label: 'Markdown 内容', type: 'textarea', placeholder: '# 标题\n\n输入 Markdown 文本...', required: true },
+      { name: 'gfm', label: 'GitHub 风格', type: 'checkbox', checked: true },
+      { name: 'breaks', label: '换行转 <br>', type: 'checkbox', checked: true }
+    ],
+    endpoint: '/api/tools/dev/markdown-preview',
+    method: 'POST'
+  },
+
+  // 二维码解码
+  'dev/qr-decode': {
+    title: '二维码解码',
+    description: '上传二维码图片自动识别内容',
+    openInNew: true,
+    endpoint: '/api/tools/dev/qr-decode',
+    method: 'GET'
+  },
+
+  // Cron 生成器
+  'dev/cron-generate': {
+    title: 'Cron 生成器',
+    fields: [
+      { name: 'second', label: '秒 (0-59, * )', type: 'text', placeholder: '0', value: '0' },
+      { name: 'minute', label: '分钟 (0-59, * )', type: 'text', placeholder: '*', value: '*' },
+      { name: 'hour', label: '小时 (0-23, * )', type: 'text', placeholder: '*', value: '*' },
+      { name: 'day', label: '日期 (1-31, * )', type: 'text', placeholder: '*', value: '*' },
+      { name: 'month', label: '月份 (1-12, * )', type: 'text', placeholder: '*', value: '*' },
+      { name: 'week', label: '星期 (0-6, * )', type: 'text', placeholder: '*', value: '*' }
+    ],
+    endpoint: '/api/tools/dev/cron-generate',
+    method: 'POST'
+  },
+
+  // 随机数生成
+  'data/random-number': {
+    title: '随机数生成',
+    fields: [
+      { name: 'min', label: '最小值', type: 'number', value: 1 },
+      { name: 'max', label: '最大值', type: 'number', value: 100 },
+      { name: 'count', label: '生成数量', type: 'number', value: 1, min: 1, max: 100 },
+      { name: 'type', label: '类型', type: 'select', options: [
+        { value: 'integer', label: '整数' },
+        { value: 'decimal', label: '小数' }
+      ]},
+      { name: 'decimal', label: '小数位数', type: 'number', value: 2, min: 0, max: 10 }
+    ],
+    endpoint: '/api/tools/data/random-number',
+    method: 'POST'
+  },
+
+  // 在线计算器
+  'data/calculator': {
+    title: '在线计算器',
+    fields: [
+      { name: 'expression', label: '表达式', type: 'textarea', placeholder: '例如: 2+3*4 或 sqrt(16)+pow(2,3)', required: true }
+    ],
+    endpoint: '/api/tools/data/calculator',
+    method: 'POST'
+  },
+
+  // JSON 路径查询
+  'data/json-path': {
+    title: 'JSON 路径查询',
+    fields: [
+      { name: 'json', label: 'JSON 数据', type: 'textarea', placeholder: '{"name":"Tom","age":25}', required: true },
+      { name: 'path', label: '查询路径', type: 'text', placeholder: '$.name 或 $.items[0]', required: true }
+    ],
+    endpoint: '/api/tools/data/json-path',
+    method: 'POST'
+  },
+
+  // YAML 转换
+  'data/yaml-convert': {
+    title: 'YAML 转换',
+    fields: [
+      { name: 'data', label: '输入内容', type: 'textarea', placeholder: '输入 JSON 或 YAML', required: true },
+      { name: 'direction', label: '转换方向', type: 'select', options: [
+        { value: 'json-to-yaml', label: 'JSON → YAML' },
+        { value: 'yaml-to-json', label: 'YAML → JSON' }
+      ]}
+    ],
+    endpoint: '/api/tools/data/yaml-convert',
+    method: 'POST'
+  },
+
+  // URL 批量解析
+  'network/url-parser': {
+    title: 'URL 批量解析',
+    fields: [
+      { name: 'urls', label: 'URL 列表（每行一个）', type: 'textarea', placeholder: 'https://example.com?id=1&name=test\nhttps://example.com?key=abc', required: true }
+    ],
+    endpoint: '/api/tools/network/url-parser',
+    method: 'POST',
+    transform: { urls: 'split' }
+  },
+
+  // 哈希计算器
+  'security/hash-calc': {
+    title: '哈希计算器',
+    fields: [
+      { name: 'text', label: '输入文本', type: 'textarea', placeholder: '输入要计算哈希的文本', required: true },
+      { name: 'algorithm', label: '主算法', type: 'select', options: [
+        { value: 'md5', label: 'MD5' },
+        { value: 'sha256', label: 'SHA-256' },
+        { value: 'sha512', label: 'SHA-512' }
+      ]}
+    ],
+    endpoint: '/api/tools/security/hash-calc',
+    method: 'POST'
   }
 };
 
@@ -621,6 +735,12 @@ function setupEventListeners() {
   document.querySelectorAll('.tool-card').forEach(card => {
     card.addEventListener('click', () => {
       const toolId = card.dataset.tool;
+      const config = toolForms[toolId];
+      // openInNew 的工具直接在新窗口打开
+      if (config && config.openInNew) {
+        window.open(config.endpoint, '_blank');
+        return;
+      }
       openToolModal(toolId);
     });
   });
@@ -743,7 +863,12 @@ async function executeTool(toolId, config) {
     } else if (field.type === 'number' || field.type === 'range') {
       data[field.name] = parseFloat(formData.get(field.name));
     } else {
-      data[field.name] = formData.get(field.name);
+      let val = formData.get(field.name);
+      // 处理 split 转换（textarea 每行转数组）
+      if (config.transform && config.transform[field.name] === 'split') {
+        val = val ? val.split(/\r?\n/).filter(Boolean) : [];
+      }
+      data[field.name] = val;
     }
   });
 
