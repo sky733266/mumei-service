@@ -283,9 +283,9 @@
   --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.3);
   --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.3);
   
-  /* 图片URL */
-  --hero-bg: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&q=80');
-  --hero-overlay: linear-gradient(135deg, rgba(15,15,26,0.95) 0%, rgba(26,26,46,0.9) 50%, rgba(15,15,26,0.95) 100%);
+  /* 图片URL - 代码/开发者风格背景 */
+  --hero-bg: url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1920&q=80');
+  --hero-overlay: linear-gradient(135deg, rgba(15,15,26,0.92) 0%, rgba(26,26,46,0.88) 50%, rgba(15,15,26,0.92) 100%);
   
   /* 动画 */
   --transition: all 0.3s ease;
