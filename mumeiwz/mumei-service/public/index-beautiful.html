@@ -16,6 +16,12 @@
 <body>
   <!-- 页面加载进度条 -->
   <div id="pageLoader" class="page-loader"></div>
+
+  <!-- 动态背景装饰 -->
+  <div class="bg-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
   
   <!-- 公告横幅 -->
   <div id="announcementBanner" class="announcement-banner" style="display:none;">
@@ -35,10 +41,10 @@
       </a>
       
       <div class="navbar-nav">
-        <a href="/tools" class="navbar-link">工具箱</a>
-        <a href="/panel" class="navbar-link">用户面板</a>
-        <a href="#pricing" class="navbar-link">定价</a>
-        <a href="#docs" class="navbar-link">文档</a>
+        <a href="/tools" class="navbar-link nav-link-animated">工具箱</a>
+        <a href="/panel" class="navbar-link nav-link-animated">用户面板</a>
+        <a href="#pricing" class="navbar-link nav-link-animated">定价</a>
+        <a href="/docs" class="navbar-link nav-link-animated">文档</a>
       </div>
       
       <!-- 汉堡菜单按钮 -->
@@ -72,10 +78,15 @@
 
   <!-- Hero区域 - 带宇宙背景图 -->
   <header class="hero">
+    <!-- 几何装饰 -->
+    <div class="geo-deco geo-ring"></div>
+    <div class="geo-deco geo-dots"></div>
+    <div class="geo-deco geo-square"></div>
+
     <div class="hero-content">
       <div class="hero-badge">
         <span class="hero-badge-dot"></span>
-        <span>50+ 开发者工具现已上线</span>
+        <span>🌟 46+ 开发工具免费使用</span>
       </div>
       
       <h1>
@@ -87,16 +98,16 @@
       <p class="hero-subtitle">
         为独立开发者和一人公司打造的全栈API服务平台。
         <br>
-        AI工具、文件处理、数据分析、网络安全，一站式解决。
+        AI工具 · 文件处理 · 数据转换 · 网络诊断 · 安全加密，46+工具免费用。
       </p>
       
       <div class="hero-actions">
-        <a href="/tools" class="btn btn-primary btn-lg">
+        <a href="/tools" class="btn btn-primary btn-lg btn-glow">
           <span>🛠️</span>
-          <span>探索工具箱</span>
+          <span>探索46+工具</span>
         </a>
         <a href="/panel" class="btn btn-secondary btn-lg">
-          <span>免费注册</span>
+          <span>免费注册 →</span>
         </a>
       </div>
       
@@ -125,8 +136,11 @@
   <section class="tool-section">
     <div class="container">
       <div class="tool-section-header">
-        <h2>强大功能，简单使用</h2>
-        <p>从AI生成到数据处理，从网络安全到开发工具，满足您的所有需求</p>
+        <h2>🛠️ 强大功能，简单使用</h2>
+        <p>从AI生成到数据处理，从网络安全到开发工具，46+工具满足您的所有需求</p>
+        <div style="margin-top:12px;">
+          <a href="/tools" class="btn btn-secondary btn-sm">查看全部工具 →</a>
+        </div>
       </div>
       
       <div class="grid grid-3">
