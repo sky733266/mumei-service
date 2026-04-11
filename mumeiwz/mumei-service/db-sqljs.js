@@ -507,6 +507,12 @@ const PlanDB = {
         quotas: { dailyLimit: 100, monthlyLimit: 1000, maxTokens: 3 }
       },
       {
+        id: 'starter',
+        name: '入门版',
+        price: 9,
+        quotas: { dailyLimit: 500, monthlyLimit: 5000, maxTokens: 5 }
+      },
+      {
         id: 'pro',
         name: '专业版',
         price: 29,
@@ -515,7 +521,7 @@ const PlanDB = {
       {
         id: 'enterprise',
         name: '企业版',
-        price: 99,
+        price: 49,
         quotas: { dailyLimit: 100000, monthlyLimit: 1000000, maxTokens: 100 }
       }
     ];

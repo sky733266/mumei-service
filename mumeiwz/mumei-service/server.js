@@ -1071,6 +1071,7 @@ function combinedAuth(req, res, next) {
 // ============ 配额检查中间件 ============
 const PLAN_DAILY_LIMITS = {
   free:       100,
+  starter:    500,
   pro:        10000,
   enterprise: 100000
 };
