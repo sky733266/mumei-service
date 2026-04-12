@@ -2572,8 +2572,50 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/docs', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'docs.html'));
+app.get('/docs', async (req, res) => {
+  try {
+    let html = fs.readFileSync(path.join(__dirname, 'public', 'docs.html'), 'utf-8');
+
+    // 后端预渲染 API 文档（解决前端 JS 加载顺序问题）
+    try {
+      const raw = fs.readFileSync(path.join(__dirname, 'public', 'docs-data.js'), 'utf-8')
+        .replace(/^const API_DOCS_DATA = /, '').replace(/;$/, '').trim();
+      const docs = JSON.parse(raw);
+
+      // 生成文档 HTML
+      let docsHtml = '';
+      for (const [category, data] of Object.entries(docs)) {
+        docsHtml += `<section class="docs-section" id="${category}-api">
+          <h2>${data.title || data.name}</h2>`;
+        for (const ep of (data.endpoints || [])) {
+          const methodClass = ep.method === 'GET' ? 'method-get' : 'method-post';
+          const paramsHtml = (ep.params || []).map(p =>
+            `<tr><td><span class="param-name">${p.name}</span></td><td>${p.type}</td><td>${p.required ? '✓' : '○'}</td></tr>`
+          ).join('');
+          docsHtml += `<div class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="endpoint-method ${methodClass}">${ep.method}</span>
+              <code class="endpoint-path">${ep.path}</code>
+            </div>
+            <div class="endpoint-body">
+              <p class="endpoint-description">${ep.desc || ''}</p>
+              ${paramsHtml ? `<table class="params-table"><thead><tr><th>参数</th><th>类型</th><th>必填</th></tr></thead><tbody>${paramsHtml}</tbody></table>` : ''}
+            </div>
+          </div>`;
+        }
+        docsHtml += '</section>';
+      }
+
+      // 替换空容器
+      html = html.replace('<div id="apiDocsContainer"></div>', `<div id="apiDocsContainer">${docsHtml}</div>`);
+    } catch(e) {
+      // 忽略，fallback 到前端 JS 渲染
+    }
+
+    res.type('html').send(html);
+  } catch(e) {
+    res.sendFile(path.join(__dirname, 'public', 'docs.html'));
+  }
 });
 
 app.get('/feedback', (req, res) => {

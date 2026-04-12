@@ -12,6 +12,7 @@
   <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles-beautiful.css">
   <script src="app-beautiful.js"></script>
+  <script src="docs-data.js"></script>
   <style>
     .docs-container {
       max-width: 1400px;
@@ -804,14 +805,27 @@
     // 页面加载完成后隐藏加载动画
     window.addEventListener('load', () => {
       setTimeout(() => {
-        document.getElementById('pageLoader').classList.add('hidden');
+        const loader = document.getElementById('pageLoader');
+        if (loader) loader.classList.add('hidden');
       }, 500);
-      loadApiDocs();
     });
 
-    // 动态加载 API 文档
+    // 等 DOM + 所有脚本加载完成后执行（避免 docs-data.js 未就绪）
+    document.addEventListener('DOMContentLoaded', () => {
+      // 等 docs-data.js 执行完（它是 defer，等 DOMContentLoaded 后执行）
+      setTimeout(loadApiDocs, 100);
+    });
+
+    // 动态加载 API 文档（优先用内联数据，失败时尝试网络获取）
     async function loadApiDocs() {
       try {
+        // 优先使用内联的 docs-data.js（不依赖网络）
+        if (typeof API_DOCS_DATA !== 'undefined') {
+          renderApiDocs(API_DOCS_DATA);
+          updateSidebar(API_DOCS_DATA);
+          return;
+        }
+        // 兜底：网络获取
         const res = await fetch('/api/docs');
         const docs = await res.json();
         renderApiDocs(docs);
