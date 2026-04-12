@@ -166,7 +166,8 @@ app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 // 速率限制
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100
+  max: 100,
+  skip: (req) => req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1'
 });
 app.use('/api/', limiter);
 
