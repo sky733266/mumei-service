@@ -2303,11 +2303,11 @@ const API_DOCS = {
   data: {
     title: '数据处理',
     endpoints: [
-      { method: 'POST', path: '/api/tools/data/json-format', desc: 'JSON格式化', params: [{ name: 'data', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/json-format', desc: 'JSON格式化', params: [{ name: 'json', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/data/json-to-csv', desc: 'JSON转CSV', params: [{ name: 'data', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/data/csv-to-json', desc: 'CSV转JSON', params: [{ name: 'data', type: 'string', required: true }] },
-      { method: 'POST', path: '/api/tools/data/base64-encode', desc: 'Base64编码', params: [{ name: 'data', type: 'string', required: true }] },
-      { method: 'POST', path: '/api/tools/data/base64-decode', desc: 'Base64解码', params: [{ name: 'data', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/base64-encode', desc: 'Base64编码', params: [{ name: 'text', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/base64-decode', desc: 'Base64解码', params: [{ name: 'text', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/data/text-stats', desc: '字数统计', params: [{ name: 'text', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/data/case-convert', desc: '大小写转换', params: [{ name: 'text', type: 'string', required: true }, { name: 'mode', type: 'string', required: false }] },
       { method: 'POST', path: '/api/tools/data/lorem-ipsum', desc: 'Lorem Ipsum生成', params: [{ name: 'sentences', type: 'number', required: false }, { name: 'type', type: 'string', required: false }] },
@@ -2317,6 +2317,8 @@ const API_DOCS = {
       { method: 'POST', path: '/api/tools/data/calculator', desc: '在线计算器', params: [{ name: 'expression', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/data/json-path', desc: 'JSON路径查询', params: [{ name: 'json', type: 'string', required: true }, { name: 'path', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/data/yaml-convert', desc: 'YAML转换', params: [{ name: 'data', type: 'string', required: true }, { name: 'direction', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/data/jwt-decode', desc: 'JWT解码', params: [{ name: 'token', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/data/jwt-generate', desc: 'JWT生成', params: [{ name: 'payload', type: 'object', required: true }, { name: 'secret', type: 'string', required: true }] },
     ]
   },
   network: {
