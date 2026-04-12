@@ -479,13 +479,13 @@ const SubscriptionDB = {
 
   getActiveSubscription(userId) {
     const result = db.exec(
-      `SELECT * FROM subscriptions 
+      `SELECT * FROM subscriptions
        WHERE user_id = ? AND status = 'active' AND (expires_at IS NULL OR expires_at > datetime('now'))`,
       [userId]
     );
-    
+
     if (result.length === 0) return null;
-    
+
     const columns = result[0].columns;
     const values = result[0].values[0];
     const sub = {};
@@ -493,6 +493,31 @@ const SubscriptionDB = {
       sub[col] = values[i];
     });
     return sub;
+  },
+
+  cancelSubscription(userId) {
+    // 取消活跃订阅并降级为免费版
+    db.run(
+      "UPDATE subscriptions SET status = 'cancelled' WHERE user_id = ? AND status = 'active'",
+      [userId]
+    );
+    // 用户降级为免费版
+    UserDB.updateUserPlan(userId, 'free');
+    saveDatabase();
+    return true;
+  },
+
+  getSubscriptionHistory(userId) {
+    const result = db.exec(
+      `SELECT * FROM subscriptions WHERE user_id = '${userId}' ORDER BY started_at DESC LIMIT 20`
+    );
+    if (result.length === 0) return [];
+    const cols = result[0].columns;
+    return result[0].values.map(row => {
+      const obj = {};
+      cols.forEach((c, i) => { obj[c] = row[i]; });
+      return obj;
+    });
   }
 };
 

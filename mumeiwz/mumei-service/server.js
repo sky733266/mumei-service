@@ -3314,6 +3314,33 @@ app.get('/api/stats', authMiddleware, (req, res) => {
 });
 
 // 获取当前套餐详情
+// 订阅取消（降级为免费版）
+app.post('/api/subscription/cancel', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    SubscriptionDB.cancelSubscription(userId);
+    res.json({
+      success: true,
+      message: '订阅已取消，已降级为免费版',
+      plan: 'free',
+      dailyLimit: PLAN_DAILY_LIMITS.free
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 订阅历史
+app.get('/api/subscription/history', authMiddleware, (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId || req.user.sub;
+    const history = SubscriptionDB.getSubscriptionHistory(userId);
+    res.json({ success: true, history });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get('/api/plans/current', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
@@ -3789,7 +3816,24 @@ async function startServer() {
     }
   });
 
-  const server = app.listen(PORT, () => {
+  // 每次启动时从 API_DOCS 生成 docs-data.js（保持与路由同步）
+(function generateDocsDataJS() {
+  try {
+    // 直接用 API_DOCS 变量（已在内存中）
+    if (typeof API_DOCS !== 'undefined') {
+      const docsJSPath = path.join(__dirname, 'public', 'docs-data.js');
+      const js = '// Auto-generated - do not edit\nconst API_DOCS_DATA = ' + JSON.stringify(API_DOCS) + ';';
+      fs.writeFileSync(docsJSPath, js, 'utf-8');
+      const cats = Object.keys(API_DOCS).length;
+      const eps = Object.values(API_DOCS).reduce((a, v) => a + (v.endpoints || []).length, 0);
+      console.log('[Docs] docs-data.js: ' + cats + ' categories, ' + eps + ' endpoints');
+    } else {
+      console.warn('[Docs] docs-data.js: API_DOCS not found, keeping existing file');
+    }
+  } catch(e) { console.warn('[Docs] docs-data.js: ' + e.message); }
+})();
+
+const server = app.listen(PORT, () => {
     console.log(`沐美服务运行在 http://localhost:${PORT}`);
     console.log(`用户面板: http://localhost:${PORT}/panel`);
     console.log(`工具箱: http://localhost:${PORT}/tools`);
