@@ -441,5 +441,20 @@
   </footer>
 
   <script src="tools.js"></script>
+  <script>
+    // 全局语言切换事件（tools.js 加载后执行）
+    document.addEventListener('DOMContentLoaded', function() {
+      var sel = document.getElementById('languageSelect');
+      if (sel) {
+        sel.addEventListener('change', function() {
+          var lang = sel.value;
+          // 优先用 tools.js 的 switchLang
+          if (typeof switchLang === 'function') {
+            switchLang(lang);
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

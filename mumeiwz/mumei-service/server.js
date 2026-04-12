@@ -326,7 +326,26 @@ const translations = {
     referralDesc: '分享你的邀请链接，好友注册你获得 20 次免费调用',
     referralTip: '💡 好友付费购买专业版，你额外获得 ¥5 返利',
     viewAll: '查看全部',
-    language: '语言'
+    language: '语言',
+    // 首页新增
+    home: '首页',
+    nav_home: '首页',
+    nav_tools: '工具箱',
+    nav_panel: '用户面板',
+    nav_pricing: '定价',
+    nav_docs: '文档',
+    heroTitle: '沐美服务',
+    heroSubtitle: '一人公司API服务平台',
+    heroCta: '立即体验',
+    heroCta2: '查看定价',
+    statTools: '46+工具',
+    statUsers: '用户',
+    statCalls: '总调用',
+    announcement_close: '×',
+    footer_tools: '工具箱',
+    footer_docs: '文档',
+    footer_pricing: '定价',
+    footer_contact: '联系我们'
   },
   en: {
     // General
@@ -460,7 +479,26 @@ const translations = {
     referralDesc: 'Share your invite link — friends who register earn you 20 free calls',
     referralTip: '💡 Friends who buy Pro earn you ¥5 cashback',
     viewAll: 'View All',
-    language: 'Language'
+    language: 'Language',
+    // Home新增
+    home: 'Home',
+    nav_home: 'Home',
+    nav_tools: 'Toolbox',
+    nav_panel: 'User Panel',
+    nav_pricing: 'Pricing',
+    nav_docs: 'Docs',
+    heroTitle: 'Mumei Service',
+    heroSubtitle: 'One-Person Company API Platform',
+    heroCta: 'Get Started',
+    heroCta2: 'View Pricing',
+    statTools: '46+ Tools',
+    statUsers: 'Users',
+    statCalls: 'Total Calls',
+    announcement_close: '×',
+    footer_tools: 'Toolbox',
+    footer_docs: 'Docs',
+    footer_pricing: 'Pricing',
+    footer_contact: 'Contact'
   },
 
   // ============ 日本語 ============
@@ -577,7 +615,26 @@ const translations = {
     referralDesc: '招待リンクを共有すると、友達が登録するたびに20回の無料呼び出しを獲得',
     referralTip: '💡 友達がプロプランを購入すると、¥5のキャッシュバックを獲得',
     viewAll: 'すべて表示',
-    language: '言語'
+    language: '言語',
+    // 首页新增
+    home: 'ホーム',
+    nav_home: 'ホーム',
+    nav_tools: 'ツールボックス',
+    nav_panel: 'ユーザーパネル',
+    nav_pricing: '料金',
+    nav_docs: 'ドキュメント',
+    heroTitle: '沐美サービス',
+    heroSubtitle: '一人会社APIプラットフォーム',
+    heroCta: '今すぐ体験',
+    heroCta2: '料金を見る',
+    statTools: '46+ツール',
+    statUsers: 'ユーザー',
+    statCalls: '総呼び出し',
+    announcement_close: '×',
+    footer_tools: 'ツール',
+    footer_docs: 'ドキュメント',
+    footer_pricing: '料金',
+    footer_contact: 'お問い合わせ'
   },
 
   // ============ 한국어 ============
@@ -694,7 +751,26 @@ const translations = {
     referralDesc: '초대 링크를 공유하면 친구가 가입할 때마다 20회 무료 호출 획득',
     referralTip: '💡 친구가 프로 요금제를 구매하면 ¥5 캐시백 획득',
     viewAll: '전체 보기',
-    language: '언어'
+    language: '언어',
+    // 首页新增
+    home: '홈',
+    nav_home: '홈',
+    nav_tools: '도구 상자',
+    nav_panel: '사용자 패널',
+    nav_pricing: '가격',
+    nav_docs: '문서',
+    heroTitle: '沐美 서비스',
+    heroSubtitle: '1인 기업 API 플랫폼',
+    heroCta: '지금 시작',
+    heroCta2: '가격 보기',
+    statTools: '46+ 도구',
+    statUsers: '사용자',
+    statCalls: '총 호출',
+    announcement_close: '×',
+    footer_tools: '도구',
+    footer_docs: '문서',
+    footer_pricing: '가격',
+    footer_contact: '연락처'
   },
 
   // ============ Français ============
@@ -811,7 +887,26 @@ const translations = {
     referralDesc: 'Partagez votre lien — chaque ami inscrit vous rapporte 20 appels gratuits',
     referralTip: '💡 Un ami qui achète Pro vous rapporte ¥5 de cashback',
     viewAll: 'Voir tout',
-    language: 'Langue'
+    language: 'Langue',
+    // 首页新增
+    home: 'Accueil',
+    nav_home: 'Accueil',
+    nav_tools: 'Boîte à outils',
+    nav_panel: 'Panneau',
+    nav_pricing: 'Tarifs',
+    nav_docs: 'Docs',
+    heroTitle: 'Mumei Service',
+    heroSubtitle: "Plateforme API pour entreprise individuelle",
+    heroCta: 'Commencer',
+    heroCta2: 'Voir les tarifs',
+    statTools: '46+ Outils',
+    statUsers: 'Utilisateurs',
+    statCalls: 'Appels totaux',
+    announcement_close: '×',
+    footer_tools: 'Outils',
+    footer_docs: 'Docs',
+    footer_pricing: 'Tarifs',
+    footer_contact: 'Contact'
   },
 
   // ============ Español ============
@@ -928,7 +1023,26 @@ const translations = {
     referralDesc: 'Comparte tu enlace — cada amigo que se registre te da 20 llamadas gratis',
     referralTip: '💡 Un amigo que compre Pro te da ¥5 de cashback',
     viewAll: 'Ver todo',
-    language: 'Idioma'
+    language: 'Idioma',
+    // 首页新增
+    home: 'Inicio',
+    nav_home: 'Inicio',
+    nav_tools: 'Herramientas',
+    nav_panel: 'Panel',
+    nav_pricing: 'Precios',
+    nav_docs: 'Docs',
+    heroTitle: 'Mumei Service',
+    heroSubtitle: 'Plataforma API para empresa individual',
+    heroCta: 'Comenzar',
+    heroCta2: 'Ver precios',
+    statTools: '46+ Herramientas',
+    statUsers: 'Usuarios',
+    statCalls: 'Llamadas totales',
+    announcement_close: '×',
+    footer_tools: 'Herramientas',
+    footer_docs: 'Docs',
+    footer_pricing: 'Precios',
+    footer_contact: 'Contacto'
   }
 };
 

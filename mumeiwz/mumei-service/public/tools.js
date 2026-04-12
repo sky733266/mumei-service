@@ -48,6 +48,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// 语言切换（供外部调用，API 与 app-beautiful.js 保持一致）
+async function switchLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('language', lang);
+  document.documentElement.lang = lang;
+  await loadTranslations(currentLang);
+}
+
 // 加载翻译
 async function loadTranslations(lang) {
   try {
@@ -58,6 +66,9 @@ async function loadTranslations(lang) {
     console.error('加载翻译失败:', error);
   }
 }
+
+// eslint-disable-next-line no-unused-vars
+function updateUI() { updatePageText(); }
 
 // 更新页面文本
 function updatePageText() {
