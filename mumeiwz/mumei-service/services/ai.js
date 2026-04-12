@@ -1,6 +1,15 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 
+// 强制清空 OpenAI API Key（国内无法直连，重启服务后生效）
+// 正式使用时请通过 .env 或环境变量配置兼容国内的大模型接口
+if (process.env.OPENAI_API_KEY) {
+  console.warn('[AI] 检测到 OPENAI_API_KEY，国内直连 OpenAI 会超时，AI工具暂用模拟模式');
+  // 临时禁用，换用硅基流动等国内兼容接口时可改为：
+  // AI_CONFIG.openai.baseURL = 'https://api.siliconflow.cn/v1';
+  process.env.OPENAI_API_KEY = '';
+}
+
 // AI服务配置
 const AI_CONFIG = {
   // OpenAI配置
