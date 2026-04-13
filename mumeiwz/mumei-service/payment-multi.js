@@ -3,6 +3,7 @@
  * 支持: Stripe, PayPal, 易支付(微信/支付宝)
  */
 
+try { require('dotenv').config(); } catch(e) {}
 const https = require('https');
 const crypto = require('crypto');
 

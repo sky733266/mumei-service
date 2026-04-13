@@ -1855,8 +1855,9 @@ app.post('/api/tools/security/url-decode', async (req, res) => {
 // HTML转义
 app.post('/api/tools/security/html-escape', async (req, res) => {
   try {
-    const { html } = req.body;
-    const result = SecurityService.escapeHTML(html);
+    const { text, html } = req.body;
+    const input = text || html || '';
+    const result = SecurityService.escapeHTML(input);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1866,8 +1867,9 @@ app.post('/api/tools/security/html-escape', async (req, res) => {
 // HTML反转义
 app.post('/api/tools/security/html-unescape', async (req, res) => {
   try {
-    const { escaped } = req.body;
-    const result = SecurityService.unescapeHTML(escaped);
+    const { text, escaped } = req.body;
+    const input = text || escaped || '';
+    const result = SecurityService.unescapeHTML(input);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -3047,7 +3049,7 @@ app.delete('/api/auth/account', authMiddleware, async (req, res) => {
 app.get('/api/webhooks', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const webhooks = WebhookDB.getByUser(userId);
+    const webhooks = WebhookDB.getUserWebhooks(userId);
     res.json({ success: true, webhooks });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -3073,14 +3075,13 @@ app.post('/api/webhooks', authMiddleware, async (req, res) => {
     }
 
     // 限制每个用户最多 5 个 Webhook
-    const existing = WebhookDB.getByUser(userId);
+    const existing = WebhookDB.getUserWebhooks(userId);
     if (existing.length >= 5) {
       return res.status(403).json({ error: '最多创建 5 个 Webhook' });
     }
 
-    const result = WebhookDB.create({ user_id: userId, url, events: events || [], active: true });
-    if (!result.success) return res.status(500).json({ error: result.error });
-    res.json({ success: true, webhook: { id: result.id, url, events, active: true, secret: result.secret } });
+    const webhook = WebhookDB.createWebhook(userId, { url, events: events || [], description, active: true });
+    res.json({ success: true, webhook });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -3091,10 +3092,10 @@ app.put('/api/webhooks/:id', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
     const { url, events, description, active } = req.body;
-    const webhook = WebhookDB.getById(req.params.id, userId);
+    const webhook = WebhookDB.getWebhook(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
-    const result = WebhookDB.update(req.params.id, userId, { url, events, active });
-    res.json({ success: true, webhook });
+    const updated = WebhookDB.updateWebhook(req.params.id, userId, { url, events, active, description });
+    res.json({ success: true, webhook: updated });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -3240,7 +3241,7 @@ app.get('/api/docs', (req, res) => {
 app.delete('/api/webhooks/:id', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const result = WebhookDB.delete(req.params.id, userId);
+    const result = WebhookDB.deleteWebhook(req.params.id, userId);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -3251,7 +3252,7 @@ app.delete('/api/webhooks/:id', authMiddleware, (req, res) => {
 app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const webhook = WebhookDB.getById(req.params.id, userId);
+    const webhook = WebhookDB.getWebhook(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
 
     // 直接发送测试请求
@@ -3274,9 +3275,10 @@ app.post('/api/webhooks/:id/test', authMiddleware, async (req, res) => {
 app.get('/api/webhooks/:id/deliveries', authMiddleware, (req, res) => {
   try {
     const userId = req.user.id || req.user.userId || req.user.sub;
-    const webhook = WebhookDB.getById(req.params.id, userId);
+    const webhook = WebhookDB.getWebhook(req.params.id, userId);
     if (!webhook) return res.status(404).json({ error: 'Webhook 不存在' });
-    res.json({ success: true, deliveries: [] });
+    const deliveries = WebhookDB.getDeliveries(req.params.id);
+    res.json({ success: true, deliveries });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -3885,6 +3887,9 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ 未处理的 Promise 拒绝:', reason);
 });
+
+// Keep-alive: 防止进程空闲退出
+setInterval(() => {}, 60000);
 
 // 404 处理
 app.use((req, res, next) => {
