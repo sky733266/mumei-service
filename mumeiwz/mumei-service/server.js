@@ -3030,8 +3030,7 @@ app.delete('/api/auth/account', authMiddleware, async (req, res) => {
     }
     // 删除用户的 logs
     if (LogDB) {
-      const logs = LogDB.getAllLogs().filter(l => l.userId === userId);
-      logs.forEach(l => LogDB.deleteLog(l.id));
+      LogDB.deleteUserLogs(userId);
     }
     // 删除用户
     UserDB.deleteUser(userId);
@@ -3872,10 +3871,15 @@ startServer().catch(err => {
   process.exit(1);
 });
 
-// 捕获未处理错误
+// 捕获未处理错误 - 记录但不立即退出，给时间排查
 process.on('uncaughtException', (err) => {
-  console.error('❌ 未捕获异常:', err.message);
-  process.exit(1);
+  console.error('❌ 未捕获异常:', err.stack || err.message);
+  // 不立即退出，标记为需要重启但继续运行
+  // process.exit(1);  // 注释掉，避免服务直接崩溃
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ 未处理的Promise拒绝:', reason?.stack || reason);
 });
 
 process.on('unhandledRejection', (reason, promise) => {

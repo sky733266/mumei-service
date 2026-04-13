@@ -261,6 +261,11 @@ const UserDB = {
     db.run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, values);
     saveDatabase();
     return this.getUserById(userId);
+  },
+
+  deleteUser(userId) {
+    db.run('DELETE FROM users WHERE id = ?', [userId]);
+    saveDatabase();
   }
 };
 
@@ -350,6 +355,11 @@ const TokenDB = {
 
   updateLastUsed(token) {
     db.run('UPDATE tokens SET last_used = CURRENT_TIMESTAMP WHERE token = ?', [token]);
+    saveDatabase();
+  },
+
+  deleteToken(tokenId) {
+    db.run('DELETE FROM tokens WHERE id = ?', [tokenId]);
     saveDatabase();
   }
 };
@@ -455,6 +465,16 @@ const LogDB = {
     
     if (result.length === 0) return 0;
     return result[0].values[0][0] || 0;
+  },
+
+  deleteLog(logId) {
+    db.run('DELETE FROM logs WHERE id = ?', [logId]);
+    saveDatabase();
+  },
+
+  deleteUserLogs(userId) {
+    db.run('DELETE FROM logs WHERE user_id = ?', [userId]);
+    saveDatabase();
   }
 };
 

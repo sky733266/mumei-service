@@ -497,6 +497,15 @@ class DevToolsService {
   static convertColor(color, targetFormat) {
     const startTime = Date.now();
 
+    // 如果没有指定目标格式，自动推断：HEX输入→RGB，其他→HEX
+    if (!targetFormat) {
+      if (color && color.startsWith('#')) {
+        targetFormat = 'rgb';
+      } else {
+        targetFormat = 'hex';
+      }
+    }
+
     try {
       let r, g, b, a = 1;
 
