@@ -29,25 +29,6 @@ let authToken = localStorage.getItem('authToken');
 let translations = {};
 
 // 初始化语言切换
-document.addEventListener('DOMContentLoaded', function() {
-  const languageSelect = document.getElementById('languageSelect');
-  if (languageSelect) {
-    languageSelect.value = currentLang;
-    languageSelect.addEventListener('change', (e) => {
-      currentLang = e.target.value;
-      localStorage.setItem('language', currentLang);
-      document.documentElement.lang = currentLang;
-      loadTranslations(currentLang);
-    });
-    loadTranslations(currentLang);
-  }
-  // 显示免费试用次数（未登录时）
-  if (!authToken) {
-    const badge = document.getElementById('trialBadge');
-    if (badge) { badge.style.display = 'inline'; showTrialCount(); }
-  }
-});
-
 // 语言切换（供外部调用，API 与 app-beautiful.js 保持一致）
 async function switchLang(lang) {
   currentLang = lang;
@@ -725,23 +706,8 @@ const toolForms = {
   }
 };
 
-// 初始化
-document.addEventListener('DOMContentLoaded', () => {
-  setupEventListeners();
-  filterTools('all');
-});
-
+// 初始化（由 tools.html 的 inline script 统一处理，这里不再重复过滤）
 // 设置事件监听
-function setupEventListeners() {
-  // 分类标签
-  document.querySelectorAll('.tool-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      filterTools(tab.dataset.category);
-    });
-  });
-
   // 工具卡片点击
   document.querySelectorAll('.tool-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -766,15 +732,6 @@ function setupEventListeners() {
 }
 
 // 过滤工具
-function filterTools(category) {
-  document.querySelectorAll('.tool-card').forEach(card => {
-    if (category === 'all' || card.dataset.category === category) {
-      card.classList.remove('hidden');
-    } else {
-      card.classList.add('hidden');
-    }
-  });
-}
 
 // 打开工具弹窗
 function openToolModal(toolId) {
@@ -1186,31 +1143,3 @@ function showToast(message) {
   }
 
   var searchTimer;
-  document.addEventListener('DOMContentLoaded', function() {
-    var searchInput = document.getElementById('toolSearch');
-    if (searchInput) {
-      searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(applyFilters, 200);
-      });
-      // 聚焦时加边框高亮
-      searchInput.addEventListener('focus', function() {
-        searchInput.style.borderColor = 'var(--primary)';
-      });
-      searchInput.addEventListener('blur', function() {
-        searchInput.style.borderColor = '';
-      });
-    }
-
-    document.querySelectorAll('.tool-tab').forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('.tool-tab').forEach(function(t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        applyFilters();
-      });
-    });
-
-    initFavorites();
-    applyFilters();
-  });
-})();
