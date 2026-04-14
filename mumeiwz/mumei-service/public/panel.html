@@ -380,6 +380,26 @@
     </div>
   </div>
 
+  <!-- 新手引导 -->
+  <div id="onboardingModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-secondary);border-radius:16px;padding:32px;max-width:480px;width:90%;text-align:center;border:1px solid var(--border);">
+      <div style="font-size:3rem;margin-bottom:16px;">🎉</div>
+      <h2 style="margin-bottom:12px;">欢迎加入沐美服务！</h2>
+      <p style="color:var(--text-muted);margin-bottom:24px;line-height:1.6;">
+        这里是您的个人面板，您可以：<br>
+        • 查看 API 使用统计<br>
+        • 管理您的 API Token<br>
+        • 升级套餐获取更多额度
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button onclick="closeOnboarding()" style="padding:12px 24px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;">开始使用</button>
+      </div>
+      <label style="display:block;margin-top:16px;color:var(--text-muted);font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="skipOnboarding" style="margin-right:6px;"> 下次不再显示
+      </label>
+    </div>
+  </div>
+
   <!-- 页脚 -->
   <footer>
     <p>&copy; 2026 沐美服务 Mumei Service. All rights reserved.</p>
@@ -405,6 +425,27 @@
       var btn = document.getElementById('themeToggle');
       if (btn) btn.textContent = isDark ? '☀️' : '🌙';
     }
+
+    // ============ 新手引导 ============
+    function showOnboarding() {
+      if (localStorage.getItem('onboardingShown')) return;
+      var modal = document.getElementById('onboardingModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeOnboarding() {
+      var modal = document.getElementById('onboardingModal');
+      if (modal) modal.style.display = 'none';
+      var skip = document.getElementById('skipOnboarding');
+      if (skip && skip.checked) {
+        localStorage.setItem('onboardingShown', 'true');
+      }
+    }
+
+    // 页面加载后检查是否显示引导
+    setTimeout(function() {
+      showOnboarding();
+    }, 1000);
   </script>
 </body>
 </html>
