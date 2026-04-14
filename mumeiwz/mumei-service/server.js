@@ -2421,8 +2421,8 @@ app.get('/api/translations/:lang', (req, res) => {
 // ============ 公告横幅 ============
 // 在 .env 中配置 ANNOUNCEMENT_TEXT 和 ANNOUNCEMENT_LINK
 const ANNOUNCEMENT = {
-  enabled: process.env.ANNOUNCEMENT_ENABLED === 'true',
-  text: process.env.ANNOUNCEMENT_TEXT || '🎉 新工具上线！AI 代码审查功能免费试用中',
+  enabled: process.env.ANNOUNCEMENT_ENABLED !== 'false', // 默认启用
+  text: process.env.ANNOUNCEMENT_TEXT || '🎉 新功能上线！深色模式、使用量图表、公告系统现已开放',
   link: process.env.ANNOUNCEMENT_LINK || '/tools',
   linkText: process.env.ANNOUNCEMENT_LINK_TEXT || '立即体验 →',
   bg: process.env.ANNOUNCEMENT_BG || 'linear-gradient(90deg, #6366f1, #8b5cf6)',

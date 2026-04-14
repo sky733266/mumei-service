@@ -282,23 +282,49 @@
 
     // 加载公告横幅
     (function loadAnnouncement() {
+      // 先尝试从数据库获取公告
       fetch('/api/public/announcement?lang=zh')
         .then(r => r.json())
         .then(data => {
           if (data.success && data.announcement) {
+            showAnnouncement(data.announcement.title + '：' + data.announcement.content);
+          } else {
+            // 如果没有数据库公告，尝试环境变量公告
+            return fetch('/api/announcement');
+          }
+        })
+        .then(r => r && r.json())
+        .then(data => {
+          if (data && data.enabled && data.text) {
             const banner = document.getElementById('announcementBanner');
             const text = document.getElementById('announcementText');
+            const link = document.getElementById('announcementLink');
             if (banner && text) {
-              text.textContent = data.announcement.title + '：' + data.announcement.content;
+              text.textContent = data.text;
+              if (link && data.link) {
+                link.href = data.link;
+                link.textContent = data.linkText || '了解更多 →';
+                link.style.display = 'inline';
+              }
               banner.style.display = 'flex';
-              // 存储已关闭状态
-              if (localStorage.getItem('announcementClosed_' + data.announcement.id)) {
+              banner.style.background = data.bg || 'linear-gradient(90deg, #6366f1, #8b5cf6)';
+              // 检查是否已关闭
+              if (localStorage.getItem('announcementClosed_env')) {
                 banner.style.display = 'none';
               }
             }
           }
         })
         .catch(() => { /* 静默失败 */ });
+
+      function showAnnouncement(text) {
+        const banner = document.getElementById('announcementBanner');
+        const textEl = document.getElementById('announcementText');
+        if (banner && textEl) {
+          textEl.textContent = text;
+          banner.style.display = 'flex';
+        }
+      }
     })();
 
     // 关闭公告
@@ -306,15 +332,8 @@
       const banner = document.getElementById('announcementBanner');
       if (banner) {
         banner.style.display = 'none';
-        // 提取ID并存储
-        const text = document.getElementById('announcementText');
-        if (text) {
-          const match = text.textContent.match(/^([^：]+)：/);
-          if (match) {
-            // 简单处理：存储关闭时间戳
-            localStorage.setItem('announcementClosed', Date.now().toString());
-          }
-        }
+        // 标记环境变量公告已关闭
+        localStorage.setItem('announcementClosed_env', Date.now().toString());
       }
     }
 
