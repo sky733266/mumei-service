@@ -373,6 +373,9 @@ async function loadUserStats() {
       monthlyProgress.style.width = Math.min((s.monthlyUsage / monthlyLimit) * 100, 100) + '%';
     }
 
+    // 检查配额警告（超过80%显示警告）
+    checkQuotaWarning(s.dailyUsage, 100);
+
     // 渲染图表
     if (s.dailyChart && window.Chart) {
       renderUsageChart(s.dailyChart.labels, s.dailyChart.data);
@@ -427,6 +430,21 @@ function renderUsageChart(labels, data) {
       }
     }
   });
+}
+
+// 检查配额警告
+function checkQuotaWarning(used, limit) {
+  const warningEl = document.getElementById('quotaWarning');
+  const usedEl = document.getElementById('quotaUsed');
+  if (!warningEl) return;
+
+  const percentage = Math.round((used / limit) * 100);
+  if (percentage >= 80) {
+    warningEl.style.display = 'block';
+    if (usedEl) usedEl.textContent = percentage;
+  } else {
+    warningEl.style.display = 'none';
+  }
 }
 
 // 退出登录
