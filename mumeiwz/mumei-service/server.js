@@ -2562,6 +2562,9 @@ app.get('/panel', (req, res) => {
 });
 
 app.get('/tools', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'public', 'tools.html'));
 });
 
@@ -3301,6 +3304,18 @@ app.get('/api/stats', authMiddleware, (req, res) => {
     const tokens = TokenDB.getUserTokens(userId);
     const activeTokens = tokens.filter(t => !t.revoked).length;
 
+    // 生成最近7天的每日统计数据
+    const dailyStats = [];
+    const labels = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayLogs = logs.filter(l => (l.timestamp || '').startsWith(dateStr));
+      labels.push(d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }));
+      dailyStats.push(dayLogs.length);
+    }
+
     res.json({
       success: true,
       stats: {
@@ -3309,7 +3324,11 @@ app.get('/api/stats', authMiddleware, (req, res) => {
         totalCalls: logs.length,
         successRate: logs.length > 0 ? Math.round((successLogs.length / logs.length) * 100) : 100,
         avgResponse: logs.length > 0 ? Math.round(totalResponse / logs.length) : 0,
-        activeTokens
+        activeTokens,
+        dailyChart: {
+          labels,
+          data: dailyStats
+        }
       }
     });
   } catch (e) {

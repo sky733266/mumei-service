@@ -332,6 +332,101 @@ function showPanel(user) {
   
   // 显示用户面板内容
   alert('登录成功！欢迎 ' + user.email);
+
+  // 加载用户统计数据
+  loadUserStats();
+}
+
+// 加载用户统计数据
+async function loadUserStats() {
+  try {
+    const res = await fetch('/api/stats', authHeader());
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success) return;
+
+    const s = data.stats;
+    // 更新统计卡片
+    const dailyEl = document.getElementById('dailyUsage');
+    const monthlyEl = document.getElementById('monthlyUsage');
+    const totalEl = document.getElementById('totalCalls');
+    const successEl = document.getElementById('successRate');
+    const avgEl = document.getElementById('avgResponse');
+    const tokensEl = document.getElementById('activeTokens');
+
+    if (dailyEl) dailyEl.textContent = s.dailyUsage || 0;
+    if (monthlyEl) monthlyEl.textContent = s.monthlyUsage || 0;
+    if (totalEl) totalEl.textContent = s.totalCalls || 0;
+    if (successEl) successEl.textContent = (s.successRate || 0) + '%';
+    if (avgEl) avgEl.textContent = (s.avgResponse || 0) + 'ms';
+    if (tokensEl) tokensEl.textContent = s.activeTokens || 0;
+
+    // 更新进度条
+    const dailyProgress = document.getElementById('dailyProgress');
+    const monthlyProgress = document.getElementById('monthlyProgress');
+    if (dailyProgress) {
+      const dailyLimit = 100; // 假设每日限额100
+      dailyProgress.style.width = Math.min((s.dailyUsage / dailyLimit) * 100, 100) + '%';
+    }
+    if (monthlyProgress) {
+      const monthlyLimit = 3000; // 假设每月限额3000
+      monthlyProgress.style.width = Math.min((s.monthlyUsage / monthlyLimit) * 100, 100) + '%';
+    }
+
+    // 渲染图表
+    if (s.dailyChart && window.Chart) {
+      renderUsageChart(s.dailyChart.labels, s.dailyChart.data);
+    }
+  } catch (e) {
+    console.error('加载统计失败:', e);
+  }
+}
+
+// 渲染使用量图表
+function renderUsageChart(labels, data) {
+  const ctx = document.getElementById('usageChart');
+  if (!ctx) return;
+
+  // 销毁旧图表
+  if (window.usageChartInstance) {
+    window.usageChartInstance.destroy();
+  }
+
+  window.usageChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'API调用次数',
+        data: data,
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#6366f1'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#a1a1aa', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        x: {
+          ticks: { color: '#a1a1aa', font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
 }
 
 // 退出登录
