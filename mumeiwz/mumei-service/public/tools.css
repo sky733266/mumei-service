@@ -633,3 +633,29 @@
   margin-top: 12px;
   flex-wrap: wrap;
 }
+
+/* 快速工具按钮 */
+.quick-btn {
+  transition: all 0.2s;
+}
+.quick-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* 分类标签计数 */
+.tab-count {
+  font-size: 10px;
+  background: rgba(255,255,255,0.1);
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-left: 4px;
+  font-weight: 400;
+}
+.tool-tab.active .tab-count {
+  background: rgba(255,255,255,0.2);
+}
+
+/* 工具卡片的星标 */
+.tool-card .fav-star {
+  line-height: 1;
+}
