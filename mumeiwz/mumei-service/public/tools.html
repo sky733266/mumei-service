@@ -230,6 +230,7 @@
         '<div class="tool-meta">'+
           '<span class="tool-cat">'+label+'</span>'+
           '<span class="tool-tag '+(t.pro?'pro':'free')+'">'+(t.pro?'PRO':'FREE')+'</span>'+
+          '<button class="share-btn" onclick="event.stopPropagation();shareTool(\''+t.id+'\',\''+t.name+'\')" title="分享" style="background:none;border:none;cursor:pointer;padding:0 4px;font-size:1rem;margin-left:4px;">🔗</button>'+
           '<button class="fav-btn" onclick="event.stopPropagation();toggleFav(\''+t.id+'\',this)" style="background:none;border:none;cursor:pointer;padding:0 4px;font-size:1rem">'+(favd?'★':'☆')+'</button>'+
         '</div></div>';
     }).join('');
@@ -281,6 +282,52 @@
       'dev/markdown-preview':'📝','dev/qr-decode':'📱','dev/cron-generate':'⏱️',
     };
     return m[id] || '🛠️';
+  }
+
+  // 分享工具
+  function shareTool(id, name) {
+    var url = window.location.origin + '/tools?tool=' + encodeURIComponent(id);
+    var text = '推荐一个好用的工具：' + name + ' - 沐美服务';
+
+    if (navigator.share) {
+      // 使用原生分享（移动端）
+      navigator.share({
+        title: name,
+        text: text,
+        url: url
+      }).catch(function() {});
+    } else {
+      // 复制链接到剪贴板
+      copyToClipboard(url);
+      showToast('链接已复制到剪贴板');
+    }
+  }
+
+  // 复制到剪贴板
+  function copyToClipboard(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var input = document.createElement('input');
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+  }
+
+  // 显示提示
+  function showToast(message) {
+    var toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 24px;background:#22c55e;color:#fff;border-radius:8px;z-index:9999;font-size:14px;';
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(function() { document.body.removeChild(toast); }, 300);
+    }, 2000);
   }
 
   // DOMContentLoaded：只绑定事件，渲染统一在这里调用
@@ -356,6 +403,13 @@
 
     // 初始化主题
     initTheme();
+
+    // 检查URL参数，自动打开指定工具
+    var urlParams = new URLSearchParams(window.location.search);
+    var toolId = urlParams.get('tool');
+    if (toolId && ALL_TOOLS.some(function(t) { return t.id === toolId; })) {
+      setTimeout(function() { openToolModal(toolId); }, 500);
+    }
   });
 
   // ============ 主题切换 ============
