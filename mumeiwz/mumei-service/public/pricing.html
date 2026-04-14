@@ -21,6 +21,25 @@
       --success: #22c55e;
       --warning: #f59e0b;
     }
+
+    /* 浅色主题 */
+    html:not(.dark) {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1a202c;
+      --text-muted: #64748b;
+    }
+    html:not(.dark) body {
+      background: var(--bg-primary);
+    }
+    html:not(.dark) #languageSelect,
+    html:not(.dark) #themeToggle {
+      background: #ffffff;
+      color: #1a202c;
+      border-color: #e2e8f0;
+    }
     
     body {
       font-family: 'Inter', sans-serif;
@@ -343,7 +362,8 @@
 </head>
 <body>
   <!-- 语言切换栏 -->
-  <div style="position:fixed;top:16px;right:20px;z-index:999;">
+  <div style="position:fixed;top:16px;right:20px;z-index:999;display:flex;gap:8px;align-items:center;">
+    <button id="themeToggle" onclick="toggleTheme()" title="切换主题" style="background:#1a1a24;color:#e4e4e7;border:1px solid #2a2a3a;border-radius:8px;padding:6px 10px;font-size:1.1rem;cursor:pointer;">🌙</button>
     <select id="languageSelect" style="background:#1a1a24;color:#e4e4e7;border:1px solid #2a2a3a;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;">
       <option value="zh">中文</option>
       <option value="en">English</option>
@@ -666,6 +686,24 @@
         localStorage.setItem('language', currentLang);
         loadTranslations(currentLang);
       });
+    }
+    // ============ 主题切换 ============
+    (function initTheme() {
+      var saved = localStorage.getItem('theme');
+      var isDark = saved ? saved === 'dark' : true;
+      applyTheme(isDark);
+    })();
+
+    function toggleTheme() {
+      var isDark = document.documentElement.classList.contains('dark');
+      applyTheme(!isDark);
+    }
+
+    function applyTheme(isDark) {
+      document.documentElement.classList.toggle('dark', isDark);
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = isDark ? '☀️' : '🌙';
     }
   </script>
 </body>

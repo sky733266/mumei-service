@@ -312,6 +312,20 @@
 }
 
 /* 浅色主题 */
+html:not(.dark) {
+  --bg: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --text: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-glow: rgba(99, 102, 241, 0.2);
+  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --hero-overlay: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(255,255,255,0.9) 50%, rgba(248,250,252,0.95) 100%);
+}
 [data-theme="light"] {
   --bg: #f8fafc;
   --bg-secondary: #ffffff;
