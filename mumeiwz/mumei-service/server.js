@@ -85,6 +85,13 @@ try {
   console.log('DevTools services not available');
 }
 
+let ExternalAPIService;
+try {
+  ExternalAPIService = require('./services/external-api');
+} catch (e) {
+  console.log('External API services not available:', e.message);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -213,6 +220,7 @@ const translations = {
     networkTools: '网络工具',
     securityTools: '安全工具',
     devTools: '开发工具',
+    funTools: '趣味工具',
     // 首页
     pdfConverter: 'PDF转换器',
     uploadPDF: '上传PDF',
@@ -1105,8 +1113,49 @@ const toolPricing = {
   'data/json-path': { price: 0, unit: 'free', freeQuota: Infinity },
   'data/yaml-convert': { price: 0, unit: 'free', freeQuota: Infinity },
   'network/url-parser': { price: 0, unit: 'free', freeQuota: Infinity },
-  'security/hash-calc': { price: 0, unit: 'free', freeQuota: Infinity }
+  'security/hash-calc': { price: 0, unit: 'free', freeQuota: Infinity },
+  // 趣味与生活工具（全部免费）
+  'fun/random-quote': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/random-joke': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/encouraging': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/cat-image': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/dog-image': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/random-user': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/word-define': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/word-synonym': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/weather': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/exchange-rate': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/ip-info': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/timezone': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/zip-code': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/holidays': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/country-info': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/world-time': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/uuid': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/password': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/color-scheme': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/slugify': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/json-schema': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/json-diff': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/xml-format': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/cron-desc': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/gitignore': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/dockerfile': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/code-example': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/regex-gen': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/coding-challenge': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/http-status': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/http-methods': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/jwt-decode': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/detect-ai': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/hash-verify': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/image-base64': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/today-history': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/news': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/github-trending': { price: 0, unit: 'free', freeQuota: Infinity },
+  'fun/stack-overflow': { price: 0, unit: 'free', freeQuota: Infinity },
 };
+
 
 // ============ 辅助函数 ============
 function cronToHuman(expr) {
@@ -1242,7 +1291,9 @@ app.get('/api/tools', (req, res) => {
       data: ['data/json-format', 'data/csv-convert', 'data/sql-format', 'data/regex-test', 'data/base64', 'data/jwt', 'data/text-stats', 'data/case-convert', 'data/lorem-ipsum', 'data/number-to-chinese', 'data/date-calculator', 'data/random-number', 'data/calculator', 'data/json-path', 'data/yaml-convert'],
       network: ['network/dns', 'network/ip-lookup', 'network/whois', 'network/ssl-check', 'network/speed-test', 'network/http-request', 'network/url-parser'],
       security: ['security/password-generate', 'security/password-check', 'security/hash', 'security/hmac', 'security/url-encode', 'security/html-escape', 'security/mask-data', 'security/uuid', 'security/encrypt', 'security/barcode', 'security/meta-generator', 'security/hash-calc'],
-      dev: ['dev/code-format', 'dev/code-minify', 'dev/code-diff', 'dev/cron-parse', 'dev/timestamp', 'dev/color-convert', 'dev/markdown-preview', 'dev/qr-decode', 'dev/cron-generate']
+      dev: ['dev/code-format', 'dev/code-minify', 'dev/code-diff', 'dev/cron-parse', 'dev/timestamp', 'dev/color-convert', 'dev/markdown-preview', 'dev/qr-decode', 'dev/cron-generate'],
+      fun: ['fun/random-quote', 'fun/random-joke', 'fun/encouraging', 'fun/cat-image', 'fun/dog-image', 'fun/random-user', 'fun/word-define', 'fun/word-synonym', 'fun/weather', 'fun/exchange-rate', 'fun/ip-info', 'fun/timezone', 'fun/zip-code', 'fun/holidays', 'fun/country-info', 'fun/world-time', 'fun/uuid', 'fun/password', 'fun/color-scheme', 'fun/slugify', 'fun/json-schema', 'fun/json-diff', 'fun/xml-format', 'fun/cron-desc', 'fun/gitignore', 'fun/dockerfile', 'fun/code-example', 'fun/regex-gen', 'fun/coding-challenge', 'fun/http-status', 'fun/http-methods', 'fun/jwt-decode', 'fun/detect-ai', 'fun/hash-verify', 'fun/image-base64', 'fun/today-history', 'fun/news', 'fun/github-trending', 'fun/stack-overflow'],
+      fun: ['fun/random-quote', 'fun/random-joke', 'fun/encouraging', 'fun/cat-image', 'fun/random-user', 'fun/word-define', 'fun/word-synonym', 'fun/weather', 'fun/exchange-rate', 'fun/ip-info', 'fun/timezone', 'fun/zip-code', 'fun/uuid', 'fun/password', 'fun/color-scheme', 'fun/detect-ai', 'fun/today-history', 'fun/news', 'fun/github-trending']
     }
   });
 });
@@ -2270,6 +2321,77 @@ app.post('/api/tools/security/hash-calc', async (req, res) => {
   }
 });
 
+// 路由表：路径 → [方法名, 参数列表]
+const externalApiRoutes = {
+  // 趣味
+  'fun/random-quote': ['randomQuote', ['category']],
+  'fun/random-joke': ['randomJoke', ['type']],
+  'fun/encouraging': ['encouragingWord', []],
+  'fun/cat-image': ['catImage', []],
+  'fun/dog-image': ['dogImage', []],
+  // 生活
+  'fun/weather': ['weather', ['city']],
+  'fun/exchange-rate': ['exchangeRate', ['from', 'to', 'amount']],
+  'fun/ip-info': ['ipInfo', ['ip']],
+  'fun/timezone': ['timezoneConvert', ['time', 'fromTz', 'toTz']],
+  'fun/zip-code': ['zipCode', ['zip']],
+  'fun/holidays': ['holidays', ['country', 'year']],
+  'fun/country-info': ['countryInfo', ['name']],
+  'fun/world-time': ['worldTime', ['tz']],
+  // 词汇
+  'fun/word-define': ['wordDefinition', ['word']],
+  'fun/word-synonym': ['wordSynonym', ['word', 'type']],
+  // 开发
+  'fun/uuid': ['uuid', ['quantity']],
+  'fun/password': ['randomPassword', ['length', 'uppercase', 'lowercase', 'numbers', 'symbols']],
+  'fun/color-scheme': ['colorScheme', ['baseColor']],
+  'fun/slugify': ['slugify', ['text']],
+  'fun/json-schema': ['jsonSchema', ['jsonText']],
+  'fun/json-diff': ['jsonDiff', ['json1', 'json2']],
+  'fun/xml-format': ['xmlFormat', ['xmlText']],
+  'fun/cron-desc': ['cronDescription', ['expression']],
+  'fun/gitignore': ['gitignoreGen', ['language']],
+  'fun/dockerfile': ['dockerfileGen', ['language']],
+  'fun/code-example': ['codeExample', ['language', 'task']],
+  'fun/regex-gen': ['regexGenerate', ['description']],
+  'fun/coding-challenge': ['codingChallenge', ['language']],
+  'fun/http-status': ['httpStatus', ['code']],
+  'fun/http-methods': ['httpMethods', ['method']],
+  'fun/jwt-decode': ['jwtDecode', ['token']],
+  // 检测
+  'fun/detect-ai': ['detectAI', ['text']],
+  'fun/hash-verify': ['hashVerify', ['text', 'algorithm']],
+  'fun/image-base64': ['imageBase64', ['imageUrl', 'direction']],
+  // 信息
+  'fun/today-history': ['todayInHistory', []],
+  'fun/news': ['newsHeadlines', ['category']],
+  'fun/github-trending': ['githubTrending', ['language']],
+  'fun/stack-overflow': ['stackOverflow', ['question', 'tags', 'sort']],
+  'fun/random-user': ['randomUser', []],
+};
+
+
+
+// 动态注册所有趣味API路由
+Object.entries(externalApiRoutes).forEach(([path, [method, paramDefs]]) => {
+  app.post(`/api/tools/${path}`, async (req, res) => {
+    try {
+      if (!ExternalAPIService) return res.status(500).json({ error: 'External API 服务未加载' });
+      const params = {};
+      for (const p of paramDefs) {
+        params[p] = req.body[p] !== undefined ? req.body[p] : undefined;
+      }
+      const result = await ExternalAPIService[method](...paramDefs.map(p => params[p]));
+      res.json(result);
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+});
+
+console.log(`[Mumei] External API routes registered: ${Object.keys(externalApiRoutes).length} endpoints`);
+
+
 // ==================== 原有API路由（认证、Token、支付等）====================
 
 // ... [保留原有的所有路由代码] ...
@@ -2355,7 +2477,46 @@ const API_DOCS = {
       { method: 'POST', path: '/api/tools/dev/color-convert', desc: '颜色格式转换', params: [{ name: 'color', type: 'string', required: true }] },
       { method: 'POST', path: '/api/tools/dev/markdown-preview', desc: 'Markdown预览', params: [{ name: 'markdown', type: 'string', required: true }] },
       { method: 'GET', path: '/api/tools/dev/qr-decode', desc: '二维码解码（独立页面）', params: [] },
-      { method: 'POST', path: '/api/tools/dev/cron-generate', desc: 'Cron生成器', params: [{ name: 'second', type: 'string', required: false }, { name: 'minute', type: 'string', required: false }, { name: 'hour', type: 'string', required: false }, { name: 'day', type: 'string', required: false }, { name: 'month', type: 'string', required: false }, { name: 'week', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/dev/cron-generate', desc: 'Cron生成器', params: [{ name: 'second', type: 'string', required: false }, { name: 'minute', type: 'string', required: false }, { name: 'hour', type: 'string', required: false }, { name: 'day', type: 'string', required: false }, { name: 'month', type: 'string', required: false }, { name: 'week', type: 'string', required: false }],
+  fun: {
+    title: '趣味与生活',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/fun/random-quote', desc: '随机名言', params: [] },
+      { method: 'POST', path: '/api/tools/fun/random-joke', desc: '随机笑话', params: [] },
+      { method: 'POST', path: '/api/tools/fun/weather', desc: '天气预报', params: [] },
+      { method: 'POST', path: '/api/tools/fun/stack-overflow', desc: 'Stack Overflow搜索', params: [] },
+      { method: 'POST', path: '/api/tools/fun/ip-info', desc: 'IP信息查询', params: [] },
+      { method: 'POST', path: '/api/tools/fun/holidays', desc: '节假日查询', params: [] },
+      { method: 'POST', path: '/api/tools/fun/exchange-rate', desc: '汇率换算', params: [] },
+      { method: 'POST', path: '/api/tools/fun/coding-challenge', desc: '编程挑战', params: [] },
+      { method: 'POST', path: '/api/tools/fun/github-trending', desc: 'GitHub Trending', params: [] },
+      { method: 'POST', path: '/api/tools/fun/news', desc: '科技新闻', params: [] },
+    ]
+  } },
+    ]
+  },
+  fun: {
+    title: '趣味与生活',
+    endpoints: [
+      { method: 'POST', path: '/api/tools/fun/random-quote', desc: '随机名言', params: [{ name: 'category', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/random-joke', desc: '随机笑话', params: [{ name: 'type', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/encouraging', desc: '彩虹屁', params: [] },
+      { method: 'POST', path: '/api/tools/fun/cat-image', desc: '随机猫图', params: [] },
+      { method: 'POST', path: '/api/tools/fun/random-user', desc: '随机用户信息', params: [] },
+      { method: 'POST', path: '/api/tools/fun/word-define', desc: '单词释义（英文）', params: [{ name: 'word', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/fun/word-synonym', desc: '单词同义词', params: [{ name: 'word', type: 'string', required: true }, { name: 'type', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/weather', desc: '天气预报（免费）', params: [{ name: 'city', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/fun/exchange-rate', desc: '汇率换算', params: [{ name: 'from', type: 'string', required: false }, { name: 'to', type: 'string', required: false }, { name: 'amount', type: 'number', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/ip-info', desc: 'IP信息查询', params: [{ name: 'ip', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/timezone', desc: '时区转换', params: [{ name: 'time', type: 'string', required: true }, { name: 'fromTz', type: 'string', required: false }, { name: 'toTz', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/zip-code', desc: '邮编查询', params: [{ name: 'zip', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/fun/uuid', desc: 'UUID生成（批量）', params: [{ name: 'quantity', type: 'number', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/password', desc: '随机密码生成', params: [{ name: 'length', type: 'number', required: false }, { name: 'uppercase', type: 'boolean', required: false }, { name: 'lowercase', type: 'boolean', required: false }, { name: 'numbers', type: 'boolean', required: false }, { name: 'symbols', type: 'boolean', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/color-scheme', desc: '配色方案生成', params: [{ name: 'baseColor', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/detect-ai', desc: 'AI内容检测', params: [{ name: 'text', type: 'string', required: true }] },
+      { method: 'POST', path: '/api/tools/fun/today-history', desc: '历史上的今天', params: [] },
+      { method: 'POST', path: '/api/tools/fun/news', desc: '科技新闻头条', params: [{ name: 'category', type: 'string', required: false }] },
+      { method: 'POST', path: '/api/tools/fun/github-trending', desc: 'GitHub Trending', params: [{ name: 'language', type: 'string', required: false }] },
     ]
   }
 };

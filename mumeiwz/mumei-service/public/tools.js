@@ -29,6 +29,25 @@ let authToken = localStorage.getItem('authToken');
 let translations = {};
 
 // 初始化语言切换
+document.addEventListener('DOMContentLoaded', function() {
+  const languageSelect = document.getElementById('languageSelect');
+  if (languageSelect) {
+    languageSelect.value = currentLang;
+    languageSelect.addEventListener('change', (e) => {
+      currentLang = e.target.value;
+      localStorage.setItem('language', currentLang);
+      document.documentElement.lang = currentLang;
+      loadTranslations(currentLang);
+    });
+    loadTranslations(currentLang);
+  }
+  // 显示免费试用次数（未登录时）
+  if (!authToken) {
+    const badge = document.getElementById('trialBadge');
+    if (badge) { badge.style.display = 'inline'; showTrialCount(); }
+  }
+});
+
 // 语言切换（供外部调用，API 与 app-beautiful.js 保持一致）
 async function switchLang(lang) {
   currentLang = lang;
@@ -703,11 +722,66 @@ const toolForms = {
     ],
     endpoint: '/api/tools/security/hash-calc',
     method: 'POST'
-  }
+  },
+  // ===== 趣味与生活工具（免费API 2025新增）=====
+  'fun/random-quote':{title:'随机名言',fields:[{name:'category',label:'类型',type:'select',options:[{value:'inspirational',label:'励志'},{value:'success',label:'成功'},{value:'wisdom',label:'智慧'},{value:'life',label:'生活'}],required:false}],endpoint:'/api/tools/fun/random-quote',method:'POST'},
+  'fun/random-joke':{title:'随机笑话',fields:[{name:'type',label:'类型',type:'select',options:[{value:'Programming',label:'程序员笑话'},{value:'Any',label:'任意'},{value:'Misc',label:'杂项'}],required:false}],endpoint:'/api/tools/fun/random-joke',method:'POST'},
+  'fun/encouraging':{title:'彩虹屁',fields:[],endpoint:'/api/tools/fun/encouraging',method:'POST'},
+  'fun/cat-image':{title:'随机猫图',fields:[],endpoint:'/api/tools/fun/cat-image',method:'POST'},
+  'fun/dog-image':{title:'随机狗图',fields:[],endpoint:'/api/tools/fun/dog-image',method:'POST'},
+  'fun/random-user':{title:'随机用户',fields:[],endpoint:'/api/tools/fun/random-user',method:'POST'},
+  'fun/word-define':{title:'单词释义',fields:[{name:'word',label:'英文单词',type:'text',placeholder:'hello',required:true}],endpoint:'/api/tools/fun/word-define',method:'POST'},
+  'fun/word-synonym':{title:'单词同义词',fields:[{name:'word',label:'英文单词',type:'text',placeholder:'run',required:true},{name:'type',label:'类型',type:'select',options:[{value:'rel_trg',label:'同义词'},{value:'rel_jjb',label:'形容词'},{value:'ml',label:'押韵词'}],required:false}],endpoint:'/api/tools/fun/word-synonym',method:'POST'},
+  'fun/weather':{title:'天气预报',fields:[{name:'city',label:'城市名',type:'text',placeholder:'北京',required:true}],endpoint:'/api/tools/fun/weather',method:'POST'},
+  'fun/exchange-rate':{title:'汇率换算',fields:[{name:'from',label:'源货币',type:'text',placeholder:'CNY'},{name:'to',label:'目标货币',type:'text',placeholder:'USD'},{name:'amount',label:'金额',type:'number',value:100}],endpoint:'/api/tools/fun/exchange-rate',method:'POST'},
+  'fun/ip-info':{title:'IP信息查询',fields:[{name:'ip',label:'IP地址',type:'text',placeholder:'8.8.8.8'}],endpoint:'/api/tools/fun/ip-info',method:'POST'},
+  'fun/timezone':{title:'时区转换',fields:[{name:'time',label:'日期时间',type:'text',placeholder:'2026-04-15T10:00:00',required:true},{name:'fromTz',label:'源时区',type:'select',options:[{value:'Asia/Shanghai',label:'中国 UTC+8'},{value:'America/New_York',label:'美国 UTC-5'},{value:'Europe/London',label:'英国 UTC+0'},{value:'Asia/Tokyo',label:'日本 UTC+9'}]},{name:'toTz',label:'目标时区',type:'select',options:[{value:'America/New_York',label:'美国 UTC-5'},{value:'Europe/London',label:'英国 UTC+0'},{value:'Asia/Shanghai',label:'中国 UTC+8'},{value:'Asia/Tokyo',label:'日本 UTC+9'}]}],endpoint:'/api/tools/fun/timezone',method:'POST'},
+  'fun/zip-code':{title:'邮编查询',fields:[{name:'zip',label:'邮政编码',type:'text',placeholder:'100000',required:true}],endpoint:'/api/tools/fun/zip-code',method:'POST'},
+  'fun/holidays':{title:'节假日查询',fields:[{name:'country',label:'国家代码',type:'text',placeholder:'CN'},{name:'year',label:'年份',type:'number',value:2026}],endpoint:'/api/tools/fun/holidays',method:'POST'},
+  'fun/country-info':{title:'国家信息查询',fields:[{name:'name',label:'国家名称',type:'text',placeholder:'China',required:true}],endpoint:'/api/tools/fun/country-info',method:'POST'},
+  'fun/world-time':{title:'世界时钟',fields:[{name:'tz',label:'时区',type:'select',options:[{value:'Asia/Shanghai',label:'中国'},{value:'America/New_York',label:'美国'},{value:'Europe/London',label:'英国'},{value:'Asia/Tokyo',label:'日本'}]}],endpoint:'/api/tools/fun/world-time',method:'POST'},
+  'fun/uuid':{title:'UUID生成',fields:[{name:'quantity',label:'数量',type:'number',value:5}],endpoint:'/api/tools/fun/uuid',method:'POST'},
+  'fun/password':{title:'随机密码',fields:[{name:'length',label:'密码长度',type:'number',value:16},{name:'uppercase',label:'大写字母',type:'checkbox',value:true},{name:'lowercase',label:'小写字母',type:'checkbox',value:true},{name:'numbers',label:'数字',type:'checkbox',value:true},{name:'symbols',label:'特殊符号',type:'checkbox',value:true}],endpoint:'/api/tools/fun/password',method:'POST'},
+  'fun/color-scheme':{title:'配色方案',fields:[{name:'baseColor',label:'基准颜色',type:'text',placeholder:'#6366f1'}],endpoint:'/api/tools/fun/color-scheme',method:'POST'},
+  'fun/slugify':{title:'文本转Slug',fields:[{name:'text',label:'文本内容',type:'textarea',placeholder:'Hello World Test',required:true}],endpoint:'/api/tools/fun/slugify',method:'POST'},
+  'fun/json-schema':{title:'JSON Schema生成',fields:[{name:'jsonText',label:'JSON文本',type:'textarea',placeholder:'{"name":"test"}',required:true}],endpoint:'/api/tools/fun/json-schema',method:'POST'},
+  'fun/json-diff':{title:'JSON对比',fields:[{name:'json1',label:'JSON 1',type:'textarea',placeholder:'{"name":"a"}',required:true},{name:'json2',label:'JSON 2',type:'textarea',placeholder:'{"name":"b"}',required:true}],endpoint:'/api/tools/fun/json-diff',method:'POST'},
+  'fun/xml-format':{title:'XML格式化',fields:[{name:'xmlText',label:'XML文本',type:'textarea',placeholder:'<root><item>x</item></root>',required:true}],endpoint:'/api/tools/fun/xml-format',method:'POST'},
+  'fun/cron-desc':{title:'Cron解释',fields:[{name:'expression',label:'Cron表达式',type:'text',placeholder:'0 9 * * *',required:true}],endpoint:'/api/tools/fun/cron-desc',method:'POST'},
+  'fun/gitignore':{title:'.gitignore生成',fields:[{name:'language',label:'语言',type:'select',options:[{value:'node',label:'Node.js'},{value:'python',label:'Python'},{value:'java',label:'Java'},{value:'go',label:'Go'},{value:'rust',label:'Rust'}],required:false}],endpoint:'/api/tools/fun/gitignore',method:'POST'},
+  'fun/dockerfile':{title:'Dockerfile生成',fields:[{name:'language',label:'语言',type:'select',options:[{value:'node',label:'Node.js'},{value:'python',label:'Python'},{value:'go',label:'Go'},{value:'java',label:'Java'}],required:false}],endpoint:'/api/tools/fun/dockerfile',method:'POST'},
+  'fun/code-example':{title:'代码示例',fields:[{name:'language',label:'编程语言',type:'select',options:[{value:'javascript',label:'JavaScript'},{value:'python',label:'Python'},{value:'go',label:'Go'}]},{name:'task',label:'任务',type:'select',options:[{value:'hello',label:'Hello World'},{value:'fetch',label:'HTTP请求'},{value:'async',label:'异步编程'}]}],endpoint:'/api/tools/fun/code-example',method:'POST'},
+  'fun/regex-gen':{title:'正则生成器',fields:[{name:'description',label:'描述关键词',type:'text',placeholder:'中国手机号',required:true}],endpoint:'/api/tools/fun/regex-gen',method:'POST'},
+  'fun/coding-challenge':{title:'编程挑战',fields:[{name:'language',label:'语言',type:'select',options:[{value:'javascript',label:'JavaScript'},{value:'python',label:'Python'}],required:false}],endpoint:'/api/tools/fun/coding-challenge',method:'POST'},
+  'fun/http-status':{title:'HTTP状态码',fields:[{name:'code',label:'状态码',type:'number',value:404,required:true}],endpoint:'/api/tools/fun/http-status',method:'POST'},
+  'fun/http-methods':{title:'HTTP方法',fields:[{name:'method',label:'HTTP方法',type:'select',options:[{value:'GET',label:'GET'},{value:'POST',label:'POST'},{value:'PUT',label:'PUT'},{value:'PATCH',label:'PATCH'},{value:'DELETE',label:'DELETE'}],required:true}],endpoint:'/api/tools/fun/http-methods',method:'POST'},
+  'fun/jwt-decode':{title:'JWT解码',fields:[{name:'token',label:'JWT Token',type:'textarea',placeholder:'eyJ...',required:true}],endpoint:'/api/tools/fun/jwt-decode',method:'POST'},
+  'fun/detect-ai':{title:'AI内容检测',fields:[{name:'text',label:'待检测文本',type:'textarea',placeholder:'粘贴待检测文本...',required:true}],endpoint:'/api/tools/fun/detect-ai',method:'POST'},
+  'fun/hash-verify':{title:'哈希计算',fields:[{name:'text',label:'文本内容',type:'textarea',placeholder:'hello',required:true}],endpoint:'/api/tools/fun/hash-verify',method:'POST'},
+  'fun/image-base64':{title:'图片Base64',fields:[{name:'imageUrl',label:'图片URL',type:'text',placeholder:'https://...',required:true}],endpoint:'/api/tools/fun/image-base64',method:'POST'},
+  'fun/today-history':{title:'历史上的今天',fields:[],endpoint:'/api/tools/fun/today-history',method:'POST'},
+  'fun/news':{title:'科技新闻',fields:[{name:'category',label:'类别',type:'select',options:[{value:'tech',label:'科技 HN'},{value:'general',label:'综合'},{value:'china',label:'国内'}]}],endpoint:'/api/tools/fun/news',method:'POST'},
+  'fun/github-trending':{title:'GitHub热榜',fields:[{name:'language',label:'语言',type:'select',options:[{value:'all',label:'全部'},{value:'python',label:'Python'},{value:'javascript',label:'JavaScript'},{value:'typescript',label:'TypeScript'},{value:'rust',label:'Rust'},{value:'go',label:'Go'}]}],endpoint:'/api/tools/fun/github-trending',method:'POST'},
+  'fun/stack-overflow':{title:'SO搜索',fields:[{name:'question',label:'搜索问题',type:'text',placeholder:'javascript async',required:true},{name:'tags',label:'标签',type:'text',placeholder:'node'},{name:'sort',label:'排序',type:'select',options:[{value:'votes',label:'票数'},{value:'relevance',label:'相关性'}]}],endpoint:'/api/tools/fun/stack-overflow',method:'POST'},
 };
 
-// 初始化（由 tools.html 的 inline script 统一处理，这里不再重复过滤）
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+  setupEventListeners();
+  filterTools('all');
+});
+
 // 设置事件监听
+function setupEventListeners() {
+  // 分类标签
+  document.querySelectorAll('.tool-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      filterTools(tab.dataset.category);
+    });
+  });
+
   // 工具卡片点击
   document.querySelectorAll('.tool-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -732,6 +806,15 @@ const toolForms = {
 }
 
 // 过滤工具
+function filterTools(category) {
+  document.querySelectorAll('.tool-card').forEach(card => {
+    if (category === 'all' || card.dataset.category === category) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+}
 
 // 打开工具弹窗
 function openToolModal(toolId) {
@@ -1143,3 +1226,31 @@ function showToast(message) {
   }
 
   var searchTimer;
+  document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('toolSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyFilters, 200);
+      });
+      // 聚焦时加边框高亮
+      searchInput.addEventListener('focus', function() {
+        searchInput.style.borderColor = 'var(--primary)';
+      });
+      searchInput.addEventListener('blur', function() {
+        searchInput.style.borderColor = '';
+      });
+    }
+
+    document.querySelectorAll('.tool-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tool-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        applyFilters();
+      });
+    });
+
+    initFavorites();
+    applyFilters();
+  });
+})();

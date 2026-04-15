@@ -94,6 +94,8 @@
       <button class="tool-tab" data-category="network">网络工具</button>
       <button class="tool-tab" data-category="security">安全工具</button>
       <button class="tool-tab" data-category="dev">开发工具</button>
+      <button class="tool-tab" data-category="fun">趣味工具</button>
+      <button class="tool-tab" data-category="fun">趣味工具</button>
     </div>
 
     <!-- 空状态提示 -->
@@ -170,6 +172,106 @@
     {id:'dev/markdown-preview',name:'Markdown预览',    cat:'dev',   aliases:['md','markdown','编辑器'],                              desc:'Markdown 实时预览',      pro:false},
     {id:'dev/qr-decode',      name:'二维码解码',         cat:'dev',   aliases:['qr','二维码解码','扫码'],                             desc:'上传图片解析二维码内容',pro:false},
     {id:'dev/cron-generate',  name:'Cron生成',           cat:'dev',   aliases:['cron生成','定时'],                                   desc:'可视化生成 Cron 表达式',pro:false},
+    // ===== 趣味与生活工具（免费）=====
+    {id:'fun/random-quote',   name:'随机名言',            cat:'fun',   aliases:['名言','quote','语录'],                               desc:'获取随机励志名言',       pro:false},
+    {id:'fun/random-joke',    name:'随机笑话',            cat:'fun',   aliases:['笑话','joke','搞笑'],                               desc:'程序员的幽默笑话',       pro:false},
+    {id:'fun/encouraging',    name:'彩虹屁',              cat:'fun',   aliases:['鼓励','彩虹屁','毒鸡汤'],                           desc:'随机彩虹屁/毒鸡汤',      pro:false},
+    {id:'fun/cat-image',      name:'随机猫图',            cat:'fun',   aliases:['猫','cat','吸猫'],                                   desc:'随机撸猫，治愈心灵',     pro:false},
+    {id:'fun/dog-image',      name:'随机狗图',            cat:'fun',   aliases:['狗','dog','汪星人'],                                 desc:'随机撸狗，开心每一天',   pro:false},
+    {id:'fun/random-user',    name:'随机用户',            cat:'fun',   aliases:['假数据','fake user','测试用户'],                   desc:'生成随机用户测试数据',   pro:false},
+    {id:'fun/word-define',     name:'单词释义',            cat:'fun',   aliases:['词典','dictionary','英语词典'],                     desc:'英文单词释义与例句',     pro:false},
+    {id:'fun/word-synonym',   name:'单词同义词',          cat:'fun',   aliases:['同义词','近义词','synonym'],                       desc:'查询英文单词同义词',     pro:false},
+    {id:'fun/weather',        name:'天气预报',            cat:'fun',   aliases:['天气','weather','温度'],                             desc:'全球城市7天天气预报',   pro:false},
+    {id:'fun/exchange-rate',  name:'汇率换算',            cat:'fun',   aliases:['汇率','货币','exchange'],                           desc:'160+种货币实时汇率',    pro:false},
+    {id:'fun/ip-info',        name:'IP信息',              cat:'fun',   aliases:['ip查询','归属地','ipinfo'],                         desc:'查询IP归属地信息',      pro:false},
+    {id:'fun/timezone',       name:'时区转换',            cat:'fun',   aliases:['时区','timezone','时间转换'],                       desc:'跨时区时间转换',        pro:false},
+    {id:'fun/zip-code',       name:'邮编查询',            cat:'fun',   aliases:['邮编','zipcode','邮政编码'],                        desc:'中国邮政编码查询',      pro:false},
+    {id:'fun/holidays',       name:'节假日查询',          cat:'fun',   aliases:['节假日','holiday','假期'],                        desc:'全球节假日查询',        pro:false},
+    {id:'fun/country-info',   name:'国家信息',            cat:'fun',   aliases:['国家','country','国旗'],                           desc:'查询国家基本信息',      pro:false},
+    {id:'fun/world-time',     name:'世界时钟',            cat:'fun',   aliases:['世界时间','world clock'],                           desc:'各时区当前时间',        pro:false},
+    {id:'fun/uuid',           name:'UUID生成',            cat:'fun',   aliases:['uuid','批量生成'],                                 desc:'批量生成UUID v4',       pro:false},
+    {id:'fun/password',       name:'随机密码',            cat:'fun',   aliases:['密码生成','password'],                             desc:'自定义规则随机密码生成',pro:false},
+    {id:'fun/color-scheme',   name:'配色方案',            cat:'fun',   aliases:['配色','调色板','color palette'],                   desc:'智能配色方案生成',      pro:false},
+    {id:'fun/slugify',        name:'文本转Slug',           cat:'fun',   aliases:['slug','url友好'],                                  desc:'文本转URL友好格式',     pro:false},
+    {id:'fun/json-schema',    name:'JSON Schema生成',     cat:'fun',   aliases:['schema','json结构'],                               desc:'从JSON生成Schema',      pro:false},
+    {id:'fun/json-diff',      name:'JSON对比',            cat:'fun',   aliases:['json对比','json差异'],                              desc:'比较两个JSON的差异',    pro:false},
+    {id:'fun/xml-format',     name:'XML格式化',           cat:'fun',   aliases:['xml','xml美化'],                                    desc:'XML格式化与美化',        pro:false},
+    {id:'fun/cron-desc',      name:'Cron解释',            cat:'fun',   aliases:['cron','定时任务解释'],                              desc:'Cron表达式转为中文描述',pro:false},
+    {id:'fun/gitignore',      name:'.gitignore生成',      cat:'fun',   aliases:['gitignore','忽略文件'],                             desc:'多语言gitignore模板',   pro:false},
+    {id:'fun/dockerfile',     name:'Dockerfile生成',       cat:'fun',   aliases:['docker','容器'],                                   desc:'多语言Dockerfile模板',  pro:false},
+    {id:'fun/code-example',   name:'代码示例',            cat:'fun',   aliases:['示例代码','snippet'],                               desc:'多语言代码示例',        pro:false},
+    {id:'fun/regex-gen',      name:'正则生成器',          cat:'fun',   aliases:['正则','regex生成'],                                desc:'关键词生成正则表达式',  pro:false},
+    {id:'fun/coding-challenge',name:'编程挑战',           cat:'fun',   aliases:['算法','刷题','challenge'],                         desc:'随机算法编程挑战题',    pro:false},
+    {id:'fun/http-status',   name:'HTTP状态码',           cat:'fun',   aliases:['状态码','status code'],                             desc:'HTTP状态码含义速查',    pro:false},
+    {id:'fun/http-methods', name:'HTTP方法',             cat:'fun',   aliases:['GET','POST','PUT','DELETE'],                       desc:'HTTP方法含义速查',      pro:false},
+    {id:'fun/jwt-decode',     name:'JWT解码',            cat:'fun',   aliases:['jwt','token解析'],                                  desc:'JWT解码与过期检查',     pro:false},
+    {id:'fun/detect-ai',     name:'AI检测',              cat:'fun',   aliases:['ai检测','aigc'],                                   desc:'检测文本是否由AI生成',  pro:false},
+    {id:'fun/hash-verify',   name:'哈希计算',            cat:'fun',   aliases:['md5','sha256','哈希验证'],                         desc:'批量多算法哈希计算',    pro:false},
+    {id:'fun/image-base64',  name:'图片Base64',           cat:'fun',   aliases:['图片编码','base64图片'],                           desc:'图片URL转Base64',       pro:false},
+    {id:'fun/today-history', name:'历史上的今天',         cat:'fun',   aliases:['历史','today in history'],                           desc:'今天发生了什么历史事件',pro:false},
+    {id:'fun/news',           name:'科技新闻',            cat:'fun',   aliases:['新闻','news','科技头条'],                           desc:'最新科技新闻头条',      pro:false},
+    {id:'fun/github-trending',name:'GitHub热榜',         cat:'fun',   aliases:['github','trending','热榜'],                         desc:'GitHub热门项目排行榜',  pro:false},
+    {id:'fun/stack-overflow',name:'SO搜索',              cat:'fun',   aliases:['stackoverflow','技术问答'],                        desc:'Stack Overflow问题搜索',pro:false},
+    // === 趣味与生活工具 ===
+    {id:'fun/random-quote',   name:'随机名言',            cat:'fun',   aliases:['名言','quote','语录'],                               desc:'获取随机励志名言',       pro:false},
+    {id:'fun/random-joke',    name:'随机笑话',            cat:'fun',   aliases:['笑话','joke','搞笑'],                               desc:'程序员的幽默笑话',       pro:false},
+    {id:'fun/encouraging',    name:'彩虹屁',              cat:'fun',   aliases:['鼓励','彩虹屁','毒鸡汤'],                           desc:'随机彩虹屁/毒鸡汤',      pro:false},
+    {id:'fun/cat-image',      name:'随机猫图',            cat:'fun',   aliases:['猫','cat','吸猫'],                                   desc:'随机撸猫，治愈心灵',     pro:false},
+    {id:'fun/dog-image',      name:'随机狗图',            cat:'fun',   aliases:['狗','dog','汪星人'],                                 desc:'随机撸狗，开心每一天',   pro:false},
+    {id:'fun/random-user',    name:'随机用户',            cat:'fun',   aliases:['假数据','fake user','测试用户'],                   desc:'生成随机用户测试数据',   pro:false},
+    {id:'fun/word-define',    name:'单词释义',            cat:'fun',   aliases:['词典','dictionary','英语词典'],                     desc:'英文单词释义与例句',     pro:false},
+    {id:'fun/word-synonym',   name:'单词同义词',          cat:'fun',   aliases:['同义词','近义词','synonym'],                       desc:'查询英文单词同义词',     pro:false},
+    {id:'fun/weather',        name:'天气预报',            cat:'fun',   aliases:['天气','weather','温度'],                             desc:'全球城市7天天气预报',   pro:false},
+    {id:'fun/exchange-rate',  name:'汇率换算',            cat:'fun',   aliases:['汇率','货币','exchange'],                           desc:'160+种货币实时汇率',    pro:false},
+    {id:'fun/ip-info',        name:'IP信息',              cat:'fun',   aliases:['ip查询','归属地','ipinfo'],                         desc:'查询IP归属地信息',      pro:false},
+    {id:'fun/timezone',       name:'时区转换',            cat:'fun',   aliases:['时区','timezone','时间转换'],                     desc:'跨时区时间转换',        pro:false},
+    {id:'fun/zip-code',       name:'邮编查询',            cat:'fun',   aliases:['邮编','zipcode','邮政编码'],                      desc:'中国邮政编码查询',      pro:false},
+    {id:'fun/holidays',       name:'节假日查询',          cat:'fun',   aliases:['节假日','holiday','假期'],                        desc:'全球节假日查询（2026）',pro:false},
+    {id:'fun/country-info',   name:'国家信息',            cat:'fun',   aliases:['国家','country','国旗'],                           desc:'查询国家基本信息',      pro:false},
+    {id:'fun/world-time',     name:'世界时钟',            cat:'fun',   aliases:['世界时间','world clock'],                           desc:'各时区当前时间',        pro:false},
+    {id:'fun/uuid',           name:'UUID生成',            cat:'fun',   aliases:['uuid','批量生成'],                                 desc:'批量生成UUID v4',       pro:false},
+    {id:'fun/password',       name:'随机密码',            cat:'fun',   aliases:['密码生成','password'],                             desc:'自定义规则随机密码生成',pro:false},
+    {id:'fun/color-scheme',   name:'配色方案',            cat:'fun',   aliases:['配色','调色板','color palette'],                   desc:'智能配色方案生成',      pro:false},
+    {id:'fun/slugify',        name:'文本转Slug',           cat:'fun',   aliases:['slug','url友好'],                                  desc:'文本转URL友好格式',     pro:false},
+    {id:'fun/json-schema',    name:'JSON Schema生成',     cat:'fun',   aliases:['schema','json结构'],                               desc:'从JSON生成Schema',      pro:false},
+    {id:'fun/json-diff',      name:'JSON对比',            cat:'fun',   aliases:['json对比','json差异'],                              desc:'比较两个JSON的差异',    pro:false},
+    {id:'fun/xml-format',     name:'XML格式化',           cat:'fun',   aliases:['xml','xml美化'],                                    desc:'XML格式化与美化',        pro:false},
+    {id:'fun/cron-desc',      name:'Cron解释',            cat:'fun',   aliases:['cron','定时任务解释'],                              desc:'Cron表达式转为中文描述',pro:false},
+    {id:'fun/gitignore',      name:'.gitignore生成',      cat:'fun',   aliases:['gitignore','忽略文件'],                             desc:'多语言gitignore模板',   pro:false},
+    {id:'fun/dockerfile',     name:'Dockerfile生成',       cat:'fun',   aliases:['docker','容器'],                                   desc:'多语言Dockerfile模板',  pro:false},
+    {id:'fun/code-example',   name:'代码示例',            cat:'fun',   aliases:['示例代码','snippet'],                               desc:'多语言代码示例',        pro:false},
+    {id:'fun/regex-gen',      name:'正则生成器',          cat:'fun',   aliases:['正则','regex生成'],                                desc:'关键词生成正则表达式',  pro:false},
+    {id:'fun/coding-challenge',name:'编程挑战',           cat:'fun',   aliases:['算法','刷题','challenge'],                         desc:'随机算法编程挑战题',    pro:false},
+    {id:'fun/http-status',   name:'HTTP状态码',           cat:'fun',   aliases:['状态码','status code'],                             desc:'HTTP状态码含义速查',    pro:false},
+    {id:'fun/http-methods', name:'HTTP方法',             cat:'fun',   aliases:['GET','POST','PUT','DELETE'],                       desc:'HTTP方法含义速查',      pro:false},
+    {id:'fun/jwt-decode',     name:'JWT解码',            cat:'fun',   aliases:['jwt','token解析'],                                  desc:'JWT解码与过期检查',     pro:false},
+    {id:'fun/detect-ai',     name:'AI检测',              cat:'fun',   aliases:['ai检测','aigc'],                                   desc:'检测文本是否由AI生成',  pro:false},
+    {id:'fun/hash-verify',   name:'哈希计算',            cat:'fun',   aliases:['md5','sha256','哈希验证'],                         desc:'批量多算法哈希计算',    pro:false},
+    {id:'fun/image-base64',  name:'图片Base64',           cat:'fun',   aliases:['图片编码','base64图片'],                           desc:'图片URL转Base64',       pro:false},
+    {id:'fun/today-history', name:'历史上的今天',         cat:'fun',   aliases:['历史','today in history'],                           desc:'今天发生了什么历史事件',pro:false},
+    {id:'fun/news',           name:'科技新闻',            cat:'fun',   aliases:['新闻','news','科技头条'],                           desc:'最新科技新闻头条',      pro:false},
+    {id:'fun/github-trending',name:'GitHub热榜',         cat:'fun',   aliases:['github','trending','热榜'],                         desc:'GitHub热门项目排行榜',  pro:false},
+    {id:'fun/stack-overflow',name:'SO搜索',              cat:'fun',   aliases:['stackoverflow','技术问答'],                        desc:'Stack Overflow问题搜索',pro:false},
+
+    {id:'fun/random-quote',   name:'随机名言',            cat:'fun',   aliases:['名言','quote','语录'],                               desc:'获取随机励志名言',       pro:false},
+    {id:'fun/random-joke',    name:'随机笑话',            cat:'fun',   aliases:['笑话','joke','搞笑'],                                   desc:'程序员的幽默笑话',       pro:false},
+    {id:'fun/encouraging',    name:'彩虹屁',              cat:'fun',   aliases:['鼓励','彩虹屁','毒鸡汤'],                               desc:'随机彩虹屁/毒鸡汤',      pro:false},
+    {id:'fun/cat-image',      name:'随机猫图',            cat:'fun',   aliases:['猫','cat','吸猫'],                                       desc:'随机撸猫，治愈心灵',     pro:false},
+    {id:'fun/random-user',    name:'随机用户',            cat:'fun',   aliases:['假数据','fake user','测试用户'],                         desc:'生成随机用户测试数据',   pro:false},
+    {id:'fun/word-define',     name:'单词释义',            cat:'fun',   aliases:['词典','dictionary','英语词典'],                         desc:'英文单词释义与例句',     pro:false},
+    {id:'fun/word-synonym',   name:'单词同义词',          cat:'fun',   aliases:['同义词','近义词','synonym'],                           desc:'查询英文单词同义词',     pro:false},
+    {id:'fun/weather',        name:'天气预报',            cat:'fun',   aliases:['天气','weather','温度'],                                 desc:'全球城市7天天气预报',   pro:false},
+    {id:'fun/exchange-rate',  name:'汇率换算',            cat:'fun',   aliases:['汇率','货币','exchange'],                               desc:'160+种货币实时汇率',    pro:false},
+    {id:'fun/ip-info',        name:'IP信息',              cat:'fun',   aliases:['ip查询','归属地','ipinfo'],                              desc:'查询IP归属地信息',      pro:false},
+    {id:'fun/timezone',       name:'时区转换',            cat:'fun',   aliases:['时区','timezone','时间转换'],                           desc:'跨时区时间转换',        pro:false},
+    {id:'fun/zip-code',       name:'邮编查询',            cat:'fun',   aliases:['邮编','zipcode','邮政编码'],                            desc:'中国邮政编码查询',      pro:false},
+    {id:'fun/uuid',           name:'UUID生成',            cat:'fun',   aliases:['uuid','批量生成'],                                      desc:'批量生成UUID v4',       pro:false},
+    {id:'fun/password',       name:'随机密码',            cat:'fun',   aliases:['密码生成','password'],                                   desc:'自定义规则随机密码生成',pro:false},
+    {id:'fun/color-scheme',   name:'配色方案',            cat:'fun',   aliases:['配色','调色板','color palette'],                        desc:'智能配色方案生成',      pro:false},
+    {id:'fun/detect-ai',      name:'AI检测',              cat:'fun',   aliases:['ai检测','aigc','ai内容'],                               desc:'检测文本是否由AI生成',  pro:false},
+    {id:'fun/today-history',  name:'历史上的今天',        cat:'fun',   aliases:['历史','today in history'],                              desc:'今天发生了什么历史事件',pro:false},
+    {id:'fun/news',           name:'科技新闻',            cat:'fun',   aliases:['新闻','news','科技头条'],                                 desc:'最新科技新闻头条',      pro:false},
+    {id:'fun/github-trending',name:'GitHub热榜',        cat:'fun',   aliases:['github','trending','热榜'],                               desc:'GitHub热门项目排行榜',  pro:false},
   ];
 
   const FAV_KEY = 'mumei_fav_v2';
@@ -219,7 +321,7 @@
       return;
     }
 
-    const catMap = {ai:'AI',data:'数据',network:'网络',security:'安全',dev:'开发'};
+    const catMap = {ai:'AI',data:'数据',network:'网络',security:'安全',dev:'开发',fun:'趣味'};
     grid.innerHTML = filtered.map(t => {
       const favd = favorites.includes(t.id);
       const label = catMap[t.cat] || t.cat;
@@ -280,6 +382,11 @@
       'dev/code-format':'✨','dev/code-minify':'📦','dev/code-diff':'📑',
       'dev/cron-parse':'⏰','dev/timestamp':'🕐','dev/color-convert':'🎨',
       'dev/markdown-preview':'📝','dev/qr-decode':'📱','dev/cron-generate':'⏱️',
+      'fun/random-quote':'💬','fun/random-joke':'😄','fun/encouraging':'💖','fun/cat-image':'🐱',
+      'fun/random-user':'👤','fun/word-define':'📖','fun/word-synonym':'🔗','fun/weather':'🌤️',
+      'fun/exchange-rate':'💱','fun/ip-info':'🌐','fun/timezone':'🕐','fun/zip-code':'📮',
+      'fun/uuid':'🆔','fun/password':'🔑','fun/color-scheme':'🎨','fun/detect-ai':'🤖',
+      'fun/today-history':'📅','fun/news':'📰','fun/github-trending':'🏆',
     };
     return m[id] || '🛠️';
   }
