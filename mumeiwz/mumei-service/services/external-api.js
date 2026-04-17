@@ -1168,19 +1168,53 @@ class ExternalAPIService {
   }
 
   /**
-   * 路径规划 - 步行/驾车路线（免费fallback: OSRM）
+   * 路径规划 - 步行/驾车路线
    * @param {string} origin - 起点坐标 "lng,lat"
    * @param {string} destination - 终点坐标 "lng,lat"
    * @param {string} type - 类型：walking/driving/transit
-   * @returns {object} - { success, data: { distance, duration, summary }, _info }
+   * @returns {object} - { success, data: { distance, duration, summary, steps }, _info }
    */
   static async amapRoute(origin, destination, type = 'driving') {
-    // OSRM免费服务（无Key要求）
-    const osrmType = type === 'walking' ? 'foot' : 'car';
-    const url = `https://router.project-osrm.org/route/v1/${osrmType}/${origin};${destination}?overview=true&steps=true&annotations=distance`;
-    
+    const key = process.env.AMAP_KEY;
+    const apiType = type === 'walking' ? 'walking' : 'driving';
+
+    // 优先：高德 Web 服务 API
+    if (key) {
+      const url = `https://restapi.amap.com/v3/direction/${apiType}?key=${key}&origin=${origin}&destination=${destination}&extensions=base`;
+      try {
+        const res = await this.safeFetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === '1' && data.route && data.route.paths && data.route.paths.length > 0) {
+            const path = data.route.paths[0];
+            const durationSec = parseInt(path.duration) || 0;
+            const distanceM = parseInt(path.distance) || 0;
+            const durationMin = Math.round(durationSec / 60);
+            const steps = (path.steps || []).slice(0, 5).map(s => ({
+              instruction: s.instruction || '',
+              road: Array.isArray(s.road) ? s.road[0] : (s.road || ''),
+              distance: parseInt(s.distance) || 0
+            }));
+            return this.ok({
+              distance: distanceM,
+              distanceText: distanceM >= 1000 ? (distanceM / 1000).toFixed(1) + ' km' : distanceM + ' m',
+              duration: durationSec,
+              durationText: durationMin >= 60 ? Math.floor(durationMin / 60) + '小时' + (durationMin % 60) + '分钟' : durationMin + '分钟',
+              strategy: path.strategy || '',
+              tolls: parseInt(path.tolls) || 0,
+              steps: steps
+            }, '高德路径规划 ✅');
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Fallback: OSRM
     try {
-      const res = await this.safeFetch(url);
+      const osrmType = type === 'walking' ? 'foot' : 'car';
+      const res = await this.safeFetch(
+        `https://router.project-osrm.org/route/v1/${osrmType}/${origin};${destination}?overview=true&steps=true`
+      );
       if (res.ok) {
         const data = await res.json();
         if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
@@ -1192,13 +1226,13 @@ class ExternalAPIService {
             distance: distanceM,
             distanceText: distanceM >= 1000 ? (distanceM / 1000).toFixed(1) + ' km' : distanceM + ' m',
             duration: durationSec,
-            durationText: durationMin >= 60 ? Math.floor(durationMin / 60) + '小时' + (durationMin % 60) + '分钟' : durationMin + '分钟',
-            summary: route.routes_name ? route.routes_name[0] : ''
+            durationText: durationMin >= 60 ? Math.floor(durationMin / 60) + '小时' + (durationMin % 60) + '分钟' : durationMin + '分钟'
           }, 'OSRM (Open Source Routing Machine)');
         }
       }
     } catch (_) {}
-    return this.err('路径规划失败，请检查坐标格式（lng,lat）');
+
+    return this.err('路径规划失败，请检查坐标格式（经度,纬度）');
   }
 
   /**
