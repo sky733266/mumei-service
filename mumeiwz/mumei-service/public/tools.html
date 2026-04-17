@@ -95,6 +95,8 @@
       <button class="tool-tab" data-category="security">安全工具</button>
       <button class="tool-tab" data-category="dev">开发工具</button>
       <button class="tool-tab" data-category="fun">趣味工具</button>
+      <button class="tool-tab" data-category="voice">语音工具</button>
+      <button class="tool-tab" data-category="map">地图工具</button>
       <button class="tool-tab" data-category="fun">趣味工具</button>
     </div>
 
@@ -212,6 +214,16 @@
     {id:'fun/news',           name:'科技新闻',            cat:'fun',   aliases:['新闻','news','科技头条'],                           desc:'最新科技新闻头条',      pro:false},
     {id:'fun/github-trending',name:'GitHub热榜',         cat:'fun',   aliases:['github','trending','热榜'],                         desc:'GitHub热门项目排行榜',  pro:false},
     {id:'fun/stack-overflow',name:'SO搜索',              cat:'fun',   aliases:['stackoverflow','技术问答'],                        desc:'Stack Overflow问题搜索',pro:false},
+    // ===== 百度语音工具 =====
+    {id:'voice/tts',       name:'语音合成 TTS',      cat:'voice', aliases:['tts','文字转语音','语音合成'],                    desc:'百度语音合成，文字转MP3',    pro:false},
+    {id:'voice/asr',       name:'语音识别 ASR',      cat:'voice', aliases:['asr','语音转文字','语音识别'],                    desc:'百度语音识别，音频转文字',   pro:false},
+    // ===== 高德地图工具 =====
+    {id:'map/geocode',     name:'地址转坐标',         cat:'map',   aliases:['地理编码','geocode','地址查坐标'],               desc:'地址文本转经纬度坐标',       pro:false},
+    {id:'map/regeocode',   name:'坐标转地址',         cat:'map',   aliases:['逆地理编码','regeocode','坐标查地址'],           desc:'经纬度坐标转详细地址',       pro:false},
+    {id:'map/poi-search',  name:'POI地点搜索',        cat:'map',   aliases:['poi','地点搜索','周边搜索'],                     desc:'搜索附近地点/兴趣点',        pro:false},
+    {id:'map/route',       name:'路径规划',           cat:'map',   aliases:['导航','路线规划','route'],                       desc:'步行/驾车/公交路线规划',     pro:false},
+    {id:'map/weather',     name:'高德天气',           cat:'map',   aliases:['天气预报','高德天气'],                           desc:'高德实时天气+3天预报',       pro:false},
+    {id:'map/ip-location', name:'IP城市定位',         cat:'map',   aliases:['ip定位','ip城市','ip归属地'],                   desc:'根据IP定位所在城市',         pro:false},
     // === 趣味与生活工具 ===
     {id:'fun/random-quote',   name:'随机名言',            cat:'fun',   aliases:['名言','quote','语录'],                               desc:'获取随机励志名言',       pro:false},
     {id:'fun/random-joke',    name:'随机笑话',            cat:'fun',   aliases:['笑话','joke','搞笑'],                               desc:'程序员的幽默笑话',       pro:false},
@@ -321,7 +333,7 @@
       return;
     }
 
-    const catMap = {ai:'AI',data:'数据',network:'网络',security:'安全',dev:'开发',fun:'趣味'};
+    const catMap = {ai:'AI',data:'数据',network:'网络',security:'安全',dev:'开发',fun:'趣味',voice:'语音',map:'地图'};
     grid.innerHTML = filtered.map(t => {
       const favd = favorites.includes(t.id);
       const label = catMap[t.cat] || t.cat;

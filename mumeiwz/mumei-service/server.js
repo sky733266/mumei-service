@@ -1154,6 +1154,16 @@ const toolPricing = {
   'fun/news': { price: 0, unit: 'free', freeQuota: Infinity },
   'fun/github-trending': { price: 0, unit: 'free', freeQuota: Infinity },
   'fun/stack-overflow': { price: 0, unit: 'free', freeQuota: Infinity },
+  // 百度语音（需要 API Key）
+  'voice/tts': { price: 0, unit: 'free', freeQuota: 50000 },
+  'voice/asr': { price: 0, unit: 'free', freeQuota: 50000 },
+  // 高德地图（需要 API Key）
+  'map/geocode': { price: 0, unit: 'free', freeQuota: 300000 },
+  'map/regeocode': { price: 0, unit: 'free', freeQuota: 300000 },
+  'map/poi-search': { price: 0, unit: 'free', freeQuota: 300000 },
+  'map/route': { price: 0, unit: 'free', freeQuota: 300000 },
+  'map/weather': { price: 0, unit: 'free', freeQuota: 300000 },
+  'map/ip-location': { price: 0, unit: 'free', freeQuota: 300000 },
 };
 
 
@@ -1293,6 +1303,8 @@ app.get('/api/tools', (req, res) => {
       security: ['security/password-generate', 'security/password-check', 'security/hash', 'security/hmac', 'security/url-encode', 'security/html-escape', 'security/mask-data', 'security/uuid', 'security/encrypt', 'security/barcode', 'security/meta-generator', 'security/hash-calc'],
       dev: ['dev/code-format', 'dev/code-minify', 'dev/code-diff', 'dev/cron-parse', 'dev/timestamp', 'dev/color-convert', 'dev/markdown-preview', 'dev/qr-decode', 'dev/cron-generate'],
       fun: ['fun/random-quote', 'fun/random-joke', 'fun/encouraging', 'fun/cat-image', 'fun/dog-image', 'fun/random-user', 'fun/word-define', 'fun/word-synonym', 'fun/weather', 'fun/exchange-rate', 'fun/ip-info', 'fun/timezone', 'fun/zip-code', 'fun/holidays', 'fun/country-info', 'fun/world-time', 'fun/uuid', 'fun/password', 'fun/color-scheme', 'fun/slugify', 'fun/json-schema', 'fun/json-diff', 'fun/xml-format', 'fun/cron-desc', 'fun/gitignore', 'fun/dockerfile', 'fun/code-example', 'fun/regex-gen', 'fun/coding-challenge', 'fun/http-status', 'fun/http-methods', 'fun/jwt-decode', 'fun/detect-ai', 'fun/hash-verify', 'fun/image-base64', 'fun/today-history', 'fun/news', 'fun/github-trending', 'fun/stack-overflow'],
+      voice: ['voice/tts', 'voice/asr'],
+      map: ['map/geocode', 'map/regeocode', 'map/poi-search', 'map/route', 'map/weather', 'map/ip-location'],
       fun: ['fun/random-quote', 'fun/random-joke', 'fun/encouraging', 'fun/cat-image', 'fun/random-user', 'fun/word-define', 'fun/word-synonym', 'fun/weather', 'fun/exchange-rate', 'fun/ip-info', 'fun/timezone', 'fun/zip-code', 'fun/uuid', 'fun/password', 'fun/color-scheme', 'fun/detect-ai', 'fun/today-history', 'fun/news', 'fun/github-trending']
     }
   });
@@ -2368,6 +2380,16 @@ const externalApiRoutes = {
   'fun/github-trending': ['githubTrending', ['language']],
   'fun/stack-overflow': ['stackOverflow', ['question', 'tags', 'sort']],
   'fun/random-user': ['randomUser', []],
+  // ===== 百度语音 =====
+  'voice/tts': ['baiduTTS', ['text', 'per', 'spd', 'pit', 'vol']],
+  'voice/asr': ['baiduASR', ['audioBase64', 'format', 'rate']],
+  // ===== 高德地图 =====
+  'map/geocode': ['amapGeocode', ['address', 'city']],
+  'map/regeocode': ['amapRegeocode', ['longitude', 'latitude']],
+  'map/poi-search': ['amapPOISearch', ['keywords', 'location', 'city']],
+  'map/route': ['amapRoute', ['origin', 'destination', 'type']],
+  'map/weather': ['amapWeather', ['city']],
+  'map/ip-location': ['amapIPLocation', ['ip']],
 };
 
 

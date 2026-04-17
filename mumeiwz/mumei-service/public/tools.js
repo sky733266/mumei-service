@@ -763,6 +763,44 @@ const toolForms = {
   'fun/news':{title:'科技新闻',fields:[{name:'category',label:'类别',type:'select',options:[{value:'tech',label:'科技 HN'},{value:'general',label:'综合'},{value:'china',label:'国内'}]}],endpoint:'/api/tools/fun/news',method:'POST'},
   'fun/github-trending':{title:'GitHub热榜',fields:[{name:'language',label:'语言',type:'select',options:[{value:'all',label:'全部'},{value:'python',label:'Python'},{value:'javascript',label:'JavaScript'},{value:'typescript',label:'TypeScript'},{value:'rust',label:'Rust'},{value:'go',label:'Go'}]}],endpoint:'/api/tools/fun/github-trending',method:'POST'},
   'fun/stack-overflow':{title:'SO搜索',fields:[{name:'question',label:'搜索问题',type:'text',placeholder:'javascript async',required:true},{name:'tags',label:'标签',type:'text',placeholder:'node'},{name:'sort',label:'排序',type:'select',options:[{value:'votes',label:'票数'},{value:'relevance',label:'相关性'}]}],endpoint:'/api/tools/fun/stack-overflow',method:'POST'},
+  // ===== 百度语音工具 =====
+  'voice/tts':{title:'语音合成 TTS 🔊',fields:[
+    {name:'text',label:'要合成的文字',type:'textarea',placeholder:'你好，欢迎使用沐美服务！',required:true},
+    {name:'per',label:'发音人',type:'select',options:[{value:0,label:'女声（度小美）'},{value:1,label:'男声（度小宇）'},{value:3,label:'情感男声（度逍遥）'},{value:4,label:'情感女声（度丫丫）'}]},
+    {name:'spd',label:'语速（0-15）',type:'number',value:5},
+    {name:'pit',label:'音调（0-15）',type:'number',value:5},
+    {name:'vol',label:'音量（0-15）',type:'number',value:5}
+  ],endpoint:'/api/tools/voice/tts',method:'POST'},
+  'voice/asr':{title:'语音识别 ASR 🎤',fields:[
+    {name:'audioBase64',label:'音频Base64',type:'textarea',placeholder:'粘贴音频文件的Base64编码...',required:true},
+    {name:'format',label:'音频格式',type:'select',options:[{value:'wav',label:'WAV'},{value:'pcm',label:'PCM'},{value:'amr',label:'AMR'},{value:'m4a',label:'M4A'}]},
+    {name:'rate',label:'采样率',type:'select',options:[{value:16000,label:'16000 Hz（推荐）'},{value:8000,label:'8000 Hz'}]}
+  ],endpoint:'/api/tools/voice/asr',method:'POST'},
+  // ===== 高德地图工具 =====
+  'map/geocode':{title:'地址转坐标 📍',fields:[
+    {name:'address',label:'地址',type:'text',placeholder:'北京市朝阳区望京街道',required:true},
+    {name:'city',label:'城市（可选）',type:'text',placeholder:'北京'}
+  ],endpoint:'/api/tools/map/geocode',method:'POST'},
+  'map/regeocode':{title:'坐标转地址 🗺️',fields:[
+    {name:'longitude',label:'经度',type:'text',placeholder:'116.481488',required:true},
+    {name:'latitude',label:'纬度',type:'text',placeholder:'39.990464',required:true}
+  ],endpoint:'/api/tools/map/regeocode',method:'POST'},
+  'map/poi-search':{title:'POI地点搜索 🔍',fields:[
+    {name:'keywords',label:'搜索关键词',type:'text',placeholder:'星巴克',required:true},
+    {name:'city',label:'城市',type:'text',placeholder:'北京'},
+    {name:'location',label:'中心坐标（可选）',type:'text',placeholder:'116.481488,39.990464'}
+  ],endpoint:'/api/tools/map/poi-search',method:'POST'},
+  'map/route':{title:'路径规划 🚗',fields:[
+    {name:'origin',label:'起点坐标',type:'text',placeholder:'116.481488,39.990464',required:true},
+    {name:'destination',label:'终点坐标',type:'text',placeholder:'116.434446,39.90816',required:true},
+    {name:'type',label:'出行方式',type:'select',options:[{value:'driving',label:'驾车'},{value:'walking',label:'步行'},{value:'transit',label:'公交'}]}
+  ],endpoint:'/api/tools/map/route',method:'POST'},
+  'map/weather':{title:'高德天气 🌤️',fields:[
+    {name:'city',label:'城市名称',type:'text',placeholder:'北京',required:true}
+  ],endpoint:'/api/tools/map/weather',method:'POST'},
+  'map/ip-location':{title:'IP城市定位 📡',fields:[
+    {name:'ip',label:'IP地址（留空查本机）',type:'text',placeholder:'8.8.8.8'}
+  ],endpoint:'/api/tools/map/ip-location',method:'POST'},
 };
 
 // 初始化

@@ -887,6 +887,389 @@ class ExternalAPIService {
     } catch (_) {}
     return this.err('IP 查询暂时不可用（可能被网络限制拦截）');
   }
+
+  // ============ 百度语音 API ============
+
+  /**
+   * 获取百度 Access Token
+   */
+  static async getBaiduToken() {
+    const apiKey = process.env.BAIDU_API_KEY;
+    const secretKey = process.env.BAIDU_SECRET_KEY;
+    if (!apiKey || !secretKey) return null;
+    
+    // 缓存 token（有效期30天，这里提前1小时刷新）
+    if (this._baiduToken && this._baiduTokenExpire > Date.now()) {
+      return this._baiduToken;
+    }
+    
+    const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`;
+    const res = await this.safeFetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.access_token) {
+      this._baiduToken = data.access_token;
+      this._baiduTokenExpire = Date.now() + 29 * 24 * 60 * 60 * 1000; // 29天
+      return this._baiduToken;
+    }
+    return null;
+  }
+
+  /**
+   * 语音合成（TTS）- 将文字转为语音
+   * @param {string} text - 要合成的文字（最多1024字节）
+   * @param {object} options - 选项
+   *   - per: 发音人选择, 0-女声, 1-男声, 3-情感合成-度逍遥, 4-情感合成-度丫丫
+   *   - spd: 语速，取值0-15，默认5中语速
+   *   - pit: 音调，取值0-15，默认5中音调
+   *   - vol: 音量，取值0-15，默认5中音量
+   * @returns {object} - { success, data: { audioUrl }, _info }
+   */
+  static async baiduTTS(text, options = {}) {
+    const token = await this.getBaiduToken();
+    if (!token) return this.err('百度语音未配置或获取Token失败');
+    
+    const { per = 0, spd = 5, pit = 5, vol = 5 } = options;
+    const url = `https://tsn.baidu.com/text2audio?tex=${encodeURIComponent(text)}&tok=${token}&cuid=mumei_service&ctp=1&lan=zh&per=${per}&spd=${spd}&pit=${pit}&vol=${vol}`;
+    
+    const res = await this.safeFetch(url);
+    if (!res.ok) return this.err('百度TTS请求失败');
+    
+    // 返回音频URL（百度直接返回音频数据，这里返回URL让前端直接播放）
+    return this.ok({ 
+      audioUrl: url,
+      format: 'mp3',
+      text: text.slice(0, 50) + (text.length > 50 ? '...' : '')
+    }, '百度语音合成');
+  }
+
+  /**
+   * 语音识别（ASR）- 将语音转为文字
+   * 注意：需要上传音频文件，这里提供API接口，实际使用需要前端上传
+   * @param {string} audioBase64 - 音频文件的base64编码
+   * @param {string} format - 音频格式：pcm/wav/amr/m4a
+   * @param {number} rate - 采样率：16000/8000
+   * @returns {object} - { success, data: { text }, _info }
+   */
+  static async baiduASR(audioBase64, format = 'wav', rate = 16000) {
+    const token = await this.getBaiduToken();
+    if (!token) return this.err('百度语音未配置或获取Token失败');
+    
+    const url = `https://vop.baidu.com/server_api?cuid=mumei_service&token=${token}&dev_pid=1537`; // 1537=普通话(支持简单英文)
+    
+    const res = await this.safeFetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        format: format,
+        rate: rate,
+        channel: 1,
+        speech: audioBase64,
+        len: Buffer.from(audioBase64, 'base64').length
+      })
+    });
+    
+    if (!res.ok) return this.err('百度ASR请求失败');
+    const data = await res.json();
+    
+    if (data.err_no === 0 && data.result && data.result.length > 0) {
+      return this.ok({ 
+        text: data.result.join('\n'),
+        confidence: data.result_num || 1
+      }, '百度语音识别');
+    }
+    return this.err(data.err_msg || '语音识别失败');
+  }
+
+  // ============ 高德地图 API ============
+
+  /**
+   * 地理编码 - 地址转坐标（多源fallback）
+   */
+  static async amapGeocode(address, city = '') {
+    const key = process.env.AMAP_KEY;
+    // 高德（如果配置了有效的 Web 服务 Key）
+    if (key && key.length > 10 && !key.includes('xxxxxxxx') && !key.includes('xxxx')) {
+      const url = `https://restapi.amap.com/v3/geocode/geo?key=${key}&address=${encodeURIComponent(address)}`;
+      try {
+        const res = await this.safeFetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
+            const geo = data.geocodes[0];
+            const [lng, lat] = geo.location.split(',');
+            return this.ok({
+              longitude: parseFloat(lng),
+              latitude: parseFloat(lat),
+              formattedAddress: geo.formatted_address || address,
+              province: geo.province || '',
+              city: geo.city || '',
+              district: geo.district || ''
+            }, '高德地理编码 ✅');
+          }
+        }
+      } catch (_) {}
+    }
+    // Fallback 1: BigDataCloud（免费，海外节点，但国内可访问）
+    try {
+      const q = encodeURIComponent(address + (city ? ' ' + city : ''));
+      const res = await this.safeFetch(
+        `https://api.bigdatacloud.net/data/geocode-free?text=${q}&language=zh`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.latitude && data.longitude) {
+          return this.ok({
+            longitude: data.longitude,
+            latitude: data.latitude,
+            displayName: data.locality || data.city || address,
+            country: data.countryName || ''
+          }, 'BigDataCloud ✅');
+        }
+      }
+    } catch (_) {}
+    // Fallback 2: Google Geocoding（免费，需代理）
+    try {
+      const q = encodeURIComponent(address);
+      const res = await this.safeFetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${q}&key=`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+          const r = data.results[0].geometry.location;
+          return this.ok({
+            longitude: r.lng,
+            latitude: r.lat,
+            displayName: data.results[0].formatted_address || address
+          }, 'Google Geocoding ✅');
+        }
+      }
+    } catch (_) {}
+    return this.err('地址查询失败，请确认地址格式正确（如：北京市朝阳区望京街道）');
+  }
+
+  /**
+   * 逆地理编码 - 坐标转地址（多源fallback）
+   */
+  static async amapRegeocode(longitude, latitude) {
+    const key = process.env.AMAP_KEY;
+    if (key && key.length > 10 && !key.includes('xxxxxxxx') && !key.includes('xxxx')) {
+      const url = `https://restapi.amap.com/v3/geocode/regeo?key=${key}&location=${longitude},${latitude}&extensions=base`;
+      try {
+        const res = await this.safeFetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === '1' && data.regeocode) {
+            const addr = data.regeocode.addressComponent;
+            return this.ok({
+              address: data.regeocode.formatted_address || '',
+              province: addr.province || '',
+              city: addr.city || '',
+              district: addr.district || '',
+              township: addr.township || ''
+            }, '高德逆地理编码 ✅');
+          }
+        }
+      } catch (_) {}
+    }
+    // Fallback: BigDataCloud reverse
+    try {
+      const res = await this.safeFetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-free?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.city) {
+          return this.ok({
+            address: [data.locality, data.city, data.countryName].filter(Boolean).join(', '),
+            province: data.principalSubdivision || '',
+            city: data.city || '',
+            district: data.locality || ''
+          }, 'BigDataCloud ✅');
+        }
+      }
+    } catch (_) {}
+    return this.err('坐标解析失败，请确认坐标格式正确（经度,纬度）');
+  }
+
+  /**
+   * POI 搜索 - 搜索周边兴趣点（多源fallback）
+   */
+  static async amapPOISearch(keywords, location = '', city = '') {
+    const key = process.env.AMAP_KEY;
+    if (key && key.length > 10 && !key.includes('xxxxxxxx') && !key.includes('xxxx')) {
+      let url = `https://restapi.amap.com/v3/place/text?key=${key}&keywords=${encodeURIComponent(keywords)}&offset=10`;
+      if (location) url += `&location=${location}`;
+      if (city) url += `&city=${encodeURIComponent(city)}`;
+      try {
+        const res = await this.safeFetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === '1' && data.pois) {
+            const pois = data.pois.map(p => ({
+              name: p.name,
+              address: p.address || '',
+              location: p.location,
+              distance: p.distance || '',
+              type: p.type || ''
+            }));
+            return this.ok({ pois, total: parseInt(data.count) || pois.length }, '高德POI搜索 ✅');
+          }
+        }
+      } catch (_) {}
+    }
+    // Fallback: Overpass API (OpenStreetMap)
+    try {
+      // Overpass需要构造OSM查询，这里用简单方式搜索
+      const q = encodeURIComponent(keywords + (city ? ' ' + city : ''));
+      // 用 Foursquare / Wikidata 备用
+      const res = await this.safeFetch(
+        `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=10&accept-language=zh`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const pois = data.slice(0, 8).map(p => ({
+            name: p.display_name ? p.display_name.split(',')[0] : '',
+            address: p.display_name || '',
+            location: (p.lon || '') + ',' + (p.lat || ''),
+            type: p.type || ''
+          }));
+          return this.ok({ pois, total: pois.length }, 'OpenStreetMap (Nominatim)');
+        }
+      }
+    } catch (_) {}
+    // Fallback 2: 使用已有地理编码获取坐标后搜周边
+    if (city || keywords) {
+      try {
+        const geo = await this.amapGeocode(city || keywords, '');
+        if (geo.success) {
+          // 搜索附近
+          const res2 = await this.safeFetch(
+            `https://api.bigdatacloud.net/data/locality-search?text=${encodeURIComponent(keywords)}&latitude=${geo.data.latitude}&longitude=${geo.data.longitude}`
+          );
+          if (res2.ok) {
+            const data2 = await res2.json();
+            if (data2 && Array.isArray(data2) && data2.length > 0) {
+              const pois = data2.slice(0, 8).map(p => ({
+                name: p.name || p.locality || '',
+                address: p.administrative?.[0] || '',
+                location: (p.longitude || '') + ',' + (p.latitude || ''),
+                type: p.localityType || ''
+              }));
+              return this.ok({ pois, total: pois.length }, 'BigDataCloud POI ✅');
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    return this.err('未搜索到相关地点，请尝试更通用的关键词');
+  }
+
+  /**
+   * 路径规划 - 步行/驾车路线（免费fallback: OSRM）
+   * @param {string} origin - 起点坐标 "lng,lat"
+   * @param {string} destination - 终点坐标 "lng,lat"
+   * @param {string} type - 类型：walking/driving/transit
+   * @returns {object} - { success, data: { distance, duration, summary }, _info }
+   */
+  static async amapRoute(origin, destination, type = 'driving') {
+    // OSRM免费服务（无Key要求）
+    const osrmType = type === 'walking' ? 'foot' : 'car';
+    const url = `https://router.project-osrm.org/route/v1/${osrmType}/${origin};${destination}?overview=true&steps=true&annotations=distance`;
+    
+    try {
+      const res = await this.safeFetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const durationSec = Math.round(route.duration);
+          const distanceM = Math.round(route.distance);
+          const durationMin = Math.round(durationSec / 60);
+          return this.ok({
+            distance: distanceM,
+            distanceText: distanceM >= 1000 ? (distanceM / 1000).toFixed(1) + ' km' : distanceM + ' m',
+            duration: durationSec,
+            durationText: durationMin >= 60 ? Math.floor(durationMin / 60) + '小时' + (durationMin % 60) + '分钟' : durationMin + '分钟',
+            summary: route.routes_name ? route.routes_name[0] : ''
+          }, 'OSRM (Open Source Routing Machine)');
+        }
+      }
+    } catch (_) {}
+    return this.err('路径规划失败，请检查坐标格式（lng,lat）');
+  }
+
+  /**
+   * 天气查询 - 高德天气API
+   * @param {string} city - 城市名称或adcode
+   * @returns {object} - { success, data: { weather, temperature, ... }, _info }
+   */
+  static async amapWeather(city) {
+    const key = process.env.AMAP_KEY;
+    if (!key) return this.err('高德地图未配置');
+    
+    const url = `https://restapi.amap.com/v3/weather/weatherInfo?key=${key}&city=${encodeURIComponent(city)}&extensions=all`;
+    
+    const res = await this.safeFetch(url);
+    if (!res.ok) return this.err('高德API请求失败');
+    const data = await res.json();
+    
+    if (data.status === '1' && data.forecasts && data.forecasts.length > 0) {
+      const forecast = data.forecasts[0];
+      const today = forecast.casts && forecast.casts[0];
+      return this.ok({
+        city: forecast.city,
+        province: forecast.province || '',
+        today: today ? {
+          date: today.date,
+          week: today.week,
+          dayWeather: today.dayweather,
+          nightWeather: today.nightweather,
+          dayTemp: today.daytemp,
+          nightTemp: today.nighttemp,
+          dayWind: today.daywind,
+          nightWind: today.nightwind
+        } : null,
+        forecasts: (forecast.casts || []).slice(1, 4).map(c => ({
+          date: c.date,
+          dayWeather: c.dayweather,
+          nightWeather: c.nightweather,
+          dayTemp: c.daytemp,
+          nightTemp: c.nighttemp
+        }))
+      }, '高德天气预报');
+    }
+    return this.err('天气查询失败');
+  }
+
+  /**
+   * IP定位 - 根据IP获取位置
+   * @param {string} ip - IP地址（可选，不传则定位当前IP）
+   * @returns {object} - { success, data: { province, city, rectangle }, _info }
+   */
+  static async amapIPLocation(ip = '') {
+    const key = process.env.AMAP_KEY;
+    if (!key) return this.err('高德地图未配置');
+    
+    let url = `https://restapi.amap.com/v3/ip?key=${key}`;
+    if (ip) url += `&ip=${ip}`;
+    
+    const res = await this.safeFetch(url);
+    if (!res.ok) return this.err('高德API请求失败');
+    const data = await res.json();
+    
+    if (data.status === '1') {
+      return this.ok({
+        province: data.province || '',
+        city: data.city || '',
+        rectangle: data.rectangle || '',
+        adcode: data.adcode || ''
+      }, '高德IP定位');
+    }
+    return this.err('IP定位失败');
+  }
 }
 
 module.exports = ExternalAPIService;
