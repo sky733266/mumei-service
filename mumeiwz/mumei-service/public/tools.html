@@ -97,6 +97,9 @@
       <button class="tool-tab" data-category="fun">趣味工具</button>
       <button class="tool-tab" data-category="voice">语音工具</button>
       <button class="tool-tab" data-category="map">地图工具</button>
+      <button class="tool-tab" data-category="doc">文档工具</button>
+      <button class="tool-tab" data-category="image">图片工具</button>
+      <button class="tool-tab" data-category="web">网页工具</button>
       <button class="tool-tab" data-category="fun">趣味工具</button>
     </div>
 
@@ -224,6 +227,29 @@
     {id:'map/route',       name:'路径规划',           cat:'map',   aliases:['导航','路线规划','route'],                       desc:'步行/驾车/公交路线规划',     pro:false},
     {id:'map/weather',     name:'高德天气',           cat:'map',   aliases:['天气预报','高德天气'],                           desc:'高德实时天气+3天预报',       pro:false},
     {id:'map/ip-location', name:'IP城市定位',         cat:'map',   aliases:['ip定位','ip城市','ip归属地'],                   desc:'根据IP定位所在城市',         pro:false},
+    // ===== 文档工具 =====
+    {id:'doc/qr-generate',    name:'二维码生成',        cat:'doc',   aliases:['qr','qrcode','生成二维码'],                        desc:'生成精美二维码，支持颜色自定义',   pro:false},
+    {id:'doc/qr-advanced',     name:'二维码美化',         cat:'doc',   aliases:['qr高级','彩色二维码'],                           desc:'QuickChart二维码，支持Logo',        pro:false},
+    {id:'doc/pdf-generate',   name:'PDF生成',           cat:'doc',   aliases:['生成PDF','创建PDF'],                            desc:'输入标题和内容，生成PDF文件',        pro:false},
+    {id:'doc/pdf-merge',      name:'PDF合并',           cat:'doc',   aliases:['合并PDF','拼接PDF'],                             desc:'将多个PDF合并为一个文件',          pro:false},
+    {id:'doc/pdf-split',      name:'PDF分割',           cat:'doc',   aliases:['拆分PDF','PDF分割'],                             desc:'按页码范围分割PDF',                 pro:false},
+    {id:'doc/pdf-watermark',   name:'PDF加水印',         cat:'doc',   aliases:['水印PDF','PDF水印'],                              desc:'给PDF添加文字水印',                 pro:false},
+    // ===== 图片工具 =====
+    {id:'image/image-compress', name:'图片压缩',          cat:'image', aliases:['压缩图片','图片优化'],                         desc:'智能压缩图片，减少文件大小',         pro:false},
+    {id:'image/image-watermark',name:'图片水印',          cat:'image', aliases:['添加水印','水印图片'],                         desc:'给图片添加文字水印',                 pro:false},
+    // ===== 数据工具 =====
+    {id:'data/chart-generate', name:'图表生成',          cat:'data',  aliases:['生成图表','chart','可视化'],                    desc:'输入数据生成柱状/折线/饼图等',       pro:false},
+    // ===== 网页工具 =====
+    {id:'web/webpage-screenshot',name:'网页截图',         cat:'web',   aliases:['网页快照','web截图','thumbnail'],                desc:'输入URL生成网页截图预览',           pro:false},
+    {id:'web/short-url',       name:'短链接生成',        cat:'web',   aliases:['短网址','url缩短'],                             desc:'长链接缩短，全球节点加速',           pro:false},
+    // ===== 开发工具（补充）=====
+    {id:'dev/code-beautify',   name:'代码美化',          cat:'dev',   aliases:['格式化代码','prettier','code format'],           desc:'Prettier一键美化代码',              pro:false},
+    {id:'dev/regex-test',      name:'正则测试',          cat:'dev',   aliases:['regex','正则表达式'],                           desc:'正则表达式实时测试与匹配',           pro:false},
+    {id:'dev/url-codec',       name:'URL编解码',          cat:'dev',   aliases:['url编码','encode','decode'],                   desc:'URL编码与解码',                      pro:false},
+    {id:'dev/base64-codec',   name:'Base64编解码',        cat:'dev',   aliases:['base64','base64编码'],                         desc:'Base64编码与解码',                   pro:false},
+    {id:'dev/base-convert',   name:'进制转换',           cat:'dev',   aliases:['进制','binary','hex','decimal'],               desc:'2/8/10/16进制互转',                  pro:false},
+    {id:'dev/color-convert',  name:'颜色转换',           cat:'dev',   aliases:['颜色','HEX','RGB','HSL'],                       desc:'HEX/RGB/HSL颜色互转',               pro:false},
+    {id:'dev/html-preview',   name:'HTML预览',           cat:'dev',   aliases:['html渲染','live preview'],                    desc:'HTML代码在线预览',                  pro:false},
     // === 趣味与生活工具 ===
     {id:'fun/random-quote',   name:'随机名言',            cat:'fun',   aliases:['名言','quote','语录'],                               desc:'获取随机励志名言',       pro:false},
     {id:'fun/random-joke',    name:'随机笑话',            cat:'fun',   aliases:['笑话','joke','搞笑'],                               desc:'程序员的幽默笑话',       pro:false},
@@ -333,7 +359,7 @@
       return;
     }
 
-    const catMap = {ai:'AI',data:'数据',network:'网络',security:'安全',dev:'开发',fun:'趣味',voice:'语音',map:'地图'};
+    const catMap = {ai:'AI',data:'数据',network:'网络',security:'安全',dev:'开发',fun:'趣味',voice:'语音',map:'地图',doc:'文档',image:'图片',web:'网页'};
     grid.innerHTML = filtered.map(t => {
       const favd = favorites.includes(t.id);
       const label = catMap[t.cat] || t.cat;

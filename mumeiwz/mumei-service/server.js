@@ -87,6 +87,7 @@ try {
 
 let ExternalAPIService;
 try {
+delete require.cache[require.resolve('./services/external-api')];  // 清除缓存，确保加载最新代码
   ExternalAPIService = require('./services/external-api');
 } catch (e) {
   console.log('External API services not available:', e.message);
@@ -1164,6 +1165,25 @@ const toolPricing = {
   'map/route': { price: 0, unit: 'free', freeQuota: 300000 },
   'map/weather': { price: 0, unit: 'free', freeQuota: 300000 },
   'map/ip-location': { price: 0, unit: 'free', freeQuota: 300000 },
+  // 新增工具
+  'dev/code-beautify': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/regex-test': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/url-codec': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/base64-codec': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/base-convert': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/color-convert': { price: 0, unit: 'free', freeQuota: Infinity },
+  'dev/html-preview': { price: 0, unit: 'free', freeQuota: Infinity },
+  'doc/qr-generate': { price: 0, unit: 'free', freeQuota: Infinity },
+  'doc/qr-advanced': { price: 0, unit: 'free', freeQuota: Infinity },
+  'doc/pdf-generate': { price: 0, unit: 'free', freeQuota: Infinity },
+  'doc/pdf-merge': { price: 0, unit: 'free', freeQuota: Infinity },
+  'doc/pdf-split': { price: 0, unit: 'free', freeQuota: Infinity },
+  'doc/pdf-watermark': { price: 0, unit: 'free', freeQuota: Infinity },
+  'image/image-compress': { price: 0, unit: 'free', freeQuota: Infinity },
+  'image/image-watermark': { price: 0, unit: 'free', freeQuota: Infinity },
+  'data/chart-generate': { price: 0, unit: 'free', freeQuota: Infinity },
+  'web/webpage-screenshot': { price: 0, unit: 'free', freeQuota: 100 },
+  'web/short-url': { price: 0, unit: 'free', freeQuota: 1000 },
 };
 
 
@@ -2390,6 +2410,25 @@ const externalApiRoutes = {
   'map/route': ['amapRoute', ['origin', 'destination', 'type']],
   'map/weather': ['amapWeather', ['city']],
   'map/ip-location': ['amapIPLocation', ['ip']],
+  // ===== 新增工具 =====
+  'dev/code-beautify': ['codeBeautify', ['code', 'language']],
+  'dev/regex-test': ['regexTest', ['pattern', 'text', 'flags']],
+  'dev/url-codec': ['urlCodec', ['text', 'type']],
+  'dev/base64-codec': ['base64Codec', ['text', 'type']],
+  'dev/base-convert': ['baseConvert', ['number', 'fromBase', 'toBase']],
+  'dev/color-convert': ['colorConvert', ['color', 'targetFormat']],
+  'dev/html-preview': ['htmlPreview', ['html']],
+  'doc/qr-generate': ['qrCodeGenerate', ['text', 'size', 'format', 'dark', 'light']],
+  'doc/qr-advanced': ['qrAdvanced', ['text', 'size', 'dark', 'light']],
+  'doc/pdf-generate': ['pdfGenerate', ['title', 'content', 'author']],
+  'doc/pdf-merge': ['pdfMerge', ['pdfBases']],
+  'doc/pdf-split': ['pdfSplit', ['pdfBase64', 'pageRange']],
+  'doc/pdf-watermark': ['pdfWatermark', ['pdfBase64', 'watermarkText', 'opacity', 'fontSize', 'angle']],
+  'image/image-compress': ['imageCompress', ['imageUrl', 'quality', 'format']],
+  'image/image-watermark': ['imageWatermark', ['imageUrl', 'watermarkText', 'opacity', 'fontSize', 'gravity']],
+  'data/chart-generate': ['chartGenerate', ['type', 'data', 'labels', 'title']],
+  'web/webpage-screenshot': ['webpageScreenshot', ['url', 'width', 'height']],
+  'web/short-url': ['shortUrl', ['longUrl']],
 };
 
 

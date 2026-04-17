@@ -28,7 +28,7 @@ class ExternalAPIService {
       const res = await this.safeFetch('https://api.quotable.io/random?tags=' + category);
       if (res.ok) {
         const q = await res.json();
-        return this.ok({ quote: q.content, author: q.author, tags: q.tags || [] }, 'Quotable API');
+        return ExternalAPIService.ok({ quote: q.content, author: q.author, tags: q.tags || [] }, 'Quotable API');
       }
     } catch (_) {}
     const fb = [
@@ -37,7 +37,7 @@ class ExternalAPIService {
       { quote: 'Any fool can write code that a computer can understand.', author: 'Martin Fowler' },
       { quote: '程序员的三大谎言：1. 代码马上好 2. 只是小改动 3. 注释以后补', author: '社区智慧' },
     ];
-    return this.ok(fb[Math.floor(Math.random() * fb.length)], '内置数据');
+    return ExternalAPIService.ok(fb[Math.floor(Math.random() * fb.length)], '内置数据');
   }
 
   // ============ 随机笑话 ============
@@ -46,15 +46,15 @@ class ExternalAPIService {
       const res = await this.safeFetch(`https://v2.jokeapi.dev/joke/${type}`);
       if (res.ok) {
         const j = await res.json();
-        if (j.type === 'single') return this.ok({ joke: j.joke }, 'JokeAPI');
-        return this.ok({ setup: j.setup, delivery: j.delivery }, 'JokeAPI');
+        if (j.type === 'single') return ExternalAPIService.ok({ joke: j.joke }, 'JokeAPI');
+        return ExternalAPIService.ok({ setup: j.setup, delivery: j.delivery }, 'JokeAPI');
       }
     } catch (_) {}
     const fb = [
       { joke: '为什么程序员分不清万圣节和圣诞节？因为 Oct 31 = Dec 25。' },
       { joke: '程序员的两大谎言：1. 代码马上好 2. 这个 bug 很简单' },
     ];
-    return this.ok(fb[Math.floor(Math.random() * fb.length)], '内置数据');
+    return ExternalAPIService.ok(fb[Math.floor(Math.random() * fb.length)], '内置数据');
   }
 
   // ============ 随机用户 ============
@@ -63,7 +63,7 @@ class ExternalAPIService {
       const res = await this.safeFetch('https://randomuser.me/api/');
       if (res.ok) {
         const r = (await res.json()).results[0];
-        return this.ok({
+        return ExternalAPIService.ok({
           name: `${r.name.first} ${r.name.last}`,
           gender: r.gender,
           email: r.email,
@@ -76,7 +76,7 @@ class ExternalAPIService {
         }, 'RandomUser API');
       }
     } catch (_) {}
-    return this.err('RandomUser API 暂时不可用');
+    return ExternalAPIService.err('RandomUser API 暂时不可用');
   }
 
   // ============ 随机猫图 ============
@@ -85,22 +85,22 @@ class ExternalAPIService {
       const res = await this.safeFetch('https://api.thecatapi.com/v1/images/search');
       if (res.ok) {
         const d = await res.json();
-        return this.ok({ url: d[0].url, id: d[0].id }, 'TheCatAPI');
+        return ExternalAPIService.ok({ url: d[0].url, id: d[0].id }, 'TheCatAPI');
       }
     } catch (_) {}
     try {
       const res = await this.safeFetch('https://cataas.com/cat?json=true');
       if (res.ok) {
         const d = await res.json();
-        return this.ok({ url: `https://cataas.com${d.url}`, id: d.id }, 'Cataas API');
+        return ExternalAPIService.ok({ url: `https://cataas.com${d.url}`, id: d.id }, 'Cataas API');
       }
     } catch (_) {}
-    return this.ok({ url: 'https://placekitten.com/400/300' }, 'PlaceKitten fallback');
+    return ExternalAPIService.ok({ url: 'https://placekitten.com/400/300' }, 'PlaceKitten fallback');
   }
 
   // ============ 单词释义 ============
   static async wordDefinition(word) {
-    if (!word) return this.err('请提供要查询的单词');
+    if (!word) return ExternalAPIService.err('请提供要查询的单词');
     try {
       const res = await this.safeFetch(
         `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
@@ -115,30 +115,30 @@ class ExternalAPIService {
             example: d.example || null,
           })),
         }));
-        return this.ok({ word: entry.word, phonetic: entry.phonetic || '', meanings }, 'Free Dictionary API');
+        return ExternalAPIService.ok({ word: entry.word, phonetic: entry.phonetic || '', meanings }, 'Free Dictionary API');
       }
-      return this.err('未找到该单词');
+      return ExternalAPIService.err('未找到该单词');
     } catch (_) {}
-    return this.err('词典 API 暂时不可用');
+    return ExternalAPIService.err('词典 API 暂时不可用');
   }
 
   // ============ 单词同义词 ============
   static async wordSynonym(word, type = 'rel_trg') {
-    if (!word) return this.err('请提供要查询的单词');
+    if (!word) return ExternalAPIService.err('请提供要查询的单词');
     try {
       const res = await this.safeFetch(
         `https://api.datamuse.com/words?${type}=${encodeURIComponent(word)}&max=20`
       );
       if (res.ok) {
         const words = await res.json();
-        if (!words.length) return this.err('未找到相关词汇');
-        return this.ok({
+        if (!words.length) return ExternalAPIService.err('未找到相关词汇');
+        return ExternalAPIService.ok({
           word, type,
           words: words.map(w => ({ word: w.word, score: w.score, tags: w.tags || [] })),
         }, 'Datamuse API');
       }
     } catch (_) {}
-    return this.err('Datamuse API 暂时不可用');
+    return ExternalAPIService.err('Datamuse API 暂时不可用');
   }
 
   // ============ 彩虹屁 ============
@@ -153,7 +153,7 @@ class ExternalAPIService {
       '坚持就是胜利，程序员永不放弃 💻',
       '累了就休息，没有人能 24 小时高效运转 🌙',
     ];
-    return this.ok({ content: words[Math.floor(Math.random() * words.length)] }, '内置数据');
+    return ExternalAPIService.ok({ content: words[Math.floor(Math.random() * words.length)] }, '内置数据');
   }
 
   // ============ 历史上的今天（内置数据） ============
@@ -165,7 +165,7 @@ class ExternalAPIService {
       { text: '坚持coding，终会成为大神 💪', year: now.getFullYear() },
       { text: '愿你今天的代码零警告零报错 🎉', year: now.getFullYear() },
     ];
-    return this.ok({
+    return ExternalAPIService.ok({
       date: `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`,
       events,
     }, '内置数据');
@@ -191,10 +191,10 @@ class ExternalAPIService {
         while ((m = re.exec(text)) !== null && items.length < 10) {
           items.push({ title: m[1].trim(), link: m[2].trim() });
         }
-        if (items.length) return this.ok({ category, items }, 'RSS Feed');
+        if (items.length) return ExternalAPIService.ok({ category, items }, 'RSS Feed');
       }
     } catch (_) {}
-    return this.err(`新闻 RSS (${category}) 暂时不可用`);
+    return ExternalAPIService.err(`新闻 RSS (${category}) 暂时不可用`);
   }
 
   // ============ GitHub Trending ============
@@ -213,15 +213,15 @@ class ExternalAPIService {
         while ((m = re.exec(text)) !== null && projects.length < 20) {
           projects.push({ repo: m[1], name: m[1].split('/').pop() });
         }
-        return this.ok({ language, projects: projects.slice(0, 20) }, 'GitHub Trending');
+        return ExternalAPIService.ok({ language, projects: projects.slice(0, 20) }, 'GitHub Trending');
       }
     } catch (_) {}
-    return this.err('GitHub Trending 暂时不可用');
+    return ExternalAPIService.err('GitHub Trending 暂时不可用');
   }
 
   // ============ AI 内容检测（启发式） ============
   static async detectAI(text) {
-    if (!text || text.length < 50) return this.err('请提供至少50个字符的文本');
+    if (!text || text.length < 50) return ExternalAPIService.err('请提供至少50个字符的文本');
     const words = text.split(/\s+/).filter(Boolean);
     const avgLen = words.reduce((s, w) => s + w.length, 0) / (words.length || 1);
     const uniqueRatio = new Set(text).size / text.length;
@@ -235,7 +235,7 @@ class ExternalAPIService {
     if (emojiCount === 0 && text.length > 300) score += 0.15;
     if (hasAI) score += 0.4;
     score = Math.min(0.95, Math.max(0, score));
-    return this.ok({
+    return ExternalAPIService.ok({
       ai_score: Math.round(score * 100) / 100,
       is_ai: score > 0.5,
       analysis: {
@@ -255,7 +255,7 @@ class ExternalAPIService {
       );
       if (!geoRes.ok) throw new Error('geo failed');
       const geoData = await geoRes.json();
-      if (!geoData.results?.length) return this.err('未找到该城市');
+      if (!geoData.results?.length) return ExternalAPIService.err('未找到该城市');
       const { latitude, longitude, name, country } = geoData.results[0];
 
       const weatherRes = await this.safeFetch(
@@ -279,7 +279,7 @@ class ExternalAPIService {
         95: '⛈️ 雷暴', 96: '⛈️ 雷暴冰雹',
       };
 
-      return this.ok({
+      return ExternalAPIService.ok({
         location: `${name}, ${country}`,
         current: {
           temp: `${current.temperature_2m}°C`,
@@ -298,7 +298,7 @@ class ExternalAPIService {
         })),
       }, 'Open-Meteo API (免费，无需 Key)');
     } catch (e) {
-      return this.err('天气服务暂时不可用: ' + e.message);
+      return ExternalAPIService.err('天气服务暂时不可用: ' + e.message);
     }
   }
 
@@ -308,26 +308,26 @@ class ExternalAPIService {
       const res = await this.safeFetch(`https://open.er-api.com/v6/latest/${from}`);
       if (!res.ok) throw new Error('exchange failed');
       const data = await res.json();
-      if (!data.rates || data.rates[to] === undefined) return this.err('不支持该货币');
+      if (!data.rates || data.rates[to] === undefined) return ExternalAPIService.err('不支持该货币');
       const rate = data.rates[to];
-      return this.ok({
+      return ExternalAPIService.ok({
         from, to, amount,
         rate: rate,
         result: Math.round(amount * rate * 100) / 100,
         updated: data.time_last_update_utc,
       }, 'Open Exchange Rates API');
     } catch (_) {}
-    return this.err('汇率 API 暂时不可用');
+    return ExternalAPIService.err('汇率 API 暂时不可用');
   }
 
   // ============ 邮编查询 ============
   static async zipCode(zip) {
-    if (!zip) return this.err('请提供邮政编码');
+    if (!zip) return ExternalAPIService.err('请提供邮政编码');
     try {
       const res = await this.safeFetch(`https://api.zippopotam.us/cn/${zip}`);
       if (res.ok) {
         const d = await res.json();
-        return this.ok({
+        return ExternalAPIService.ok({
           zip,
           country: d['country abbreviation'],
           places: d.places.map(p => ({
@@ -338,22 +338,22 @@ class ExternalAPIService {
           })),
         }, 'Zippopotam API');
       }
-      return this.err('未找到该邮编');
+      return ExternalAPIService.err('未找到该邮编');
     } catch (_) {}
-    return this.err('邮编 API 暂时不可用');
+    return ExternalAPIService.err('邮编 API 暂时不可用');
   }
 
   // ============ 配色方案 ============
   static async colorScheme(baseColor = null) {
     if (baseColor) {
       const hex = baseColor.replace('#', '');
-      if (!/^[0-9a-fA-F]{6}$/.test(hex)) return this.err('无效的颜色值，请使用十六进制格式如 #FF5500');
+      if (!/^[0-9a-fA-F]{6}$/.test(hex)) return ExternalAPIService.err('无效的颜色值，请使用十六进制格式如 #FF5500');
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
       const b = parseInt(hex.slice(4, 6), 16);
       const clamp = (x) => Math.max(0, Math.min(255, x));
       const toHex = (x) => clamp(x).toString(16).padStart(2, '0');
-      return this.ok({
+      return ExternalAPIService.ok({
         base: baseColor,
         palette: {
           lighter: `#${toHex(r+40)},${toHex(g+40)},${toHex(b+40)}`,
@@ -374,7 +374,7 @@ class ExternalAPIService {
       };
       return `#${f(0)}${f(8)}${f(4)}`;
     };
-    return this.ok({
+    return ExternalAPIService.ok({
       scheme: 'analogous',
       colors: [
         { name: 'Primary', value: hslToHex(hue, 70, 50) },
@@ -399,7 +399,7 @@ class ExternalAPIService {
         })
       );
     }
-    return this.ok({ uuids: count === 1 ? uuids[0] : uuids }, 'UUID v4');
+    return ExternalAPIService.ok({ uuids: count === 1 ? uuids[0] : uuids }, 'UUID v4');
   }
 
   // ============ 时区转换 ============
@@ -409,7 +409,7 @@ class ExternalAPIService {
       const fmt = (tz) => new Intl.DateTimeFormat('zh-CN', {
         timeZone: tz, dateStyle: 'full', timeStyle: 'medium',
       }).format(date);
-      return this.ok({
+      return ExternalAPIService.ok({
         input_time: time,
         from_tz: fromTz,
         to_tz: toTz,
@@ -418,7 +418,7 @@ class ExternalAPIService {
         utc: date.toISOString(),
       }, 'Intl API');
     } catch (_) {}
-    return this.err('时区转换失败');
+    return ExternalAPIService.err('时区转换失败');
   }
 
   // ============ 随机密码 ============
@@ -444,7 +444,7 @@ class ExternalAPIService {
     const hasNum = /[0-9]/.test(password);
     const hasSym = /[!@#$%^&*]/.test(password);
     const strength = [hasUpper, hasLower, hasNum, hasSym].filter(Boolean).length;
-    return this.ok({
+    return ExternalAPIService.ok({
       password,
       strength: strength === 4 ? '强 💪' : strength >= 2 ? '中 ⚠️' : '弱 ❌',
       strength_score: strength,
@@ -457,26 +457,26 @@ class ExternalAPIService {
     if (!year) year = new Date().getFullYear();
     try {
       const res = await this.safeFetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${country}`);
-      if (!res.ok) return this.err('不支持该国家代码或年份');
+      if (!res.ok) return ExternalAPIService.err('不支持该国家代码或年份');
       const holidays = await res.json();
-      return this.ok({ country, year, holidays }, 'DateNager API');
+      return ExternalAPIService.ok({ country, year, holidays }, 'DateNager API');
     } catch (_) {}
-    return this.err('节假日 API 暂时不可用');
+    return ExternalAPIService.err('节假日 API 暂时不可用');
   }
 
   // ============ 国家信息查询 ============
   static async countryInfo(name = '') {
-    if (!name) return this.err('请提供国家名称');
+    if (!name) return ExternalAPIService.err('请提供国家名称');
     try {
       // 搜索国家
       const res = await this.safeFetch(
         `https://restcountries.com/v3.1/name/${encodeURIComponent(name)}?fields=name,capital,languages,currencies,region,population,flags,maps`
       );
-      if (!res.ok) return this.err('未找到该国家');
+      if (!res.ok) return ExternalAPIService.err('未找到该国家');
       const countries = await res.json();
-      if (!countries.length) return this.err('未找到该国家');
+      if (!countries.length) return ExternalAPIService.err('未找到该国家');
       const c = countries[0];
-      return this.ok({
+      return ExternalAPIService.ok({
         name: c.name.common,
         official: c.name.official,
         capital: c.capital?.[0] || '',
@@ -488,21 +488,21 @@ class ExternalAPIService {
         map: c.maps?.googleMaps || '',
       }, 'REST Countries API');
     } catch (_) {}
-    return this.err('国家信息 API 暂时不可用');
+    return ExternalAPIService.err('国家信息 API 暂时不可用');
   }
 
   // ============ Stack Overflow 搜索 ============
   static async stackOverflow(question = '', tags = '', sort = 'votes') {
-    if (!question) return this.err('请提供搜索关键词');
+    if (!question) return ExternalAPIService.err('请提供搜索关键词');
     const tagParam = tags ? `,${encodeURIComponent(tags)}` : '';
     try {
       const res = await this.safeFetch(
         `https://api.stackexchange.com/2.3/search/advanced?order=desc&sort=${sort}&q=${encodeURIComponent(question + tagParam)}&site=stackoverflow&pagesize=10`
       );
-      if (!res.ok) return this.err('搜索失败');
+      if (!res.ok) return ExternalAPIService.err('搜索失败');
       const data = await res.json();
-      if (!data.items?.length) return this.err('未找到相关问题');
-      return this.ok({
+      if (!data.items?.length) return ExternalAPIService.err('未找到相关问题');
+      return ExternalAPIService.ok({
         query: question,
         questions: data.items.map(q => ({
           title: q.title,
@@ -514,7 +514,7 @@ class ExternalAPIService {
         })),
       }, 'Stack Exchange API');
     } catch (_) {}
-    return this.err('Stack Overflow 搜索暂时不可用');
+    return ExternalAPIService.err('Stack Overflow 搜索暂时不可用');
   }
 
   // ============ 随机狗图 ============
@@ -524,16 +524,16 @@ class ExternalAPIService {
       if (res.ok) {
         const d = await res.json();
         if (d.status === 'success') {
-          return this.ok({ url: d.message, breed: d.message.split('/')[4] || 'Unknown' }, 'Dog CEO API');
+          return ExternalAPIService.ok({ url: d.message, breed: d.message.split('/')[4] || 'Unknown' }, 'Dog CEO API');
         }
       }
     } catch (_) {}
-    return this.ok({ url: 'https://placedog.net/400/300' }, 'PlaceDog fallback');
+    return ExternalAPIService.ok({ url: 'https://placedog.net/400/300' }, 'PlaceDog fallback');
   }
 
   // ============ URL Slug 生成 ============
   static async slugify(text = '') {
-    if (!text) return this.err('请提供要转换的文本');
+    if (!text) return ExternalAPIService.err('请提供要转换的文本');
     const slug = text
       .toLowerCase()
       .normalize('NFD')
@@ -542,18 +542,18 @@ class ExternalAPIService {
       .trim()
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
-    return this.ok({ original: text, slug }, '本地计算');
+    return ExternalAPIService.ok({ original: text, slug }, '本地计算');
   }
 
   // ============ JSON Schema 生成 ============
   static async jsonSchema(jsonText = '') {
-    if (!jsonText) return this.err('请提供 JSON 文本');
+    if (!jsonText) return ExternalAPIService.err('请提供 JSON 文本');
     try {
       const obj = JSON.parse(jsonText);
       const schema = this.generateSchema(obj, 'Root');
-      return this.ok({ original: jsonText, schema: JSON.stringify(schema, null, 2) }, '本地生成');
+      return ExternalAPIService.ok({ original: jsonText, schema: JSON.stringify(schema, null, 2) }, '本地生成');
     } catch (e) {
-      return this.err('JSON 解析失败: ' + e.message);
+      return ExternalAPIService.err('JSON 解析失败: ' + e.message);
     }
   }
 
@@ -582,7 +582,7 @@ class ExternalAPIService {
 
   // ============ XML 格式化 ============
   static async xmlFormat(xmlText = '') {
-    if (!xmlText) return this.err('请提供 XML 文本');
+    if (!xmlText) return ExternalAPIService.err('请提供 XML 文本');
     try {
       // 简单格式化：缩进
       let formatted = '';
@@ -601,34 +601,34 @@ class ExternalAPIService {
           formatted += '  '.repeat(indent) + token + '\n';
         }
       }
-      return this.ok({ original: xmlText, formatted: formatted.trim() }, '本地处理');
+      return ExternalAPIService.ok({ original: xmlText, formatted: formatted.trim() }, '本地处理');
     } catch (e) {
-      return this.err('XML 格式化失败: ' + e.message);
+      return ExternalAPIService.err('XML 格式化失败: ' + e.message);
     }
   }
 
   // ============ Cron 描述 ============
   static async cronDescription(expression = '') {
-    if (!expression) return this.err('请提供 Cron 表达式');
+    if (!expression) return ExternalAPIService.err('请提供 Cron 表达式');
     try {
       const cronstrue = require('cronstrue');
       const desc = cronstrue.toString(expression, { locale: 'zh_CN' });
-      return this.ok({ expression, description: desc }, 'cronstrue');
+      return ExternalAPIService.ok({ expression, description: desc }, 'cronstrue');
     } catch (e) {
-      return this.err('Cron 表达式无效: ' + e.message);
+      return ExternalAPIService.err('Cron 表达式无效: ' + e.message);
     }
   }
 
   // ============ JSON 对比 ============
   static async jsonDiff(json1 = '', json2 = '') {
-    if (!json1 || !json2) return this.err('请提供两个 JSON 文本');
+    if (!json1 || !json2) return ExternalAPIService.err('请提供两个 JSON 文本');
     try {
       const obj1 = JSON.parse(json1);
       const obj2 = JSON.parse(json2);
       const diff = this.deepDiff(obj1, obj2, '', []);
-      return this.ok({ diff: diff.length ? diff : [{ path: '(root)', change: '相同' }] }, '本地计算');
+      return ExternalAPIService.ok({ diff: diff.length ? diff : [{ path: '(root)', change: '相同' }] }, '本地计算');
     } catch (e) {
-      return this.err('JSON 解析失败: ' + e.message);
+      return ExternalAPIService.err('JSON 解析失败: ' + e.message);
     }
   }
 
@@ -656,7 +656,7 @@ class ExternalAPIService {
       default: ['node_modules/', 'dist/', 'build/', '.env', '*.log', '.DS_Store'],
     };
     const content = (templates[language] || templates.default).join('\n');
-    return this.ok({ language, gitignore: content }, '内置模板');
+    return ExternalAPIService.ok({ language, gitignore: content }, '内置模板');
   }
 
   // ============ Dockerfile 生成 ============
@@ -668,39 +668,39 @@ class ExternalAPIService {
       java: 'FROM eclipse-temurin:21-jdk-alpine\nWORKDIR /app\nCOPY pom.xml .\nRUN mvn dependency:go-offline\nCOPY . .\nRUN mvn package -DskipTests\nEXPOSE 8080\nCMD ["java", "-jar", "target/*.jar"]',
     };
     const content = dockers[language] || dockers.node;
-    return this.ok({ language, dockerfile: content }, '内置模板');
+    return ExternalAPIService.ok({ language, dockerfile: content }, '内置模板');
   }
 
   // ============ 图片 Base64 互转 ============
   static async imageBase64(imageUrl = '', direction = 'url-to-base64') {
-    if (!imageUrl) return this.err('请提供图片 URL 或 Base64 文本');
+    if (!imageUrl) return ExternalAPIService.err('请提供图片 URL 或 Base64 文本');
     if (direction === 'url-to-base64') {
       try {
         const res = await this.safeFetch(imageUrl);
-        if (!res.ok) return this.err('图片下载失败');
+        if (!res.ok) return ExternalAPIService.err('图片下载失败');
         const buf = await res.arrayBuffer();
         const b64 = Buffer.from(buf).toString('base64');
         const mimeMatch = imageUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)/i);
         const mime = mimeMatch ? `image/${mimeMatch[1] === 'jpg' ? 'jpeg' : mimeMatch[1]}` : 'image/png';
-        return this.ok({ base64: `data:${mime};base64,${b64}`, mime, size: buf.byteLength }, '本地计算');
+        return ExternalAPIService.ok({ base64: `data:${mime};base64,${b64}`, mime, size: buf.byteLength }, '本地计算');
       } catch (e) {
-        return this.err('图片下载失败: ' + e.message);
+        return ExternalAPIService.err('图片下载失败: ' + e.message);
       }
     } else {
       // base64-to-url: 简单解码返回信息
       try {
         const match = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
-        if (!match) return this.err('Base64 格式无效，应为 data:image/xxx;base64,xxxx 格式');
-        return this.ok({ mime: match[1], size: Math.round(match[2].length * 0.75) }, '本地计算');
+        if (!match) return ExternalAPIService.err('Base64 格式无效，应为 data:image/xxx;base64,xxxx 格式');
+        return ExternalAPIService.ok({ mime: match[1], size: Math.round(match[2].length * 0.75) }, '本地计算');
       } catch (e) {
-        return this.err('解析失败: ' + e.message);
+        return ExternalAPIService.err('解析失败: ' + e.message);
       }
     }
   }
 
   // ============ 哈希验证 ============
   static async hashVerify(text = '', algorithm = 'md5') {
-    if (!text) return this.err('请提供要验证的文本');
+    if (!text) return ExternalAPIService.err('请提供要验证的文本');
     const crypto = require('crypto');
     const hash = crypto.createHash(algorithm).update(text).digest('hex');
     const algorithms = ['md5', 'sha1', 'sha256', 'sha512'];
@@ -708,7 +708,7 @@ class ExternalAPIService {
     for (const alg of algorithms) {
       results[alg] = crypto.createHash(alg).update(text).digest('hex');
     }
-    return this.ok({ text, algorithms: results }, '本地计算');
+    return ExternalAPIService.ok({ text, algorithms: results }, '本地计算');
   }
 
   // ============ 时区当前时间 ============
@@ -718,14 +718,14 @@ class ExternalAPIService {
         timeZone: tz, dateStyle: 'full', timeStyle: 'full',
       });
       const now = new Date();
-      return this.ok({
+      return ExternalAPIService.ok({
         timezone: tz,
         local: formatter.format(now),
         utc: now.toISOString(),
         unix: Math.floor(now.getTime() / 1000),
       }, 'Intl API');
     } catch (_) {}
-    return this.err('时区查询失败');
+    return ExternalAPIService.err('时区查询失败');
   }
 
   // ============ 编程语言代码示例 ============
@@ -748,14 +748,14 @@ class ExternalAPIService {
       },
     };
     const langs = examples[language];
-    if (!langs) return this.err('不支持该语言，可选: javascript, python, go');
+    if (!langs) return ExternalAPIService.err('不支持该语言，可选: javascript, python, go');
     const code = langs[task] || langs.hello;
-    return this.ok({ language, task, code }, '内置示例');
+    return ExternalAPIService.ok({ language, task, code }, '内置示例');
   }
 
   // ============ 正则表达式生成 ============
   static async regexGenerate(description = '') {
-    if (!description) return this.err('请提供正则表达式描述');
+    if (!description) return ExternalAPIService.err('请提供正则表达式描述');
     // 简单规则映射
     const rules = [
       { desc: /手机|电话/, re: '^1[3-9]\\d{9}$', name: '中国手机号' },
@@ -767,10 +767,10 @@ class ExternalAPIService {
     ];
     for (const r of rules) {
       if (r.desc.test(description)) {
-        return this.ok({ description, regex: r.re, name: r.name, note: '基于关键词匹配，结果仅供参考' }, '规则映射');
+        return ExternalAPIService.ok({ description, regex: r.re, name: r.name, note: '基于关键词匹配，结果仅供参考' }, '规则映射');
       }
     }
-    return this.ok({ description, regex: '', note: '暂不支持该描述，请尝试更具体的关键词（手机、邮箱、身份证、IP、URL、车牌）' }, '规则映射');
+    return ExternalAPIService.ok({ description, regex: '', note: '暂不支持该描述，请尝试更具体的关键词（手机、邮箱、身份证、IP、URL、车牌）' }, '规则映射');
   }
 
   // ============ 编程挑战/随机算法题 ============
@@ -782,7 +782,7 @@ class ExternalAPIService {
     ];
     const challenge = challenges[Math.floor(Math.random() * challenges.length)];
     const code = challenge.languages[language] || challenge.languages.javascript;
-    return this.ok({ ...challenge, code, language }, '内置题库');
+    return ExternalAPIService.ok({ ...challenge, code, language }, '内置题库');
   }
 
   // ============ HTTP 状态码解释 ============
@@ -808,8 +808,8 @@ class ExternalAPIService {
       504: { text: 'Gateway Timeout', zh: '网关超时' },
     };
     const s = statuses[code];
-    if (!s) return this.err(`未知 HTTP 状态码: ${code}`);
-    return this.ok({ code, ...s }, '内置数据库');
+    if (!s) return ExternalAPIService.err(`未知 HTTP 状态码: ${code}`);
+    return ExternalAPIService.ok({ code, ...s }, '内置数据库');
   }
 
   // ============ HTTP 方法解释 ============
@@ -824,27 +824,27 @@ class ExternalAPIService {
       OPTIONS: { desc: '获取支持的 HTTP 方法', category: '安全方法', example: '/users — 查看可用方法' },
     };
     const m = methods[method.toUpperCase()];
-    if (!m) return this.err(`未知 HTTP 方法: ${method}`);
-    return this.ok({ method: method.toUpperCase(), ...m }, '内置数据库');
+    if (!m) return ExternalAPIService.err(`未知 HTTP 方法: ${method}`);
+    return ExternalAPIService.ok({ method: method.toUpperCase(), ...m }, '内置数据库');
   }
 
   // ============ JSON Web Token 解码（已存在，此处增强） ============
   static async jwtDecode(token = '') {
-    if (!token) return this.err('请提供 JWT Token');
+    if (!token) return ExternalAPIService.err('请提供 JWT Token');
     try {
       const parts = token.split('.');
-      if (parts.length !== 3) return this.err('无效的 JWT 格式');
+      if (parts.length !== 3) return ExternalAPIService.err('无效的 JWT 格式');
       const decode = (s) => JSON.parse(Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
       const header = decode(parts[0]);
       const payload = decode(parts[1]);
-      return this.ok({
+      return ExternalAPIService.ok({
         header,
         payload,
         signature: parts[2],
         isExpired: payload.exp ? Date.now() > payload.exp * 1000 : null,
       }, '本地解码');
     } catch (e) {
-      return this.err('JWT 解析失败: ' + e.message);
+      return ExternalAPIService.err('JWT 解析失败: ' + e.message);
     }
   }
 
@@ -858,7 +858,7 @@ class ExternalAPIService {
       if (res.ok) {
         const d = await res.json();
         if (d.error) throw new Error(d.error.message);
-        return this.ok({
+        return ExternalAPIService.ok({
           ip: d.ip || ip || 'unknown',
           city: d.city || '',
           region: d.region || '',
@@ -875,7 +875,7 @@ class ExternalAPIService {
         if (res.ok) {
           const d = await res.json();
           if (d.status === 'fail') throw new Error('ip-api failed');
-          return this.ok({
+          return ExternalAPIService.ok({
             ip: d.query || '',
             city: d.city || '',
             country: d.country || '',
@@ -885,7 +885,7 @@ class ExternalAPIService {
         }
       }
     } catch (_) {}
-    return this.err('IP 查询暂时不可用（可能被网络限制拦截）');
+    return ExternalAPIService.err('IP 查询暂时不可用（可能被网络限制拦截）');
   }
 
   // ============ 百度语音 API ============
@@ -927,16 +927,16 @@ class ExternalAPIService {
    */
   static async baiduTTS(text, options = {}) {
     const token = await this.getBaiduToken();
-    if (!token) return this.err('百度语音未配置或获取Token失败');
+    if (!token) return ExternalAPIService.err('百度语音未配置或获取Token失败');
     
     const { per = 0, spd = 5, pit = 5, vol = 5 } = options;
     const url = `https://tsn.baidu.com/text2audio?tex=${encodeURIComponent(text)}&tok=${token}&cuid=mumei_service&ctp=1&lan=zh&per=${per}&spd=${spd}&pit=${pit}&vol=${vol}`;
     
     const res = await this.safeFetch(url);
-    if (!res.ok) return this.err('百度TTS请求失败');
+    if (!res.ok) return ExternalAPIService.err('百度TTS请求失败');
     
     // 返回音频URL（百度直接返回音频数据，这里返回URL让前端直接播放）
-    return this.ok({ 
+    return ExternalAPIService.ok({ 
       audioUrl: url,
       format: 'mp3',
       text: text.slice(0, 50) + (text.length > 50 ? '...' : '')
@@ -953,7 +953,7 @@ class ExternalAPIService {
    */
   static async baiduASR(audioBase64, format = 'wav', rate = 16000) {
     const token = await this.getBaiduToken();
-    if (!token) return this.err('百度语音未配置或获取Token失败');
+    if (!token) return ExternalAPIService.err('百度语音未配置或获取Token失败');
     
     const url = `https://vop.baidu.com/server_api?cuid=mumei_service&token=${token}&dev_pid=1537`; // 1537=普通话(支持简单英文)
     
@@ -969,16 +969,16 @@ class ExternalAPIService {
       })
     });
     
-    if (!res.ok) return this.err('百度ASR请求失败');
+    if (!res.ok) return ExternalAPIService.err('百度ASR请求失败');
     const data = await res.json();
     
     if (data.err_no === 0 && data.result && data.result.length > 0) {
-      return this.ok({ 
+      return ExternalAPIService.ok({ 
         text: data.result.join('\n'),
         confidence: data.result_num || 1
       }, '百度语音识别');
     }
-    return this.err(data.err_msg || '语音识别失败');
+    return ExternalAPIService.err(data.err_msg || '语音识别失败');
   }
 
   // ============ 高德地图 API ============
@@ -998,7 +998,7 @@ class ExternalAPIService {
           if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
             const geo = data.geocodes[0];
             const [lng, lat] = geo.location.split(',');
-            return this.ok({
+            return ExternalAPIService.ok({
               longitude: parseFloat(lng),
               latitude: parseFloat(lat),
               formattedAddress: geo.formatted_address || address,
@@ -1019,7 +1019,7 @@ class ExternalAPIService {
       if (res.ok) {
         const data = await res.json();
         if (data && data.latitude && data.longitude) {
-          return this.ok({
+          return ExternalAPIService.ok({
             longitude: data.longitude,
             latitude: data.latitude,
             displayName: data.locality || data.city || address,
@@ -1038,7 +1038,7 @@ class ExternalAPIService {
         const data = await res.json();
         if (data.results && data.results.length > 0) {
           const r = data.results[0].geometry.location;
-          return this.ok({
+          return ExternalAPIService.ok({
             longitude: r.lng,
             latitude: r.lat,
             displayName: data.results[0].formatted_address || address
@@ -1046,7 +1046,7 @@ class ExternalAPIService {
         }
       }
     } catch (_) {}
-    return this.err('地址查询失败，请确认地址格式正确（如：北京市朝阳区望京街道）');
+    return ExternalAPIService.err('地址查询失败，请确认地址格式正确（如：北京市朝阳区望京街道）');
   }
 
   /**
@@ -1062,7 +1062,7 @@ class ExternalAPIService {
           const data = await res.json();
           if (data.status === '1' && data.regeocode) {
             const addr = data.regeocode.addressComponent;
-            return this.ok({
+            return ExternalAPIService.ok({
               address: data.regeocode.formatted_address || '',
               province: addr.province || '',
               city: addr.city || '',
@@ -1081,7 +1081,7 @@ class ExternalAPIService {
       if (res.ok) {
         const data = await res.json();
         if (data && data.city) {
-          return this.ok({
+          return ExternalAPIService.ok({
             address: [data.locality, data.city, data.countryName].filter(Boolean).join(', '),
             province: data.principalSubdivision || '',
             city: data.city || '',
@@ -1090,7 +1090,7 @@ class ExternalAPIService {
         }
       }
     } catch (_) {}
-    return this.err('坐标解析失败，请确认坐标格式正确（经度,纬度）');
+    return ExternalAPIService.err('坐标解析失败，请确认坐标格式正确（经度,纬度）');
   }
 
   /**
@@ -1114,7 +1114,7 @@ class ExternalAPIService {
               distance: p.distance || '',
               type: p.type || ''
             }));
-            return this.ok({ pois, total: parseInt(data.count) || pois.length }, '高德POI搜索 ✅');
+            return ExternalAPIService.ok({ pois, total: parseInt(data.count) || pois.length }, '高德POI搜索 ✅');
           }
         }
       } catch (_) {}
@@ -1136,7 +1136,7 @@ class ExternalAPIService {
             location: (p.lon || '') + ',' + (p.lat || ''),
             type: p.type || ''
           }));
-          return this.ok({ pois, total: pois.length }, 'OpenStreetMap (Nominatim)');
+          return ExternalAPIService.ok({ pois, total: pois.length }, 'OpenStreetMap (Nominatim)');
         }
       }
     } catch (_) {}
@@ -1158,13 +1158,13 @@ class ExternalAPIService {
                 location: (p.longitude || '') + ',' + (p.latitude || ''),
                 type: p.localityType || ''
               }));
-              return this.ok({ pois, total: pois.length }, 'BigDataCloud POI ✅');
+              return ExternalAPIService.ok({ pois, total: pois.length }, 'BigDataCloud POI ✅');
             }
           }
         }
       } catch (_) {}
     }
-    return this.err('未搜索到相关地点，请尝试更通用的关键词');
+    return ExternalAPIService.err('未搜索到相关地点，请尝试更通用的关键词');
   }
 
   /**
@@ -1195,7 +1195,7 @@ class ExternalAPIService {
               road: Array.isArray(s.road) ? s.road[0] : (s.road || ''),
               distance: parseInt(s.distance) || 0
             }));
-            return this.ok({
+            return ExternalAPIService.ok({
               distance: distanceM,
               distanceText: distanceM >= 1000 ? (distanceM / 1000).toFixed(1) + ' km' : distanceM + ' m',
               duration: durationSec,
@@ -1222,7 +1222,7 @@ class ExternalAPIService {
           const durationSec = Math.round(route.duration);
           const distanceM = Math.round(route.distance);
           const durationMin = Math.round(durationSec / 60);
-          return this.ok({
+          return ExternalAPIService.ok({
             distance: distanceM,
             distanceText: distanceM >= 1000 ? (distanceM / 1000).toFixed(1) + ' km' : distanceM + ' m',
             duration: durationSec,
@@ -1232,7 +1232,7 @@ class ExternalAPIService {
       }
     } catch (_) {}
 
-    return this.err('路径规划失败，请检查坐标格式（经度,纬度）');
+    return ExternalAPIService.err('路径规划失败，请检查坐标格式（经度,纬度）');
   }
 
   /**
@@ -1242,18 +1242,18 @@ class ExternalAPIService {
    */
   static async amapWeather(city) {
     const key = process.env.AMAP_KEY;
-    if (!key) return this.err('高德地图未配置');
+    if (!key) return ExternalAPIService.err('高德地图未配置');
     
     const url = `https://restapi.amap.com/v3/weather/weatherInfo?key=${key}&city=${encodeURIComponent(city)}&extensions=all`;
     
     const res = await this.safeFetch(url);
-    if (!res.ok) return this.err('高德API请求失败');
+    if (!res.ok) return ExternalAPIService.err('高德API请求失败');
     const data = await res.json();
     
     if (data.status === '1' && data.forecasts && data.forecasts.length > 0) {
       const forecast = data.forecasts[0];
       const today = forecast.casts && forecast.casts[0];
-      return this.ok({
+      return ExternalAPIService.ok({
         city: forecast.city,
         province: forecast.province || '',
         today: today ? {
@@ -1275,7 +1275,7 @@ class ExternalAPIService {
         }))
       }, '高德天气预报');
     }
-    return this.err('天气查询失败');
+    return ExternalAPIService.err('天气查询失败');
   }
 
   /**
@@ -1285,25 +1285,345 @@ class ExternalAPIService {
    */
   static async amapIPLocation(ip = '') {
     const key = process.env.AMAP_KEY;
-    if (!key) return this.err('高德地图未配置');
+    if (!key) return ExternalAPIService.err('高德地图未配置');
     
     let url = `https://restapi.amap.com/v3/ip?key=${key}`;
     if (ip) url += `&ip=${ip}`;
     
     const res = await this.safeFetch(url);
-    if (!res.ok) return this.err('高德API请求失败');
+    if (!res.ok) return ExternalAPIService.err('高德API请求失败');
     const data = await res.json();
     
     if (data.status === '1') {
-      return this.ok({
+      return ExternalAPIService.ok({
         province: data.province || '',
         city: data.city || '',
         rectangle: data.rectangle || '',
         adcode: data.adcode || ''
       }, '高德IP定位');
     }
-    return this.err('IP定位失败');
+    return ExternalAPIService.err('IP定位失败');
   }
+  // ============ Prettier 代码美化 ============
+  static async codeBeautify(code, language = 'javascript') {
+    try {
+      const prettier = require('prettier');
+      const langMap = {js:'babel',javascript:'babel',ts:'typescript',typescript:'typescript',python:'python',py:'python',html:'html',css:'css',json:'json',markdown:'markdown',md:'markdown',sql:'sql',yaml:'yaml',yml:'yaml',xml:'xml'};
+      const parser = langMap[language.toLowerCase()] || 'babel';
+      const formatted = await prettier.format(code, {parser, semi:false, singleQuote:true, tabWidth:2, printWidth:100});
+      return ExternalAPIService.ok({formatted, language, lineCount: formatted.split('\n').length}, 'Prettier 代码美化');
+    } catch (e) {
+      return ExternalAPIService.err('代码格式化失败：'+e.message);
+    }
+  }
+
+  // ============ QR码生成 ============
+  static async qrCodeGenerate(text, options = {}) {
+    try {
+      const QRCode = require('qrcode');
+      const {size=300, format='png', dark='000000', light='ffffff'} = options;
+      const opts = {width:size, color:{dark,light}, margin:2};
+      const dataUrl = await QRCode.toDataURL(text, opts);
+      return ExternalAPIService.ok({dataUrl, text, size, format:'png'}, 'QRCode 生成');
+    } catch (e) {
+      return ExternalAPIService.err('二维码生成失败：'+e.message);
+    }
+  }
+
+  // ============ PDF 生成 ============
+  static async pdfGenerate(options = {}) {
+    try {
+      const {PDFDocument, StandardFonts} = require('pdf-lib');
+      const {title='', content='', author='沐美服务'} = options;
+      const doc = await PDFDocument.create();
+      const page = doc.addPage([595.28, 841.89]);
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+      const {width, height} = page.getSize();
+      let y = height - 72;
+      if (title) {
+        page.drawText(title, {x:50, y, size:18, font:bold, color:{r:0.1,g:0.1,b:0.4}});
+        y -= 30;
+      }
+      if (content) {
+        const lines = wrapText(content, 80);
+        for (const line of lines) {
+          if (y < 72) { const np = doc.addPage([595.28, 841.89]); y = np.getSize().height - 72; }
+          page.drawText(line, {x:50, y, size:11, font});
+          y -= 18;
+        }
+      }
+      const pdfBytes = await doc.save();
+      return ExternalAPIService.ok({pdfBase64:Buffer.from(pdfBytes).toString('base64'), title, pageCount:doc.getPageCount()}, 'PDF 生成');
+    } catch (e) {
+      return ExternalAPIService.err('PDF生成失败：'+e.message);
+    }
+  }
+
+  // ============ PDF 合并 ============
+  static async pdfMerge(pdfBases = []) {
+    try {
+      const {PDFDocument} = require('pdf-lib');
+      if (!pdfBases || pdfBases.length < 2) return ExternalAPIService.err('至少需要2个PDF文件');
+      const merged = await PDFDocument.create();
+      for (const b64 of pdfBases) {
+        const pdf = await PDFDocument.load(Buffer.from(b64,'base64'));
+        const pages = await merged.copyPages(pdf, pdf.getPageIndices());
+        pages.forEach(p => merged.addPage(p));
+      }
+      return ExternalAPIService.ok({pdfBase64:Buffer.from(await merged.save()).toString('base64'), totalPages:merged.getPageCount(), count:pdfBases.length}, 'PDF 合并');
+    } catch (e) {
+      return ExternalAPIService.err('PDF合并失败：'+e.message);
+    }
+  }
+
+  // ============ PDF 分割 ============
+  static async pdfSplit(pdfBase64, pageRange = '1') {
+    try {
+      const {PDFDocument} = require('pdf-lib');
+      const pdf = await PDFDocument.load(Buffer.from(pdfBase64,'base64'));
+      const total = pdf.getPageCount();
+      const pages = pageRange.split(',').flatMap(s => {
+        if (s.includes('-')) { const [a,b] = s.split('-').map(Number); return Array.from({length:b-a+1},(_,i)=>a+i-1); }
+        return [parseInt(s)-1];
+      }).filter(i => i >= 0 && i < total);
+      const merged = await PDFDocument.create();
+      for (const idx of pages) { const [p] = await merged.copyPages(pdf,[idx]); merged.addPage(p); }
+      return ExternalAPIService.ok({pdfBase64:Buffer.from(await merged.save()).toString('base64'), extractedPages:pages.length, totalPages:total}, 'PDF 分割');
+    } catch (e) {
+      return ExternalAPIService.err('PDF分割失败：'+e.message);
+    }
+  }
+
+  // ============ PDF 加水印 ============
+  static async pdfWatermark(pdfBase64, watermarkText = '沐美服务', options = {}) {
+    try {
+      const {PDFDocument, StandardFonts} = require('pdf-lib');
+      const {opacity=0.2, fontSize=48, angle=-45} = options;
+      const pdf = await PDFDocument.load(Buffer.from(pdfBase64,'base64'));
+      const font = await pdf.embedFont(StandardFonts.HelveticaBold);
+      for (const page of pdf.getPages()) {
+        const {width, height} = page.getSize();
+        page.drawText(watermarkText, {x:width/4, y:height/2, size:fontSize, font, opacity, angle:(angle*Math.PI)/180, color:{r:0.5,g:0.5,b:0.5}});
+      }
+      return ExternalAPIService.ok({pdfBase64:Buffer.from(await pdf.save()).toString('base64'), watermarkText, pageCount:pdf.getPageCount()}, 'PDF 水印');
+    } catch (e) {
+      return ExternalAPIService.err('PDF水印失败：'+e.message);
+    }
+  }
+
+  // ============ 图片压缩（Sharp）===========
+  static async imageCompress(imageUrl, options = {}) {
+    try {
+      const {quality=80, format='jpeg'} = options;
+      const sharpLib = require('sharp');
+      let buffer;
+      if (imageUrl.startsWith('http')) {
+        const res = await this.safeFetch(imageUrl);
+        if (!res.ok) return ExternalAPIService.err('图片获取失败');
+        buffer = Buffer.from(await res.arrayBuffer());
+      } else {
+        buffer = Buffer.from(imageUrl,'base64');
+      }
+      let img = sharpLib(buffer);
+      if (format === 'png') img = img.png({compressionLevel:9});
+      else img = img.jpeg({quality});
+      const output = await img.toBuffer();
+      const ratio = ((buffer.length - output.length)/buffer.length*100).toFixed(1);
+      return ExternalAPIService.ok({imageBase64:output.toString('base64'), originalSize:buffer.length, newSize:output.length, savedPercent:ratio+'%', format}, 'Sharp 图片压缩');
+    } catch (e) {
+      return ExternalAPIService.err('图片压缩失败：'+e.message);
+    }
+  }
+
+  // ============ 图片水印（Sharp）===========
+  static async imageWatermark(imageUrl, watermarkText = '沐美服务', options = {}) {
+    try {
+      const {opacity=0.5, fontSize=24, gravity='southeast'} = options;
+      const sharpLib = require('sharp');
+      let buffer;
+      if (imageUrl.startsWith('http')) {
+        const res = await this.safeFetch(imageUrl);
+        if (!res.ok) return ExternalAPIService.err('图片获取失败');
+        buffer = Buffer.from(await res.arrayBuffer());
+      } else {
+        buffer = Buffer.from(imageUrl,'base64');
+      }
+      const meta = await sharpLib(buffer).metadata();
+      const w = meta.width || 800;
+      const wmW = Math.ceil(w * 0.6);
+      const wmH = Math.max(Math.floor(w/20), fontSize+10);
+      const wmBuf = await sharpLib({
+        create:{width:wmW, height:wmH, channels:4, background:{r:0,g:0,b:0,alpha:0}}
+      }).composite([{
+        input: Buffer.from(`<svg width="${wmW}" height="${wmH}"><text x="0" y="${fontSize}" font-size="${fontSize}" fill="white" fill-opacity="${opacity}">${watermarkText}</text></svg>`),
+        top:0, left:0
+      }]).png().toBuffer();
+      const result = await sharpLib(buffer).composite([{input:wmBuf, gravity, blend:'over'}]).png().toBuffer();
+      return ExternalAPIService.ok({imageBase64:result.toString('base64'), watermarkText, originalSize:buffer.length, newSize:result.length}, '图片水印');
+    } catch (e) {
+      return ExternalAPIService.err('图片水印失败：'+e.message);
+    }
+  }
+
+  // ============ QuickChart 图表生成 ============
+  static async chartGenerate(options = {}) {
+    try {
+      const {type='bar', data, labels, title='', colors=['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6']} = options;
+      const chartConfig = {type, data:{labels:labels||['A','B','C','D','E'],datasets:[{label:title,data:data||[10,20,30,40,50],backgroundColor:colors}]}, options:{responsive:true,plugins:{legend:{display:true,position:'top'},title:{display:!!title,text:title}}}};
+      const encoded = Buffer.from(JSON.stringify(chartConfig)).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+      const chartUrl = `https://quickchart.io/chart?c=${encoded}&width=600&height=400&format=png&backgroundColor=white`;
+      const res = await this.safeFetch(chartUrl);
+      if (!res.ok) return ExternalAPIService.err('图表生成失败');
+      const buf = Buffer.from(await res.arrayBuffer());
+      return ExternalAPIService.ok({chartImageUrl:chartUrl, chartBase64:buf.toString('base64'), type, title}, 'QuickChart 图表生成');
+    } catch (e) {
+      return ExternalAPIService.err('图表生成失败：'+e.message);
+    }
+  }
+
+  // ============ QuickChart 二维码 ============
+  static async qrAdvanced(text, options = {}) {
+    try {
+      const {size=300, dark='000000', light='ffffff'} = options;
+      const url = `https://quickchart.io/qr?text=${encodeURIComponent(text)}&size=${size}&format=png&darkcolor=%23${dark.replace('#','')}&bgcolor=%23${light.replace('#','')}`;
+      const res = await this.safeFetch(url);
+      if (!res.ok) return ExternalAPIService.err('二维码生成失败');
+      const buf = Buffer.from(await res.arrayBuffer());
+      return ExternalAPIService.ok({qrBase64:buf.toString('base64'), text, size}, 'QuickChart 二维码');
+    } catch (e) {
+      return ExternalAPIService.err('二维码生成失败：'+e.message);
+    }
+  }
+
+  // ============ 网页截图 ============
+  static async webpageScreenshot(url, options = {}) {
+    try {
+      const {width=1280, height=800} = options;
+      const apiUrl = `https://thumbnail.techlife.app/?u=${encodeURIComponent(url)}&w=${width}&h=${height}&f=png`;
+      const res = await this.safeFetch(apiUrl);
+      if (!res.ok) return ExternalAPIService.err('网页截图失败');
+      const buf = Buffer.from(await res.arrayBuffer());
+      return ExternalAPIService.ok({screenshotBase64:buf.toString('base64'), url, width, height}, '网页截图');
+    } catch (e) {
+      return ExternalAPIService.err('网页截图失败：'+e.message);
+    }
+  }
+
+  // ============ 短链接生成 ============
+  static async shortUrl(longUrl) {
+    try {
+      const res = await this.safeFetch('https://tinyurl.com/api-create.php?url='+encodeURIComponent(longUrl));
+      if (!res.ok) return ExternalAPIService.err('短链接生成失败');
+      const data = await res.json();
+      if (data.short) return ExternalAPIService.ok({shortUrl:data.short, originalUrl:longUrl}, '短链接生成');
+      return ExternalAPIService.err('短链接生成失败：'+(data.msg||'未知错误'));
+    } catch (e) {
+      return ExternalAPIService.err('短链接生成失败：'+e.message);
+    }
+  }
+
+  // ============ 正则表达式测试 ============
+  static async regexTest(pattern, text, flags = 'g') {
+    try {
+      new RegExp(pattern);
+      const regex = new RegExp(pattern, flags);
+      const matches = [];
+      let m;
+      const testText = text.slice(0, 5000);
+      if (flags.includes('g')) { while ((m = regex.exec(testText)) !== null) matches.push({match:m[0],index:m.index,groups:m.slice(1)}); }
+      else { m = regex.exec(testText); if (m) matches.push({match:m[0],index:m.index,groups:m.slice(1)}); }
+      return ExternalAPIService.ok({isValid:true, pattern, flags, matchCount:matches.length, matches:matches.slice(0,50)}, '正则表达式测试');
+    } catch (e) {
+      return ExternalAPIService.err('正则表达式错误：'+e.message);
+    }
+  }
+
+  // ============ URL 编解码 ============
+  static async urlCodec(text, type = 'encode') {
+    try {
+      if (type === 'encode') return ExternalAPIService.ok({encoded:encodeURIComponent(text), decoded:text}, 'URL 编码');
+      return ExternalAPIService.ok({encoded:text, decoded:decodeURIComponent(text)}, 'URL 解码');
+    } catch (e) {
+      return ExternalAPIService.err('URL处理失败：'+e.message);
+    }
+  }
+
+  // ============ Base64 编解码 ============
+  static async base64Codec(text, type = 'encode') {
+    try {
+      if (type === 'encode') return ExternalAPIService.ok({encoded:Buffer.from(text).toString('base64'), original:text}, 'Base64 编码');
+      return ExternalAPIService.ok({encoded:text, decoded:Buffer.from(text.replace(/\s/g,''),'base64').toString('utf8')}, 'Base64 解码');
+    } catch (e) {
+      return ExternalAPIService.err('Base64处理失败：'+e.message);
+    }
+  }
+
+  // ============ 进制转换 ============
+  static async baseConvert(number, fromBase = 10, toBase = 2) {
+    try {
+      const val = parseInt(String(number), fromBase);
+      return ExternalAPIService.ok({
+        from:{value:number, base:fromBase},
+        to:{value:val.toString(toBase).toUpperCase(), base:toBase},
+        binary:val.toString(2), octal:val.toString(8),
+        hex:val.toString(16).toUpperCase(), decimal:val
+      }, '进制转换');
+    } catch (e) {
+      return ExternalAPIService.err('进制转换失败：'+e.message);
+    }
+  }
+
+  // ============ 颜色转换 ============
+        static async colorConvert(color, targetFormat) {
+    try {
+      if (!targetFormat || targetFormat === 'all') targetFormat = 'hex,rgb,hsl';
+      let hex = color.trim();
+      if (!hex.startsWith('#')) hex = '#' + hex;
+      const m = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (!m) return ExternalAPIService.err('无效的颜色格式，请输入如 #FF5733');
+      const rv = parseInt(m[1], 16), gv = parseInt(m[2], 16), bv = parseInt(m[3], 16);
+      const [h, s, l] = rgbToHsl(rv, gv, bv);
+      const rv16 = (x) => (x < 16 ? '0' : '') + x.toString(16);
+      const result = {
+        hex: '#' + [rv, gv, bv].map(rv16).join(''),
+        rgb: 'rgb(' + rv + ', ' + gv + ', ' + bv + ')',
+        hsl: 'hsl(' + Math.round(h) + ', ' + Math.round(s) + '%, ' + Math.round(l) + '%)'
+      };
+      // 返回所有格式
+      return ExternalAPIService.ok({ input: color, hex: result.hex, rgb: result.rgb, hsl: result.hsl }, '颜色转换');
+    } catch (e) {
+      return ExternalAPIService.err('颜色转换失败：' + e.message);
+    }
+  }
+  // ============ HTML 预览=========
+  static async htmlPreview(html, options = {}) {
+    try {
+      const preview = 'data:text/html;base64,'+Buffer.from(html.slice(0,50000)).toString('base64');
+      return ExternalAPIService.ok({htmlLength:html.length, preview}, 'HTML 预览');
+    } catch (e) {
+      return ExternalAPIService.err('HTML预览失败');
+    }
+  }
+
+  // ============ 辅助函数 ============
+}
+
+function wrapText(text, maxChars) {
+  const lines = []; let cur = '';
+  for (const word of text.split(' ')) {
+    if ((cur+word).length > maxChars) { if (cur) lines.push(cur.trim()); cur = word+' '; } else cur += word+' ';
+  } if (cur) lines.push(cur.trim());
+  return lines;
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max+min)/2;
+  if (max === min) { h = s = 0; }
+  else { const d = max-min; s = l > 0.5 ? d/(2-max-min) : d/(max+min); switch(max){ case r: h=((g-b)/d+(g<b?6:0))/6; break; case g: h=((b-r)/d+2)/6; break; case b: h=((r-g)/d+4)/6; break; } }
+  return [h*360, s*100, l*100];
 }
 
 module.exports = ExternalAPIService;
